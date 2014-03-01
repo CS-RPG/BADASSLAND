@@ -1,0 +1,14 @@
+//Screen resolution.
+1280 720
+
+//Size of tiles (in pixels).
+120
+
+//Player starting coordinates (x, y).
+220 220
+
+//Game speed.
+200
+
+//Name of the level file to load.
+level1.txt

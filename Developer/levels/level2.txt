@@ -1,0 +1,16 @@
+15 28
+ABCBCBCBCBCBCBCBCBCBCBCBCBCD
+E                          F
+G                          H
+E                          F
+G                          H
+E                          F
+G                          H
+E                          F
+G                          H
+E                          F
+G                          H
+E                          F
+G                          H
+-                          -
+I-KJKJKJKJKJKJKJKJKJKJKJKJ-L
