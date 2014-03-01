@@ -693,16 +693,19 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 	mCurrentFrame += mAnimationSpeed * deltaTime;
 	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
 
-	if(mMovement.x > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 925, mRect.width, mRect.height));
-	if(mMovement.x < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 667, mRect.width, mRect.height));
-	if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
-	if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
+	if(std::abs(deltaX) > std::abs(deltaY)) {
+		if(mMovement.x > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 925, mRect.width, mRect.height));
+		if(mMovement.x < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 667, mRect.width, mRect.height));
+	} else {
+		if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
+		if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
+	}
 
 	mSprite.setPosition(mRect.left, mRect.top);
 	mTextName.setPosition(mRect.left, mRect.top - mTextName.getCharacterSize());
 
 }
-	
+
 void Enemy::collision(std::vector<std::vector<int>> levelMap, struct config* config) {
 	for(int i = mRect.top / config->tileSize; i < (mRect.top + mRect.height) / config->tileSize; ++i)
 		for(int j = mRect.left / config->tileSize; j < (mRect.left + mRect.width) / config->tileSize; ++j) {
