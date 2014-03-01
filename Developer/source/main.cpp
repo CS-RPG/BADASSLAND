@@ -155,7 +155,7 @@ public:
 
 									Enemy(sf::Texture&, int, int, sf::Font&);
 
-	void							update(float, std::vector<std::vector<int>>, struct config*, World&);
+	void							update(float, std::vector<std::vector<int>>, struct config*, World&, Player&);
 	void							collision(std::vector<std::vector<int>>, struct config*);
 	void							dealDamage(Player&);
 	void							detectTargets(World&);
@@ -184,7 +184,9 @@ private:
 
 	sf::Clock						mDamageClock;
 	sf::Clock						mMovementClock;
+
 	float							mDamage;
+	float							mAttackRange;
 
 	sf::String						mName;
 	sf::Text						mTextName;
@@ -640,10 +642,35 @@ Enemy::Enemy(sf::Texture& texture, int x, int y, sf::Font& font) {
 	mHP = 100;
 
 	mDamage = 30;
+	mAttackRange = 80;
 }
 
-void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
+void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world, Player& player) {
 
+	float deltaX = (player.getRect().left + player.getRect().width / 2) - (mRect.left + mRect.width / 2);
+	float deltaY = (player.getRect().top + player.getRect().height / 2) - (mRect.top + mRect.height / 2);
+	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
+
+	//New awesome super-AI.
+	if(distance > mAttackRange) {
+		if(player.getRect().left > mRect.left)
+			mMovement.x = mSpeed;
+		else
+			mMovement.x = -mSpeed;
+
+		if(player.getRect().top > mRect.top)
+			mMovement.y = mSpeed;
+		else
+			mMovement.y = -mSpeed;
+	} else {
+		mMovement.x = 0;
+		mMovement.y = 0;
+		if(isReadyToAttack())
+			dealDamage(player);
+	}
+
+	/*
+	//Stupid random AI.
 	if(mMovementClock.getElapsedTime().asSeconds() > 5) {
 		mDirection = rand() % 4;
 		mMovementClock.restart();
@@ -653,13 +680,14 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 	if(mDirection == 1) {mMovement.x = mSpeed;	mMovement.y = 0;}
 	if(mDirection == 2) {mMovement.x = 0;		mMovement.y = mSpeed;}
 	if(mDirection == 3) {mMovement.x = -mSpeed;	mMovement.y = 0;}
+	*/
 
 	mRect.left += mMovement.x * deltaTime;
-	collision(levelMap, config);
-	//world.resolveCollision(mRect, mMovement, 0, config->tileSize);
+	//collision(levelMap, config);
+	world.resolveCollision(mRect, mMovement, 0, config->tileSize);
 	mRect.top += mMovement.y * deltaTime;
-	collision(levelMap, config);
-	//world.resolveCollision(mRect, mMovement, 1, config->tileSize);
+	//collision(levelMap, config);
+	world.resolveCollision(mRect, mMovement, 1, config->tileSize);
 
 	//Enemy animation.
 	mCurrentFrame += mAnimationSpeed * deltaTime;
@@ -927,7 +955,6 @@ int main() {
 	std::vector<DropItem> drops = world.getDrops();
 	std::vector<Enemy> enemies = world.getEnemies();
 
-	enemies.push_back(*(new Enemy(enemyTexture, 400, 360, font)));
 	Player player(playerTexture, hpBar, config.playerStartingX, config.playerStartingY, font);
 
 
@@ -954,14 +981,16 @@ int main() {
 
 		//Updating all objects.
 		player.update(time, levelMap, &config, world);
-		for(int i = 0; i < enemies.size(); ++i)	enemies[i].update(time, levelMap, &config, world);
-		for(int i = 0; i < drops.size(); ++i)	drops[i].update(time);
+		for(int i = 0; i < enemies.size(); ++i)	
+			enemies[i].update(time, levelMap, &config, world, player);
+		for(int i = 0; i < drops.size(); ++i)
+			drops[i].update(time);
 
 
 		//Resolving collisions. Should move to World class methods.
-		for(int i = 0; i < enemies.size(); ++i)
-			if((player.getRect().intersects(enemies[i].getRect())) && (enemies[i].isReadyToAttack()))
-				enemies[i].dealDamage(player);
+		//for(int i = 0; i < enemies.size(); ++i)
+		//	if((player.getRect().intersects(enemies[i].getRect())) && (enemies[i].isReadyToAttack()))
+		//		enemies[i].dealDamage(player);
 
 		for(int i = 0; i < drops.size(); ++i)
 			if((player.getRect().intersects(drops[i].getRect())) && (~drops[i].isMarkedForRemoval()) && (player.getHP() != player.getMaxHP()))
