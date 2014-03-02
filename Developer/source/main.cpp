@@ -11,15 +11,6 @@
 #include <sstream>
 #include <vector>
 
-//Class includes.
-//#include <World.hpp>
-//#include <Player.hpp>
-//#include <Enemy.hpp>
-//#include <DropItem.hpp>
-//#include <DataTypes.hpp>
-//#include <InputComponent.hpp>
-
-
 
 //FONT - BIG.
 //http://patorjk.com/software/taag/
@@ -85,26 +76,72 @@ struct config {
 };
 
 
+
+//CLASS PROTOTYPES.
+class World;
+class Player;
+
+
+//   _____                                             _       
+//  / ____|                                           | |      
+// | |     ___  _ __ ___  _ __   ___  _ __   ___ _ __ | |_ ___ 
+// | |    / _ \| '_ ` _ \| '_ \ / _ \| '_ \ / _ \ '_ \| __/ __|
+// | |___| (_) | | | | | | |_) | (_) | | | |  __/ | | | |_\__ \
+//  \_____\___/|_| |_| |_| .__/ \___/|_| |_|\___|_| |_|\__|___/
+//                       | |                                   
+//                       |_|
+//
+
+
+//Base.
+class InputComponent {
+public:
+
+	virtual							~InputComponent();
+	virtual void					update(Player&) = 0;
+
+};
+
+class PhysicsComponent {
+public:
+
+	virtual							~PhysicsComponent();
+	virtual void					update(Player&, World&, int, float) = 0;
+
+};
+
+//Player.
+class PlayerInputComponent : public InputComponent {
+public:
+
+	virtual void					update(Player&);
+
+};
+
+class PlayerPhysicsComponent : public PhysicsComponent {
+public:
+
+	virtual void					update(Player&, World&, int, float);
+
+};
+
+
 //   _____ _                         
 //  / ____| |                        
 // | |    | | __ _ ___ ___  ___  ___ 
 // | |    | |/ _` / __/ __|/ _ \/ __|
 // | |____| | (_| \__ \__ \  __/\__ \
 //  \_____|_|\__,_|___/___/\___||___/
-//         
-
-
-//PROTOTYPES.
-class World;
+//       
 
 
 //Player.hpp
 class Player {
 public:
 
-									Player(sf::Texture&, sf::Texture&, int, int, sf::Font&);
+									Player(sf::Texture&, sf::Texture&, int, int, sf::Font&, InputComponent*, PhysicsComponent*);
 	void							update(float, std::vector<std::vector<int>>, struct config*, World&);
-	void							getMessage(int);
+	void							recieveMessage(int);
 	void							takeDamage(float);
 	void							heal(float);
 
@@ -121,10 +158,12 @@ public:
 
 	void							setSpeed(float);
 	void							setMovement(sf::Vector2f);
+	void							setRect(sf::FloatRect);
 
 private:
 
-	//InputComponent					mInput;
+	InputComponent*					mInput;
+	PhysicsComponent*				mPhysics;
 
 	sf::Vector2f					mMovement;
 	float							mSpeed;
@@ -225,7 +264,7 @@ public:
 
 									World();
 									World(int, int);
-	void							resolveCollision(sf::FloatRect&, sf::Vector2f, int, int);
+	void							resolveMapCollision(sf::FloatRect&, sf::Vector2f, int, int);
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
@@ -283,39 +322,55 @@ private:
 };
 
 
-//   _____                                             _       
-//  / ____|                                           | |      
-// | |     ___  _ __ ___  _ __   ___  _ __   ___ _ __ | |_ ___ 
-// | |    / _ \| '_ ` _ \| '_ \ / _ \| '_ \ / _ \ '_ \| __/ __|
-// | |___| (_) | | | | | | |_) | (_) | | | |  __/ | | | |_\__ \
-//  \_____\___/|_| |_| |_| .__/ \___/|_| |_|\___|_| |_|\__|___/
-//                       | |                                   
-//                       |_|
+//   _____                                             _      __  __      _   _               _     
+//  / ____|                                           | |    |  \/  |    | | | |             | |    
+// | |     ___  _ __ ___  _ __   ___  _ __   ___ _ __ | |_   | \  / | ___| |_| |__   ___   __| |___ 
+// | |    / _ \| '_ ` _ \| '_ \ / _ \| '_ \ / _ \ '_ \| __|  | |\/| |/ _ \ __| '_ \ / _ \ / _` / __|
+// | |___| (_) | | | | | | |_) | (_) | | | |  __/ | | | |_   | |  | |  __/ |_| | | | (_) | (_| \__ \
+//  \_____\___/|_| |_| |_| .__/ \___/|_| |_|\___|_| |_|\__|  |_|  |_|\___|\__|_| |_|\___/ \__,_|___/
+//                       | |                                                                        
+//                       |_|  
 //
 
 
-/*
-class InputComponent {
-public:
+//InputComponent.cpp
+InputComponent::~InputComponent() {}
 
-	void update(Player& player) {
+//PhysicsComponent.cpp
+PhysicsComponent::~PhysicsComponent() {}
 
-		sf::Vector2f movement = player.getMovement();
+//PlayerInputComponent.cpp
+void PlayerInputComponent::update(Player& player) {
 
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	movement.y -= player.getSpeed();
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += player.getSpeed();
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getSpeed();
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getSpeed();
+	sf::Vector2f movement = player.getMovement();
 
-		player.setMovement(movement);
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	movement.y -= player.getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += player.getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getSpeed();
 
-	}
+	player.setMovement(movement);
 
-private:
+}
+
+//PlayerPhysicsComponent.cpp
+void PlayerPhysicsComponent::update(Player& player, World& world, int tileSize, float deltaTime) {
 	
+	sf::FloatRect rect = player.getRect();
+	sf::Vector2f movement = player.getMovement();
 
-};
-*/
+	rect.left += movement.x * deltaTime;
+	world.resolveMapCollision(rect, movement, 0, tileSize);
+	rect.top += movement.y * deltaTime;
+	world.resolveMapCollision(rect, movement, 1, tileSize);
+
+	//movement.x = 0;
+	//movement.y = 0;
+
+	//player.setMovement(movement);
+	player.setRect(rect);
+	
+}
 
 
 //   _____ _                                  _   _               _     
@@ -344,7 +399,7 @@ World::World(int mapHeight, int mapWidth) {
 
 }
 
-void World::resolveCollision(sf::FloatRect& rect, sf::Vector2f movement, int direction, int tileSize) {
+void World::resolveMapCollision(sf::FloatRect& rect, sf::Vector2f movement, int direction, int tileSize) {
 
 	for(int i = rect.top / tileSize; i < (rect.top + rect.height) / tileSize; ++i)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
@@ -473,7 +528,9 @@ void Game::render() {
 //
 //Player.cpp
 //
-Player::Player(sf::Texture& texture, sf::Texture& hpImage, int x, int y, sf::Font& font) {
+Player::Player(sf::Texture& texture, sf::Texture& hpImage, int x, int y, sf::Font& font, InputComponent* input, PhysicsComponent* physics)
+:mInput(input),
+mPhysics(physics) {
 
 	mSprite.setTexture(texture);
 	mRect = sf::FloatRect(x, y, 120, 110);					//Character x, y, width, height.
@@ -507,19 +564,8 @@ Player::Player(sf::Texture& texture, sf::Texture& hpImage, int x, int y, sf::Fon
 
 void Player::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
 
-	//Player controls (testing).
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	mMovement.y -= mSpeed;
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	mMovement.y += mSpeed;
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	mMovement.x -= mSpeed;
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	mMovement.x += mSpeed;
-	//mInput.update(*this);
-
-
-	//Movement and resolving colisions (via the World class).
-	mRect.left += mMovement.x * deltaTime;
-	world.resolveCollision(mRect, mMovement, 0, config->tileSize);
-	mRect.top += mMovement.y * deltaTime;
-	world.resolveCollision(mRect, mMovement, 1, config->tileSize);
+	mInput->update(*this);
+	mPhysics->update(*this, world, config->tileSize, deltaTime);
 
 	//Player animation.
 	mCurrentFrame += mAnimationSpeed * deltaTime;
@@ -551,7 +597,7 @@ void Player::update(float deltaTime, std::vector<std::vector<int>> levelMap, str
 
 }
 
-void Player::getMessage(int message) {
+void Player::recieveMessage(int message) {
 	mMessages.push_back(message);
 }
 
@@ -612,6 +658,10 @@ void Player::setSpeed(float speed) {
 
 void Player::setMovement(sf::Vector2f movement) {
 	mMovement = movement;
+}
+
+void Player::setRect(sf::FloatRect rect) {
+	mRect = rect;
 }
 
 
@@ -684,10 +734,10 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 
 	mRect.left += mMovement.x * deltaTime;
 	//collision(levelMap, config);
-	world.resolveCollision(mRect, mMovement, 0, config->tileSize);
+	world.resolveMapCollision(mRect, mMovement, 0, config->tileSize);
 	mRect.top += mMovement.y * deltaTime;
 	//collision(levelMap, config);
-	world.resolveCollision(mRect, mMovement, 1, config->tileSize);
+	world.resolveMapCollision(mRect, mMovement, 1, config->tileSize);
 
 	//Enemy animation.
 	mCurrentFrame += mAnimationSpeed * deltaTime;
@@ -930,6 +980,12 @@ int main() {
 	textPlayerCoordinates.setColor(sf::Color::Color(125, 145, 176));
 	textPlayerCoordinates.setPosition(0, textPlayerCoordinates.getCharacterSize() * 3);
 
+	//HUD Mouse coordinates.
+	sf::Text textMouseCoordinates("", font, 30);
+	textMouseCoordinates.setStyle(sf::Text::Bold);
+	textMouseCoordinates.setColor(sf::Color::Color(125, 145, 176));
+	textMouseCoordinates.setPosition(0, textMouseCoordinates.getCharacterSize() * 6);
+
 	//Loading textures.
 	sf::Texture hpBar;
 	sf::Texture tileSet;
@@ -958,7 +1014,7 @@ int main() {
 	std::vector<DropItem> drops = world.getDrops();
 	std::vector<Enemy> enemies = world.getEnemies();
 
-	Player player(playerTexture, hpBar, config.playerStartingX, config.playerStartingY, font);
+	Player player(playerTexture, hpBar, config.playerStartingX, config.playerStartingY, font, new PlayerInputComponent(), new PlayerPhysicsComponent);
 
 
 	//Creating window, view.
@@ -1017,16 +1073,19 @@ int main() {
 		std::ostringstream hudMana;
 		std::ostringstream hudEnemyCount;
 		std::ostringstream hudPlayerCoordinates;
+		std::ostringstream hudMouseCoordinates;
 
 		hudHealth << player.getHP();
 		hudMana << player.getMP();
 		hudEnemyCount << "Number of enemies: " << enemies.size();
 		hudPlayerCoordinates << "X: " << player.getRect().left + config.tileSize / 2 << '\n' << "Y: " << player.getRect().top + config.tileSize / 2;
+		hudMouseCoordinates << "X: " << sf::Mouse::getPosition(mWindow).x << '\n' << "Y: " << sf::Mouse::getPosition(mWindow).y;
 
 		textMana.setString(hudMana.str());
 		textHealth.setString(hudHealth.str());
 		textEnemyCount.setString(hudEnemyCount.str());
 		textPlayerCoordinates.setString(hudPlayerCoordinates.str());
+		textMouseCoordinates.setString(hudMouseCoordinates.str());
 
 
 		//View.
@@ -1045,6 +1104,7 @@ int main() {
 		textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
 		textEnemyCount.setPosition(mViewPosition.x, mViewPosition.y + textEnemyCount.getCharacterSize() * 2);
 		textPlayerCoordinates.setPosition(mViewPosition.x, mViewPosition.y + textPlayerCoordinates.getCharacterSize() * 3);
+		textMouseCoordinates.setPosition(mViewPosition.x, mViewPosition.y + textPlayerCoordinates.getCharacterSize() * 6);
 
 
 		//Clearing the screen.
@@ -1086,6 +1146,7 @@ int main() {
 		mWindow.draw(textMana);
 		mWindow.draw(textEnemyCount);
 		mWindow.draw(textPlayerCoordinates);
+		mWindow.draw(textMouseCoordinates);
 		mWindow.display();
 
 		//Deleting objects marked for removal.
