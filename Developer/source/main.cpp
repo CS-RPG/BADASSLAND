@@ -80,7 +80,7 @@ struct config {
 //CLASS PROTOTYPES.
 class World;
 class Player;
-
+class Enemy;
 
 //   _____                                             _       
 //  / ____|                                           | |      
@@ -98,7 +98,7 @@ class InputComponent {
 public:
 
 	virtual							~InputComponent();
-	virtual void					update(Player&) = 0;
+	virtual void					update(Player&, World&) = 0;
 
 };
 
@@ -110,11 +110,20 @@ public:
 
 };
 
+class GraphicsComponent {
+public:
+
+	virtual							~GraphicsComponent();
+	virtual void					update(Player&, float) = 0;
+	virtual void					draw(sf::RenderWindow&) = 0;
+
+};
+
 //Player.
 class PlayerInputComponent : public InputComponent {
 public:
 
-	virtual void					update(Player&);
+	virtual void					update(Player&, World&);
 
 };
 
@@ -122,6 +131,43 @@ class PlayerPhysicsComponent : public PhysicsComponent {
 public:
 
 	virtual void					update(Player&, World&, int, float);
+
+};
+
+class PlayerGraphicsComponent : public GraphicsComponent {
+public:
+
+									PlayerGraphicsComponent(sf::Texture*, sf::Texture*, sf::Font*);
+	virtual void					update(Player&, float);
+	virtual void					draw(sf::RenderWindow&);
+
+private:
+
+	sf::Texture*					mTexture;
+	sf::Texture*					mHPBarTexture;
+
+	sf::Sprite						mCurrentSprite;
+
+	sf::Sprite						mSpriteStill;
+	sf::Sprite						mSpriteUp;
+	sf::Sprite						mSpriteDown;
+	sf::Sprite						mSpriteLeft;
+	sf::Sprite						mSpriteRight;
+
+	sf::Sprite						mHPBarSprite;
+	sf::Text						mText;
+
+	float							mCurrentFrame;
+	float							mAnimationSpeed;
+	int								mFrameCount;
+
+};
+
+//Enemy.
+class EnemyInputComponent : public InputComponent {
+public:
+
+	virtual void					update(Enemy&, Player&);
 
 };
 
@@ -139,44 +185,42 @@ public:
 class Player {
 public:
 
-									Player(sf::Texture&, sf::Texture&, int, int, sf::Font&, InputComponent*, PhysicsComponent*);
+									Player(int, int, InputComponent*, PhysicsComponent*, GraphicsComponent*);
 	void							update(float, std::vector<std::vector<int>>, struct config*, World&);
 	void							recieveMessage(int);
 	void							takeDamage(float);
 	void							heal(float);
 
 	sf::FloatRect					getRect();
-	sf::Sprite						getSprite();
-	sf::Sprite						getHpSprite();
-	sf::Text						getTextName();
-	float							getSpeed();
+	sf::String						getName();
 	sf::Vector2f					getMovement();
+	float							getSpeed();
+	int								getDirection();
 	float							getHP();
 	float							getMaxHP();
 	float							getMP();
 	float							getMaxMP();
+	GraphicsComponent*&				getGraphics();
 
-	void							setSpeed(float);
+
 	void							setMovement(sf::Vector2f);
+	void							setSpeed(float);
+	void							setDirection(int);
 	void							setRect(sf::FloatRect);
 
 private:
 
 	InputComponent*					mInput;
 	PhysicsComponent*				mPhysics;
+	GraphicsComponent*				mGraphics;
 
 	sf::Vector2f					mMovement;
 	float							mSpeed;
+	int								mDirection;
+	int								mLastDirection;
 
 	sf::FloatRect					mRect;
-	sf::Sprite						mSprite;
-	sf::Sprite						mHpSprite;
 	sf::String						mName;
-	sf::Text						mTextName;
-
-	float							mCurrentFrame;
-	float							mAnimationSpeed;
-	static const int				mFrameCount = 10;
 
 	bool							mIsAlive;
 	float							mHP;
@@ -197,15 +241,21 @@ public:
 	void							update(float, std::vector<std::vector<int>>, struct config*, World&, Player&);
 	void							collision(std::vector<std::vector<int>>, struct config*);
 	void							dealDamage(Player&);
-	void							detectTargets(World&);
 	void							getMessage(int);
 
 	sf::FloatRect					getRect();
 	sf::Sprite						getSprite();
 	sf::Text						getTextName();
+	float							getAttackRange();
+	float							getSpeed();
 	bool							isReadyToAttack();
 
+	void							setMovement(sf::Vector2f);
+	void							setRect(sf::FloatRect);
+
 private:
+
+	InputComponent*					mInput;
 
 	sf::Vector2f					mMovement;
 	int								mDirection;
@@ -279,12 +329,21 @@ private:
 
 	std::vector<std::vector<int>>	mLevelMap;
 	std::vector<std::vector<bool>>	mCollisionMap;
+
 	int								mMapHeight;
 	int								mMapWidth;
 
 	//Player							mPlayer;
 	std::vector<Enemy>				mEnemies;
 	std::vector<DropItem>			mDrops;
+
+};
+
+//Graphics.hpp
+class Graphics {
+public:
+
+	void							draw();
 
 };
 
@@ -298,6 +357,8 @@ public:
 	void							processEvents();
 	void							render();
 
+	void							loadConfigFile(config&);
+
 private:
 
 	sf::RenderWindow				mWindow;
@@ -310,6 +371,7 @@ private:
 	sf::Clock						mSpawnClock;
 	sf::Time						mTimePerFrame;
 
+	config							mConfig;
 	std::vector<std::vector<int>>	mLevelMap;
 			
 	int								mTileSize;						
@@ -333,14 +395,23 @@ private:
 //
 
 
+//
+//BASE.
+//
 //InputComponent.cpp
 InputComponent::~InputComponent() {}
 
 //PhysicsComponent.cpp
 PhysicsComponent::~PhysicsComponent() {}
 
+//GraphicsComponent.cpp
+GraphicsComponent::~GraphicsComponent() {}
+
+//
+//PLAYER
+//
 //PlayerInputComponent.cpp
-void PlayerInputComponent::update(Player& player) {
+void PlayerInputComponent::update(Player& player, World& world) {
 
 	sf::Vector2f movement = player.getMovement();
 
@@ -348,6 +419,16 @@ void PlayerInputComponent::update(Player& player) {
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += player.getSpeed();
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getSpeed();
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getSpeed();
+
+	if((movement.x == 0) && (movement.y == 0))	player.setDirection(0);
+	if((movement.x == 0) && (movement.y < 0))	player.setDirection(1);
+	if((movement.x > 0) && (movement.y < 0))	player.setDirection(2);
+	if((movement.x > 0) && (movement.y == 0))	player.setDirection(3);
+	if((movement.x > 0) && (movement.y > 0))	player.setDirection(4);
+	if((movement.x == 0) && (movement.y > 0))	player.setDirection(5);
+	if((movement.x < 0) && (movement.y > 0))	player.setDirection(6);
+	if((movement.x < 0) && (movement.y == 0))	player.setDirection(7);
+	if((movement.x < 0) && (movement.y < 0))	player.setDirection(8);
 
 	player.setMovement(movement);
 
@@ -364,12 +445,123 @@ void PlayerPhysicsComponent::update(Player& player, World& world, int tileSize, 
 	rect.top += movement.y * deltaTime;
 	world.resolveMapCollision(rect, movement, 1, tileSize);
 
-	//movement.x = 0;
-	//movement.y = 0;
+	movement.x = 0;
+	movement.y = 0;
 
-	//player.setMovement(movement);
+	player.setMovement(movement);
 	player.setRect(rect);
 	
+}
+
+//PlayerGraphicsComponent.cpp
+PlayerGraphicsComponent::PlayerGraphicsComponent(sf::Texture* texture, sf::Texture* hpTexture, sf::Font* font)
+:mTexture(texture) {
+
+	mCurrentSprite.setTexture(*mTexture);
+	mSpriteStill.setTexture(*mTexture);
+	mSpriteUp.setTexture(*mTexture);
+	mSpriteDown.setTexture(*mTexture);
+	mSpriteLeft.setTexture(*mTexture);
+	mSpriteRight.setTexture(*mTexture);
+
+	mSpriteStill.setTextureRect(sf::IntRect(0, 15, 120, 120));
+	mSpriteUp.setTextureRect(sf::IntRect(0, 787, 0, 0));
+	mSpriteDown.setTextureRect(sf::IntRect(0, 535, 0, 0));
+	mSpriteLeft.setTextureRect(sf::IntRect(0, 667, 0, 0));
+	mSpriteRight.setTextureRect(sf::IntRect(0, 925, 0, 0));
+
+	mHPBarSprite.setTexture(*hpTexture);
+	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
+
+	mText.setFont(*font);
+	mText.setCharacterSize(30);
+	mText.setStyle(sf::Text::Bold);
+	mText.setColor(sf::Color::Red);
+
+	mCurrentSprite = mSpriteStill;
+
+	mFrameCount = 10;
+	mCurrentFrame= 0;
+
+}
+
+void PlayerGraphicsComponent::update(Player& player, float deltaTime) {
+
+	if(player.getDirection() == 0) mCurrentSprite = mSpriteStill;
+	if(player.getDirection() == 3) mCurrentSprite = mSpriteRight;
+	if(player.getDirection() == 7) mCurrentSprite = mSpriteLeft;
+	if(player.getDirection() == 5) mCurrentSprite = mSpriteDown;
+	if(player.getDirection() == 1) mCurrentSprite = mSpriteUp;
+	
+	mAnimationSpeed = player.getSpeed() * 0.05;
+	mCurrentFrame += mAnimationSpeed * deltaTime;
+	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
+	
+	if(player.getDirection() != 0)
+		mCurrentSprite.setTextureRect(sf::IntRect(	player.getRect().width * int(mCurrentFrame),
+													mCurrentSprite.getTextureRect().top,
+													player.getRect().width,
+													player.getRect().height  ));
+
+	//HP bar.
+	float hpPercentage = player.getHP() / player.getMaxHP();
+	if(hpPercentage >= 0.6)
+		mHPBarSprite.setColor(sf::Color::Green);
+	else if((hpPercentage >= 0.35) && (hpPercentage < 0.6))
+		mHPBarSprite.setColor(sf::Color::Yellow);
+	else if(hpPercentage < 0.35)
+		mHPBarSprite.setColor(sf::Color::Red);
+
+	mHPBarSprite.setTextureRect(sf::IntRect(100 * (1 - hpPercentage), 0, 100, 10));
+	mHPBarSprite.setPosition(player.getRect().left, player.getRect().top + player.getRect().height);
+
+	//Text.
+	mText.setString(player.getName());
+	mText.setPosition(player.getRect().left, player.getRect().top - mText.getCharacterSize());
+
+	mCurrentSprite.setPosition(player.getRect().left, player.getRect().top);
+
+}
+
+void PlayerGraphicsComponent::draw(sf::RenderWindow& window) {
+	
+	window.draw(mCurrentSprite);
+	window.draw(mHPBarSprite);
+	window.draw(mText);
+
+}
+
+//
+//ENEMY
+//
+//EnemyInputComponent.cpp
+void EnemyInputComponent::update(Enemy& enemy, Player& player) {
+
+	float deltaX = (player.getRect().left + player.getRect().width / 2) - (enemy.getRect().left + enemy.getRect().width / 2);
+	float deltaY = (player.getRect().top + player.getRect().height / 2) - (enemy.getRect().top + enemy.getRect().height / 2);
+	float distance = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+	
+	sf::Vector2f movement;
+
+	if(distance > enemy.getAttackRange()) {
+		if(player.getRect().left > enemy.getRect().left)
+			movement.x = enemy.getSpeed();
+		else
+			movement.x = -enemy.getSpeed();
+
+		if(player.getRect().top > enemy.getRect().top)
+			movement.y = enemy.getSpeed();
+		else
+			movement.y = -enemy.getSpeed();
+	} else {
+		movement.x = 0;
+		movement.y = 0;
+		if(enemy.isReadyToAttack())
+			enemy.dealDamage(player);
+	}
+
+	enemy.setMovement(movement);
+
 }
 
 
@@ -472,6 +664,8 @@ int World::getMapWidth() {
 //
 void Game::run() {
 
+	loadConfigFile(mConfig);
+
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
 	mTimePerFrame = sf::seconds(1.f/60.f);
 
@@ -523,36 +717,58 @@ void Game::render() {
 
 }
 
+void Game::loadConfigFile(config& config) {
+
+	std::ifstream inputFile;
+	inputFile.open("config.txt");
+	
+	std::string temp;
+
+	getline(inputFile, temp);
+	inputFile >> config.screenWidth >> config.screenHeight;
+	inputFile.get();
+	inputFile.get();
+
+	getline(inputFile, temp);
+	inputFile >> config.tileSize;
+	inputFile.get();
+	inputFile.get();
+
+	getline(inputFile, temp);
+	inputFile >> config.playerStartingX >> config.playerStartingY;
+	inputFile.get();
+	inputFile.get();
+
+	getline(inputFile, temp);
+	inputFile >> config.gameSpeed;
+	inputFile.get();
+	inputFile.get();
+
+	getline(inputFile, temp);
+	inputFile >> config.levelMapName;
+
+	inputFile.close();
+	return;
+
+}
+
 
 
 //
 //Player.cpp
 //
-Player::Player(sf::Texture& texture, sf::Texture& hpImage, int x, int y, sf::Font& font, InputComponent* input, PhysicsComponent* physics)
+Player::Player(int x, int y, InputComponent* input, PhysicsComponent* physics, GraphicsComponent* graphics)
 :mInput(input),
-mPhysics(physics) {
+mPhysics(physics),
+mGraphics(graphics) {
 
-	mSprite.setTexture(texture);
 	mRect = sf::FloatRect(x, y, 120, 110);					//Character x, y, width, height.
 		
 	mName = "Player 1";
-	mTextName.setString(mName);
-	mTextName.setFont(font);
-	mTextName.setCharacterSize(30);
-	mTextName.setStyle(sf::Text::Bold);
-	mTextName.setColor(sf::Color::Red);
-		
-	mHpSprite.setTexture(hpImage);
-	mHpSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
-
-	mSprite.setTextureRect(sf::IntRect(0, 15, 120, 110));
 	
 	mSpeed = 0.1;
 	mMovement.x = 0;
 	mMovement.y = 0;
-
-	mCurrentFrame = 0;
-	mAnimationSpeed = 0.005;
 
 	mIsAlive = true;
 	mHP = 150;
@@ -564,36 +780,9 @@ mPhysics(physics) {
 
 void Player::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
 
-	mInput->update(*this);
+	mInput->update(*this, world);
 	mPhysics->update(*this, world, config->tileSize, deltaTime);
-
-	//Player animation.
-	mCurrentFrame += mAnimationSpeed * deltaTime;
-	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
-
-	if(mMovement.x > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 925, mRect.width, mRect.height));
-	if(mMovement.x < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 667, mRect.width, mRect.height));
-	if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
-	if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
-
-	mSprite.setPosition(mRect.left, mRect.top);
-
-	//HP bar.
-	float hpPercentage = mHP / mMaxHP;
-	if(hpPercentage >= 0.6)
-		mHpSprite.setColor(sf::Color::Green);
-	else if((hpPercentage >= 0.35) && (hpPercentage < 0.6))
-		mHpSprite.setColor(sf::Color::Yellow);
-	else if(hpPercentage < 0.35)
-		mHpSprite.setColor(sf::Color::Red);
-
-	mHpSprite.setTextureRect(sf::IntRect(100 * (1 - hpPercentage), 0, 100, 10));
-	mHpSprite.setPosition(mRect.left, mRect.top + mRect.height);
-	mTextName.setPosition(mRect.left, mRect.top - mTextName.getCharacterSize());
-
-	//Stopping the player.
-	mMovement.x = 0;
-	mMovement.y = 0;
+	mGraphics->update(*this, deltaTime);
 
 }
 
@@ -616,16 +805,8 @@ sf::FloatRect Player::getRect() {
 	return mRect;
 }
 
-sf::Sprite Player::getSprite() {
-	return mSprite;
-}
-
-sf::Sprite Player::getHpSprite() {
-	return mHpSprite;
-}
-
-sf::Text Player::getTextName() {
-	return mTextName;
+sf::String Player::getName() {
+	return mName;
 }
 
 float Player::getSpeed() {
@@ -634,6 +815,10 @@ float Player::getSpeed() {
 
 sf::Vector2f Player::getMovement() {
 	return mMovement;
+}
+
+int Player::getDirection() {
+	return mDirection;
 }
 
 float Player::getHP() {
@@ -652,12 +837,20 @@ float Player::getMaxMP() {
 	return mMaxMP;
 }
 
+GraphicsComponent*& Player::getGraphics() {
+	return mGraphics;
+}
+
 void Player::setSpeed(float speed) {
 	mSpeed = speed;
 }
 
 void Player::setMovement(sf::Vector2f movement) {
 	mMovement = movement;
+}
+
+void Player::setDirection(int direction) {
+	mDirection = direction;
 }
 
 void Player::setRect(sf::FloatRect rect) {
@@ -696,7 +889,7 @@ Enemy::Enemy(sf::Texture& texture, int x, int y, sf::Font& font) {
 }
 
 void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world, Player& player) {
-
+	
 	float deltaX = (player.getRect().left + player.getRect().width / 2) - (mRect.left + mRect.width / 2);
 	float deltaY = (player.getRect().top + player.getRect().height / 2) - (mRect.top + mRect.height / 2);
 	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
@@ -704,21 +897,21 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 	//New awesome super-AI.
 	if(distance > mAttackRange) {
 		if(player.getRect().left > mRect.left)
-			mMovement.x = mSpeed;
+			mMovement.x += mSpeed;
 		else
-			mMovement.x = -mSpeed;
+			mMovement.x -= mSpeed;
 
 		if(player.getRect().top > mRect.top)
-			mMovement.y = mSpeed;
+			mMovement.y += mSpeed;
 		else
-			mMovement.y = -mSpeed;
+			mMovement.y -= mSpeed;
 	} else {
 		mMovement.x = 0;
 		mMovement.y = 0;
 		if(isReadyToAttack())
 			dealDamage(player);
 	}
-
+	
 	/*
 	//Stupid random AI.
 	if(mMovementClock.getElapsedTime().asSeconds() > 5) {
@@ -731,7 +924,7 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 	if(mDirection == 2) {mMovement.x = 0;		mMovement.y = mSpeed;}
 	if(mDirection == 3) {mMovement.x = -mSpeed;	mMovement.y = 0;}
 	*/
-
+	//mInput->update(*this, player);
 	mRect.left += mMovement.x * deltaTime;
 	//collision(levelMap, config);
 	world.resolveMapCollision(mRect, mMovement, 0, config->tileSize);
@@ -750,6 +943,9 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 		if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
 		if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
 	}
+
+	mMovement.x = 0;
+	mMovement.y = 0;
 
 	mSprite.setPosition(mRect.left, mRect.top);
 	mTextName.setPosition(mRect.left, mRect.top - mTextName.getCharacterSize());
@@ -778,10 +974,6 @@ void Enemy::dealDamage(Player& player) {
 	player.takeDamage(damage);
 	mDamageClock.restart();
 }
-
-void detectTargets(World& world) {
-	
-}
 	
 //Inner communication between objects (between the components in the future).
 void Enemy::getMessage(int message) {
@@ -800,6 +992,14 @@ sf::Text Enemy::getTextName() {
 	return mTextName;
 }
 
+float Enemy::getAttackRange() {
+	return mAttackRange;
+}
+
+float Enemy::getSpeed() {
+	return mSpeed;
+}
+
 bool Enemy::isReadyToAttack() {
 	if(mDamageClock.getElapsedTime().asSeconds() > mSpeed * 10)
 		return true;
@@ -807,7 +1007,13 @@ bool Enemy::isReadyToAttack() {
 		return false;
 }
 
+void Enemy::setMovement(sf::Vector2f movement) {
+	mMovement = movement;
+}
 
+void Enemy::setRect(sf::FloatRect rect) {
+	mRect = rect;
+}
 
 //
 //DropItem.cpp
@@ -1014,7 +1220,10 @@ int main() {
 	std::vector<DropItem> drops = world.getDrops();
 	std::vector<Enemy> enemies = world.getEnemies();
 
-	Player player(playerTexture, hpBar, config.playerStartingX, config.playerStartingY, font, new PlayerInputComponent(), new PlayerPhysicsComponent);
+	Player player(config.playerStartingX, config.playerStartingY,
+		new PlayerInputComponent(), 
+		new PlayerPhysicsComponent(), 
+		new PlayerGraphicsComponent(&playerTexture, &hpBar, &font));
 
 
 	//Creating window, view.
@@ -1057,13 +1266,13 @@ int main() {
 	
 		//Spawning elves.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			enemies.push_back(*(new Enemy(enemyTexture, 240, 240, font)));
+			enemies.push_back( *(new Enemy(enemyTexture, 240, 240, font)) );
 			spawnClock.restart();
 		}
 
 		//Spawning health potions.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			drops.push_back(*(new DropItem(healthPotionTexture, 40, player.getRect().left + (rand() % 2 - 1) * (rand() % 100), player.getRect().top + (rand() % 2 - 1) * (rand() % 100))));
+			drops.push_back( *(new DropItem(healthPotionTexture, 40, player.getRect().left + (rand() % 2 - 1) * (rand() % 100), player.getRect().top + (rand() % 2 - 1) * (rand() % 100))) );
 			spawnClock.restart();
 		}
 
@@ -1138,9 +1347,8 @@ int main() {
 		for(int i = 0; i < drops.size(); ++i)
 			mWindow.draw(drops[i].getSprite());
 
-		mWindow.draw(player.getSprite());
-		mWindow.draw(player.getHpSprite());
-		mWindow.draw(player.getTextName());
+		//mWindow.draw(player.getSprite());
+		player.getGraphics()->draw(mWindow);
 
 		mWindow.draw(textHealth);
 		mWindow.draw(textMana);
