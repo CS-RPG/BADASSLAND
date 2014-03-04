@@ -26,8 +26,9 @@
 //                              |___/|_|   
 //
 
+
 //DataTypes.hpp
-struct attributes {
+struct Attributes {
 
      int							strength;				//Carry weight, melee damage. 
      int							endurance;				//HP, resistances.
@@ -37,7 +38,7 @@ struct attributes {
 
 };
 
-struct resistances {
+struct Resistances {
 
      int							poison;
      int							paralize;
@@ -45,14 +46,6 @@ struct resistances {
      int							fire;
      int							ice;
      int							earth;
-
-};
-
-struct healthBar {
-
-	sf::Sprite						mSprite;
-	int								mWidth;
-	int								mHeight;
 
 };
 
@@ -72,15 +65,14 @@ struct config {
 	float							offsetX;				//Map scrolling
 	float							offsetY;				//offset.
 	
-
 };
 
 
 
 //CLASS PROTOTYPES.
 class World;
-class Player;
 class Enemy;
+class GameObject;
 
 //   _____                                             _       
 //  / ____|                                           | |      
@@ -98,7 +90,7 @@ class InputComponent {
 public:
 
 	virtual							~InputComponent();
-	virtual void					update(Player&, World&) = 0;
+	virtual void					update(GameObject&, World&) = 0;
 
 };
 
@@ -106,7 +98,24 @@ class PhysicsComponent {
 public:
 
 	virtual							~PhysicsComponent();
-	virtual void					update(Player&, World&, int, float) = 0;
+	virtual void					update(GameObject&, World&, int, float) = 0;
+
+	sf::FloatRect					getRect();
+	sf::Vector2f					getMovement();
+	int								getDirection();
+	float							getSpeed();
+
+	void							setRect(sf::FloatRect);
+	void							setMovement(sf::Vector2f);
+	void							setDirection(int);
+	void							setSpeed(float);
+
+private:
+
+	sf::FloatRect					mRect;
+	sf::Vector2f					mMovement;
+	int								mDirection;
+	float							mSpeed;
 
 };
 
@@ -114,8 +123,79 @@ class GraphicsComponent {
 public:
 
 	virtual							~GraphicsComponent();
-	virtual void					update(Player&, float) = 0;
+	virtual void					update(GameObject&, float) = 0;
 	virtual void					draw(sf::RenderWindow&) = 0;
+
+	sf::Texture&					getTexture();
+	void							setTexture(sf::Texture&);
+
+private:
+
+	sf::Texture						mTexture;
+
+};
+
+class CombatComponent {
+public:
+
+	virtual							~CombatComponent();
+	virtual void					attack(GameObject*) = 0;
+	virtual void					takeDamage(float) = 0;
+	//virtual void					heal(float) = 0;
+
+	float							getHP();
+	float							getMaxHP();
+	float							getDT();
+	bool							isAlive();
+
+	float							getAttackRange();
+	float							getAttackSpeed();
+	float							getDamage();
+	bool							isReadyToAttack();
+
+	void							setHP(float);
+	void							setMaxHP(float);
+	void							setDT(float);
+	void							kill();
+	void							revive();
+
+	void							setAttackRange(float);
+	void							setAttackSpeed(float);
+	void							setDamage(float);
+
+	void							restartAttackClock();
+
+private:
+
+	float							mHP;
+	float							mMaxHP;
+	float							mDT;
+	bool							mIsAlive;
+
+	float							mAttackRange;
+	float							mAttackSpeed;
+	float							mDamage;
+
+	sf::Clock						mAttackClock;						
+
+};
+
+class SocialComponent {
+public:
+
+	virtual							~SocialComponent();
+	//virtual void					update(GameObject&) = 0;
+
+	sf::String						getName();
+	sf::String						getFaction();
+
+	void							setName(sf::String);
+	void							setFaction(sf::String);
+
+private:
+
+	sf::String						mName;
+	sf::String						mFaction;
 
 };
 
@@ -123,14 +203,15 @@ public:
 class PlayerInputComponent : public InputComponent {
 public:
 
-	virtual void					update(Player&, World&);
+	virtual void					update(GameObject&, World&);
 
 };
 
 class PlayerPhysicsComponent : public PhysicsComponent {
 public:
 
-	virtual void					update(Player&, World&, int, float);
+									PlayerPhysicsComponent(sf::FloatRect, float);
+	virtual void					update(GameObject&, World&, int, float);
 
 };
 
@@ -138,7 +219,8 @@ class PlayerGraphicsComponent : public GraphicsComponent {
 public:
 
 									PlayerGraphicsComponent(sf::Texture*, sf::Texture*, sf::Font*);
-	virtual void					update(Player&, float);
+
+	virtual void					update(GameObject&, float);
 	virtual void					draw(sf::RenderWindow&);
 
 private:
@@ -163,14 +245,41 @@ private:
 
 };
 
+class PlayerCombatComponent : public CombatComponent {
+public:
+
+									PlayerCombatComponent(int, int, float, float, float);
+	virtual void					attack(GameObject*);
+	virtual void					takeDamage(float);
+	//virtual void					heal(float);
+
+};
+
+class PlayerSocialComponent : public SocialComponent {
+public:
+
+									PlayerSocialComponent(sf::String, sf::String);
+
+};
+
 //Enemy.
 class EnemyInputComponent : public InputComponent {
 public:
 
-	virtual void					update(Enemy&, Player&);
+	virtual void					update(GameObject&, World&);
+
+private:
+
+	float							mFraction;
 
 };
 
+class EnemyPhysicsComponent : public PhysicsComponent {
+public:
+
+	virtual void					update(Enemy&, World&, int, float);
+
+};
 
 //   _____ _                         
 //  / ____| |                        
@@ -181,106 +290,32 @@ public:
 //       
 
 
-//Player.hpp
-class Player {
+//GameObject.hpp
+class GameObject {
 public:
 
-									Player(int, int, InputComponent*, PhysicsComponent*, GraphicsComponent*);
+									GameObject( InputComponent*,
+												PhysicsComponent*,
+												GraphicsComponent*,
+												CombatComponent*,
+												SocialComponent* );
+
 	void							update(float, std::vector<std::vector<int>>, struct config*, World&);
-	void							recieveMessage(int);
-	void							takeDamage(float);
-	void							heal(float);
 
-	sf::FloatRect					getRect();
-	sf::String						getName();
-	sf::Vector2f					getMovement();
-	float							getSpeed();
-	int								getDirection();
-	float							getHP();
-	float							getMaxHP();
-	float							getMP();
-	float							getMaxMP();
+	InputComponent*&				getInput();
+	PhysicsComponent*&				getPhysics();
 	GraphicsComponent*&				getGraphics();
+	CombatComponent*&				getCombat();
+	SocialComponent*&				getSocial();
 
-
-	void							setMovement(sf::Vector2f);
-	void							setSpeed(float);
-	void							setDirection(int);
-	void							setRect(sf::FloatRect);
 
 private:
 
 	InputComponent*					mInput;
 	PhysicsComponent*				mPhysics;
 	GraphicsComponent*				mGraphics;
-
-	sf::Vector2f					mMovement;
-	float							mSpeed;
-	int								mDirection;
-	int								mLastDirection;
-
-	sf::FloatRect					mRect;
-	sf::String						mName;
-
-	bool							mIsAlive;
-	float							mHP;
-	float							mMaxHP;
-	float							mMP;
-	float							mMaxMP;
-
-	std::vector<int>				mMessages;	
-	
-};
-
-//Enemy.hpp
-class Enemy {
-public:
-
-									Enemy(sf::Texture&, int, int, sf::Font&);
-
-	void							update(float, std::vector<std::vector<int>>, struct config*, World&, Player&);
-	void							collision(std::vector<std::vector<int>>, struct config*);
-	void							dealDamage(Player&);
-	void							getMessage(int);
-
-	sf::FloatRect					getRect();
-	sf::Sprite						getSprite();
-	sf::Text						getTextName();
-	float							getAttackRange();
-	float							getSpeed();
-	bool							isReadyToAttack();
-
-	void							setMovement(sf::Vector2f);
-	void							setRect(sf::FloatRect);
-
-private:
-
-	InputComponent*					mInput;
-
-	sf::Vector2f					mMovement;
-	int								mDirection;
-	float							mSpeed;
-
-	sf::FloatRect					mRect;
-	sf::Sprite						mSprite;
-
-	float							mCurrentFrame;
-	float							mAnimationSpeed;
-	static const int				mFrameCount = 10;
-
-	bool							mIsAlive;
-	int								mHP;
-
-	sf::Clock						mDamageClock;
-	sf::Clock						mMovementClock;
-
-	float							mDamage;
-	float							mAttackRange;
-
-	sf::String						mName;
-	sf::Text						mTextName;
-
-	std::vector<int>				mMessages;
+	CombatComponent*				mCombat;
+	SocialComponent*				mSocial;
 
 };
 
@@ -289,8 +324,9 @@ class DropItem {
 public:
 
 									DropItem(sf::Texture&, int, int, int);
+
 	void							update(float);
-	void							action(Player&);
+	void							action(GameObject&);
 
 	sf::FloatRect					getRect();
 
@@ -312,13 +348,15 @@ private:
 class World {
 public:
 
-									World();
+									World(sf::Texture*, sf::Texture*, sf::Font*);
 									World(int, int);
+
 	void							resolveMapCollision(sf::FloatRect&, sf::Vector2f, int, int);
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
-	std::vector<Enemy>&				getEnemies();
+	GameObject*&					getPlayer();
+	std::vector<GameObject>&		getEnemies();
 	std::vector<DropItem>&			getDrops();
 
 	std::vector<std::vector<int>>	getLevelMap();
@@ -327,23 +365,16 @@ public:
 
 private:
 
+	GameObject*						mPlayer;
+
 	std::vector<std::vector<int>>	mLevelMap;
 	std::vector<std::vector<bool>>	mCollisionMap;
 
 	int								mMapHeight;
 	int								mMapWidth;
 
-	//Player							mPlayer;
-	std::vector<Enemy>				mEnemies;
+	std::vector<GameObject>			mEnemies;
 	std::vector<DropItem>			mDrops;
-
-};
-
-//Graphics.hpp
-class Graphics {
-public:
-
-	void							draw();
 
 };
 
@@ -352,6 +383,7 @@ class Game {
 public:
 
 									Game();
+
 	void							run();
 	void							update(sf::Time);
 	void							processEvents();
@@ -401,44 +433,201 @@ private:
 //InputComponent.cpp
 InputComponent::~InputComponent() {}
 
+
+
 //PhysicsComponent.cpp
 PhysicsComponent::~PhysicsComponent() {}
 
+sf::FloatRect PhysicsComponent::getRect() {
+	return mRect;
+}
+
+sf::Vector2f PhysicsComponent::getMovement() {
+	return mMovement;
+}
+
+int PhysicsComponent::getDirection() {
+	return mDirection;
+}
+
+float PhysicsComponent::getSpeed() {
+	return mSpeed;
+}
+
+void PhysicsComponent::setRect(sf::FloatRect rect) {
+	mRect = rect;
+}
+
+void PhysicsComponent::setMovement(sf::Vector2f movement) {
+	mMovement = movement;
+}
+
+void PhysicsComponent::setDirection(int direction) {
+	mDirection = direction;
+}
+
+void PhysicsComponent::setSpeed(float speed) {
+	mSpeed = speed;
+}
+
+
+
 //GraphicsComponent.cpp
 GraphicsComponent::~GraphicsComponent() {}
+
+sf::Texture& GraphicsComponent::getTexture() {
+	return mTexture;
+}
+
+void GraphicsComponent::setTexture(sf::Texture& texture) {
+	mTexture = texture;
+}
+
+
+
+//CombatComponent.cpp
+CombatComponent::~CombatComponent() {}
+
+float CombatComponent::getHP() {
+	return mHP;
+}
+
+float CombatComponent::getMaxHP() {
+	return mMaxHP;
+}
+
+float CombatComponent::getDT() {
+	return mDT;
+}
+
+bool CombatComponent::isAlive() {
+	return mIsAlive;
+}
+
+float CombatComponent::getAttackRange() {
+	return mAttackRange;
+}
+
+float CombatComponent::getAttackSpeed() {
+	return mAttackSpeed;
+}
+
+float CombatComponent::getDamage() {
+	return mDamage;
+}
+
+bool CombatComponent::isReadyToAttack() {
+
+	if(mAttackClock.getElapsedTime().asSeconds() > 1 / mAttackSpeed)
+		return true;
+	else
+		return false;
+
+}
+
+void CombatComponent::setHP(float HP) {
+	mHP = HP;
+}
+
+void CombatComponent::setMaxHP(float maxHP) {
+	mMaxHP = maxHP;
+}
+
+void CombatComponent::setDT(float DT) {
+	mDT = DT;
+}
+
+void CombatComponent::kill() {
+	mIsAlive = false;
+}
+
+void CombatComponent::revive() {
+	mIsAlive = true;
+}
+
+void CombatComponent::setAttackRange(float attackRange) {
+	mAttackRange = attackRange;
+}
+
+void CombatComponent::setAttackSpeed(float attackSpeed) {
+	mAttackSpeed = attackSpeed;
+}
+
+void CombatComponent::setDamage(float damage) {
+	mDamage = damage;
+}
+
+void CombatComponent::restartAttackClock() {
+	mAttackClock.restart();
+}
+
+//SocialComponent.cpp
+SocialComponent::~SocialComponent() {}
+
+sf::String SocialComponent::getName() {
+	return mName;
+}
+
+sf::String SocialComponent::getFaction() {
+	return mFaction;
+}
+
+void SocialComponent::setName(sf::String name) {
+	mName = name;
+}
+
+void SocialComponent::setFaction(sf::String faction) {
+	mFaction = faction;
+}
+
+
+
+
+
+
 
 //
 //PLAYER
 //
 //PlayerInputComponent.cpp
-void PlayerInputComponent::update(Player& player, World& world) {
+void PlayerInputComponent::update(GameObject& player, World& world) {
 
-	sf::Vector2f movement = player.getMovement();
+	sf::Vector2f movement = player.getPhysics()->getMovement();
 
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	movement.y -= player.getSpeed();
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += player.getSpeed();
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getSpeed();
-	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	movement.y -= player.getPhysics()->getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += player.getPhysics()->getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getPhysics()->getSpeed();
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getPhysics()->getSpeed();
 
-	if((movement.x == 0) && (movement.y == 0))	player.setDirection(0);
-	if((movement.x == 0) && (movement.y < 0))	player.setDirection(1);
-	if((movement.x > 0) && (movement.y < 0))	player.setDirection(2);
-	if((movement.x > 0) && (movement.y == 0))	player.setDirection(3);
-	if((movement.x > 0) && (movement.y > 0))	player.setDirection(4);
-	if((movement.x == 0) && (movement.y > 0))	player.setDirection(5);
-	if((movement.x < 0) && (movement.y > 0))	player.setDirection(6);
-	if((movement.x < 0) && (movement.y == 0))	player.setDirection(7);
-	if((movement.x < 0) && (movement.y < 0))	player.setDirection(8);
+	if((movement.x == 0) && (movement.y == 0))	player.getPhysics()->setDirection(0);
+	if((movement.x == 0) && (movement.y < 0))	player.getPhysics()->setDirection(1);
+	if((movement.x > 0) && (movement.y < 0))	player.getPhysics()->setDirection(2);
+	if((movement.x > 0) && (movement.y == 0))	player.getPhysics()->setDirection(3);
+	if((movement.x > 0) && (movement.y > 0))	player.getPhysics()->setDirection(4);
+	if((movement.x == 0) && (movement.y > 0))	player.getPhysics()->setDirection(5);
+	if((movement.x < 0) && (movement.y > 0))	player.getPhysics()->setDirection(6);
+	if((movement.x < 0) && (movement.y == 0))	player.getPhysics()->setDirection(7);
+	if((movement.x < 0) && (movement.y < 0))	player.getPhysics()->setDirection(8);
 
-	player.setMovement(movement);
+	player.getPhysics()->setMovement(movement);
 
 }
 
+
+
 //PlayerPhysicsComponent.cpp
-void PlayerPhysicsComponent::update(Player& player, World& world, int tileSize, float deltaTime) {
+PlayerPhysicsComponent::PlayerPhysicsComponent(sf::FloatRect rect, float speed = 0.1) {
+
+	setRect(rect);
+	setSpeed(speed);
+	setDirection(0);
+
+}
+
+void PlayerPhysicsComponent::update(GameObject& player, World& world, int tileSize, float deltaTime) {
 	
-	sf::FloatRect rect = player.getRect();
-	sf::Vector2f movement = player.getMovement();
+	sf::FloatRect rect = player.getPhysics()->getRect();
+	sf::Vector2f movement = player.getPhysics()->getMovement();
 
 	rect.left += movement.x * deltaTime;
 	world.resolveMapCollision(rect, movement, 0, tileSize);
@@ -448,10 +637,12 @@ void PlayerPhysicsComponent::update(Player& player, World& world, int tileSize, 
 	movement.x = 0;
 	movement.y = 0;
 
-	player.setMovement(movement);
-	player.setRect(rect);
+	player.getPhysics()->setMovement(movement);
+	player.getPhysics()->setRect(rect);
 	
 }
+
+
 
 //PlayerGraphicsComponent.cpp
 PlayerGraphicsComponent::PlayerGraphicsComponent(sf::Texture* texture, sf::Texture* hpTexture, sf::Font* font)
@@ -485,26 +676,27 @@ PlayerGraphicsComponent::PlayerGraphicsComponent(sf::Texture* texture, sf::Textu
 
 }
 
-void PlayerGraphicsComponent::update(Player& player, float deltaTime) {
+void PlayerGraphicsComponent::update(GameObject& player, float deltaTime) {
 
-	if(player.getDirection() == 0) mCurrentSprite = mSpriteStill;
-	if(player.getDirection() == 3) mCurrentSprite = mSpriteRight;
-	if(player.getDirection() == 7) mCurrentSprite = mSpriteLeft;
-	if(player.getDirection() == 5) mCurrentSprite = mSpriteDown;
-	if(player.getDirection() == 1) mCurrentSprite = mSpriteUp;
-	
-	mAnimationSpeed = player.getSpeed() * 0.05;
+	if(player.getPhysics()->getDirection() == 0) mCurrentSprite = mSpriteStill;
+
+	if(player.getPhysics()->getDirection() == 3) mCurrentSprite = mSpriteRight;
+	if(player.getPhysics()->getDirection() == 7) mCurrentSprite = mSpriteLeft;
+	if(player.getPhysics()->getDirection() == 5) mCurrentSprite = mSpriteDown;
+	if(player.getPhysics()->getDirection() == 1) mCurrentSprite = mSpriteUp;
+
+	mAnimationSpeed = player.getPhysics()->getSpeed() * 0.05;
 	mCurrentFrame += mAnimationSpeed * deltaTime;
 	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
 	
-	if(player.getDirection() != 0)
-		mCurrentSprite.setTextureRect(sf::IntRect(	player.getRect().width * int(mCurrentFrame),
+	if(player.getPhysics()->getDirection() != 0)
+		mCurrentSprite.setTextureRect(sf::IntRect(	player.getPhysics()->getRect().width * int(mCurrentFrame),
 													mCurrentSprite.getTextureRect().top,
-													player.getRect().width,
-													player.getRect().height  ));
+													player.getPhysics()->getRect().width,
+													player.getPhysics()->getRect().height  ));
 
 	//HP bar.
-	float hpPercentage = player.getHP() / player.getMaxHP();
+	float hpPercentage = player.getCombat()->getHP() / player.getCombat()->getMaxHP();
 	if(hpPercentage >= 0.6)
 		mHPBarSprite.setColor(sf::Color::Green);
 	else if((hpPercentage >= 0.35) && (hpPercentage < 0.6))
@@ -513,13 +705,13 @@ void PlayerGraphicsComponent::update(Player& player, float deltaTime) {
 		mHPBarSprite.setColor(sf::Color::Red);
 
 	mHPBarSprite.setTextureRect(sf::IntRect(100 * (1 - hpPercentage), 0, 100, 10));
-	mHPBarSprite.setPosition(player.getRect().left, player.getRect().top + player.getRect().height);
+	mHPBarSprite.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top + player.getPhysics()->getRect().height);
 
 	//Text.
-	mText.setString(player.getName());
-	mText.setPosition(player.getRect().left, player.getRect().top - mText.getCharacterSize());
+	mText.setString(player.getSocial()->getName());
+	mText.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top - mText.getCharacterSize());
 
-	mCurrentSprite.setPosition(player.getRect().left, player.getRect().top);
+	mCurrentSprite.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top);
 
 }
 
@@ -531,36 +723,116 @@ void PlayerGraphicsComponent::draw(sf::RenderWindow& window) {
 
 }
 
+
+
+//PlayerCombatComponent.cpp
+PlayerCombatComponent::PlayerCombatComponent(int HP, int maxHP, float damage, float attackRange, float attackSpeed) {
+	
+	setHP(HP);
+	setMaxHP(maxHP);
+
+	setDamage(damage);
+	setAttackRange(attackRange);
+	setAttackSpeed(attackSpeed);
+
+}
+
+void PlayerCombatComponent::takeDamage(float damage) {
+	setHP(getHP() - damage);
+}
+
+void PlayerCombatComponent::attack(GameObject* target) {
+	target->getCombat()->takeDamage(getDamage());
+	restartAttackClock();
+}
+
+//PlayerSocialComponent.cpp
+PlayerSocialComponent::PlayerSocialComponent(sf::String name, sf::String faction) {
+	setName(name);
+	setFaction(faction);
+}
+
+
+
+
+
 //
 //ENEMY
 //
 //EnemyInputComponent.cpp
-void EnemyInputComponent::update(Enemy& enemy, Player& player) {
+void EnemyInputComponent::update(GameObject& source, World& world) {
 
-	float deltaX = (player.getRect().left + player.getRect().width / 2) - (enemy.getRect().left + enemy.getRect().width / 2);
-	float deltaY = (player.getRect().top + player.getRect().height / 2) - (enemy.getRect().top + enemy.getRect().height / 2);
-	float distance = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+	GameObject* target = world.getPlayer();
+	sf::Vector2f movement = source.getPhysics()->getMovement();
+
+	float deltaX =  (target->getPhysics()->getRect().left + target->getPhysics()->getRect().width / 2) -
+					(source.getPhysics()->getRect().left + source.getPhysics()->getRect().width / 2);
+
+	float deltaY =  (target->getPhysics()->getRect().top + target->getPhysics()->getRect().height / 2) - 
+					(source.getPhysics()->getRect().top + source.getPhysics()->getRect().height / 2);
+	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
+
+	bool movingHorizontal = true;
+	bool movingVertical = false;
+	bool changeDirection = false;
 	
-	sf::Vector2f movement;
 
-	if(distance > enemy.getAttackRange()) {
-		if(player.getRect().left > enemy.getRect().left)
-			movement.x = enemy.getSpeed();
+	if(distance > source.getCombat()->getAttackRange()) {
+		/*
+		if(target->getPhysics()->getRect().left > source.getPhysics()->getRect().left)
+			movement.x += source.getPhysics()->getSpeed();
 		else
-			movement.x = -enemy.getSpeed();
+			movement.x -= source.getPhysics()->getSpeed();
 
-		if(player.getRect().top > enemy.getRect().top)
-			movement.y = enemy.getSpeed();
+		if(target->getPhysics()->getRect().top > source.getPhysics()->getRect().top)
+			movement.y += source.getPhysics()->getSpeed();
 		else
-			movement.y = -enemy.getSpeed();
+			movement.y -= source.getPhysics()->getSpeed();
+		*/
+
+		if(std::abs(deltaX) > std::abs(deltaY) * 1.3) {
+			movingHorizontal = true;
+			movingVertical = false;
+		}
+
+		if(std::abs(deltaY) > std::abs(deltaX) * 1.3) {
+			movingHorizontal = false;
+			movingVertical = true;
+		}
+
+		if(movingHorizontal)
+			if(target->getPhysics()->getRect().left > source.getPhysics()->getRect().left)
+				movement.x += source.getPhysics()->getSpeed();
+			else
+				movement.x -= source.getPhysics()->getSpeed();
+		
+		if(movingVertical)
+			if(target->getPhysics()->getRect().top > source.getPhysics()->getRect().top)
+				movement.y += source.getPhysics()->getSpeed();
+			else
+				movement.y -= source.getPhysics()->getSpeed();
+		
 	} else {
+
 		movement.x = 0;
 		movement.y = 0;
-		if(enemy.isReadyToAttack())
-			enemy.dealDamage(player);
+		if(source.getCombat()->isReadyToAttack())
+			source.getCombat()->attack(target);
+
 	}
 
-	enemy.setMovement(movement);
+
+	if((movement.x == 0) && (movement.y == 0))	source.getPhysics()->setDirection(0);
+	if((movement.x == 0) && (movement.y < 0))	source.getPhysics()->setDirection(1);
+	if((movement.x > 0) && (movement.y < 0))	source.getPhysics()->setDirection(2);
+	if((movement.x > 0) && (movement.y == 0))	source.getPhysics()->setDirection(3);
+	if((movement.x > 0) && (movement.y > 0))	source.getPhysics()->setDirection(4);
+	if((movement.x == 0) && (movement.y > 0))	source.getPhysics()->setDirection(5);
+	if((movement.x < 0) && (movement.y > 0))	source.getPhysics()->setDirection(6);
+	if((movement.x < 0) && (movement.y == 0))	source.getPhysics()->setDirection(7);
+	if((movement.x < 0) && (movement.y < 0))	source.getPhysics()->setDirection(8);
+
+	source.getPhysics()->setMovement(movement);
 
 }
 
@@ -577,10 +849,16 @@ void EnemyInputComponent::update(Enemy& enemy, Player& player) {
 //
 //World.cpp
 //
-World::World() {
+World::World(sf::Texture* playerTexture, sf::Texture* hpBar, sf::Font* font) {
 
 	mMapHeight = 0;
 	mMapWidth = 0;
+
+	mPlayer = new GameObject( new PlayerInputComponent(), 
+							  new PlayerPhysicsComponent(sf::FloatRect(200, 200, 120, 120)), 
+							  new PlayerGraphicsComponent(&*playerTexture, &*hpBar, &*font),
+							  new PlayerCombatComponent(150, 150, 40, 40, 40),
+							  new PlayerSocialComponent("Player", "players") );
 
 }
 
@@ -637,7 +915,11 @@ void World::deleteLevelMap() {
 	mDrops.clear();
 }
 
-std::vector<Enemy>& World::getEnemies() {
+GameObject*& World::getPlayer() {
+	return mPlayer;
+}
+
+std::vector<GameObject>& World::getEnemies() {
 	return mEnemies;
 }
 
@@ -706,7 +988,7 @@ void Game::processEvents() {
 
 void Game::update(sf::Time) {
 
-	std::vector<Enemy> enemies = mWorld.getEnemies();
+	std::vector<GameObject> enemies = mWorld.getEnemies();
 	std::vector<DropItem> drops = mWorld.getDrops();
 	std::vector<std::vector<int>> levelMap = mWorld.getLevelMap();
 
@@ -753,32 +1035,23 @@ void Game::loadConfigFile(config& config) {
 }
 
 
-
 //
-//Player.cpp
+//GameObject.cpp
 //
-Player::Player(int x, int y, InputComponent* input, PhysicsComponent* physics, GraphicsComponent* graphics)
+GameObject::GameObject( InputComponent* input, 
+						PhysicsComponent* physics,
+						GraphicsComponent* graphics,
+						CombatComponent* combat,
+						SocialComponent* social )
 :mInput(input),
 mPhysics(physics),
-mGraphics(graphics) {
-
-	mRect = sf::FloatRect(x, y, 120, 110);					//Character x, y, width, height.
-		
-	mName = "Player 1";
-	
-	mSpeed = 0.1;
-	mMovement.x = 0;
-	mMovement.y = 0;
-
-	mIsAlive = true;
-	mHP = 150;
-	mMaxHP = 150;
-	mMP = 100;
-	mMaxMP = 100;
+mGraphics(graphics),
+mCombat(combat),
+mSocial(social) {
 
 }
 
-void Player::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
+void GameObject::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
 
 	mInput->update(*this, world);
 	mPhysics->update(*this, world, config->tileSize, deltaTime);
@@ -786,82 +1059,32 @@ void Player::update(float deltaTime, std::vector<std::vector<int>> levelMap, str
 
 }
 
-void Player::recieveMessage(int message) {
-	mMessages.push_back(message);
+InputComponent*& GameObject::getInput() {
+	return mInput;
 }
 
-void Player::takeDamage(float damage) {
-	mHP -= damage;
+PhysicsComponent*& GameObject::getPhysics() {
+	return mPhysics;
 }
 
-void Player::heal(float hp) {
-	if(mHP + hp > mMaxHP)
-		mHP += mMaxHP - mHP;
-	else
-		mHP += hp;
-}
-
-sf::FloatRect Player::getRect() {
-	return mRect;
-}
-
-sf::String Player::getName() {
-	return mName;
-}
-
-float Player::getSpeed() {
-	return mSpeed;
-}
-
-sf::Vector2f Player::getMovement() {
-	return mMovement;
-}
-
-int Player::getDirection() {
-	return mDirection;
-}
-
-float Player::getHP() {
-	return mHP;
-}
-
-float Player::getMaxHP() {
-	return mMaxHP;
-}
-
-float Player::getMP() {
-	return mMP;
-}
-
-float Player::getMaxMP() {
-	return mMaxMP;
-}
-
-GraphicsComponent*& Player::getGraphics() {
+GraphicsComponent*& GameObject::getGraphics() {
 	return mGraphics;
 }
 
-void Player::setSpeed(float speed) {
-	mSpeed = speed;
+CombatComponent*& GameObject::getCombat() {
+	return mCombat;
 }
 
-void Player::setMovement(sf::Vector2f movement) {
-	mMovement = movement;
-}
-
-void Player::setDirection(int direction) {
-	mDirection = direction;
-}
-
-void Player::setRect(sf::FloatRect rect) {
-	mRect = rect;
+SocialComponent*& GameObject::getSocial() {
+	return mSocial;
 }
 
 
-
+//OLD ENEMY. DO NOT DELETE.
 //
 //Enemy.cpp
 //
+/*
 Enemy::Enemy(sf::Texture& texture, int x, int y, sf::Font& font) {
 	mSprite.setTexture(texture);
 	mRect = sf::FloatRect(x, y, 120, 110);					//Character x, y, width, height.
@@ -888,20 +1111,20 @@ Enemy::Enemy(sf::Texture& texture, int x, int y, sf::Font& font) {
 	mAttackRange = 80;
 }
 
-void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world, Player& player) {
+void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world, GameObject& player) {
 	
-	float deltaX = (player.getRect().left + player.getRect().width / 2) - (mRect.left + mRect.width / 2);
-	float deltaY = (player.getRect().top + player.getRect().height / 2) - (mRect.top + mRect.height / 2);
+	float deltaX = (player.getPhysics()->getRect().left + player.getPhysics()->getRect().width / 2) - (mRect.left + mRect.width / 2);
+	float deltaY = (player.getPhysics()->getRect().top + player.getPhysics()->getRect().height / 2) - (mRect.top + mRect.height / 2);
 	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
 
 	//New awesome super-AI.
 	if(distance > mAttackRange) {
-		if(player.getRect().left > mRect.left)
+		if(player.getPhysics()->getRect().left > mRect.left)
 			mMovement.x += mSpeed;
 		else
 			mMovement.x -= mSpeed;
 
-		if(player.getRect().top > mRect.top)
+		if(player.getPhysics()->getRect().top > mRect.top)
 			mMovement.y += mSpeed;
 		else
 			mMovement.y -= mSpeed;
@@ -909,10 +1132,11 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 		mMovement.x = 0;
 		mMovement.y = 0;
 		if(isReadyToAttack())
-			dealDamage(player);
+			//dealDamage(player);
+			player.getCombat()->takeDamage(40);
 	}
 	
-	/*
+	
 	//Stupid random AI.
 	if(mMovementClock.getElapsedTime().asSeconds() > 5) {
 		mDirection = rand() % 4;
@@ -923,29 +1147,31 @@ void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, stru
 	if(mDirection == 1) {mMovement.x = mSpeed;	mMovement.y = 0;}
 	if(mDirection == 2) {mMovement.x = 0;		mMovement.y = mSpeed;}
 	if(mDirection == 3) {mMovement.x = -mSpeed;	mMovement.y = 0;}
-	*/
-	//mInput->update(*this, player);
+	
+	
+	//mPhysics->update(*this, world, config->tileSize, deltaTime);
+	
 	mRect.left += mMovement.x * deltaTime;
 	//collision(levelMap, config);
 	world.resolveMapCollision(mRect, mMovement, 0, config->tileSize);
 	mRect.top += mMovement.y * deltaTime;
 	//collision(levelMap, config);
 	world.resolveMapCollision(mRect, mMovement, 1, config->tileSize);
-
+	
 	//Enemy animation.
 	mCurrentFrame += mAnimationSpeed * deltaTime;
 	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
 
-	if(std::abs(deltaX) > std::abs(deltaY)) {
+	//if(std::abs(deltaX) > std::abs(deltaY)) {
 		if(mMovement.x > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 925, mRect.width, mRect.height));
 		if(mMovement.x < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 667, mRect.width, mRect.height));
-	} else {
+	//} else {
 		if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
 		if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
-	}
+	//}
 
-	mMovement.x = 0;
-	mMovement.y = 0;
+	//mMovement.x = 0;
+	//mMovement.y = 0;
 
 	mSprite.setPosition(mRect.left, mRect.top);
 	mTextName.setPosition(mRect.left, mRect.top - mTextName.getCharacterSize());
@@ -968,56 +1194,14 @@ void Enemy::collision(std::vector<std::vector<int>> levelMap, struct config* con
 						
 		}
 }
-
-void Enemy::dealDamage(Player& player) {
-	float damage = rand() % int(mDamage);
-	player.takeDamage(damage);
-	mDamageClock.restart();
-}
-	
-//Inner communication between objects (between the components in the future).
-void Enemy::getMessage(int message) {
-	mMessages.push_back(message);
-}
-
-sf::FloatRect Enemy::getRect() {
-	return mRect;
-}
-
-sf::Sprite Enemy::getSprite() {
-	return mSprite;
-}
-
-sf::Text Enemy::getTextName() {
-	return mTextName;
-}
-
-float Enemy::getAttackRange() {
-	return mAttackRange;
-}
-
-float Enemy::getSpeed() {
-	return mSpeed;
-}
-
-bool Enemy::isReadyToAttack() {
-	if(mDamageClock.getElapsedTime().asSeconds() > mSpeed * 10)
-		return true;
-	else
-		return false;
-}
-
-void Enemy::setMovement(sf::Vector2f movement) {
-	mMovement = movement;
-}
-
-void Enemy::setRect(sf::FloatRect rect) {
-	mRect = rect;
-}
+*/
 
 //
 //DropItem.cpp
 //
+
+
+
 DropItem::DropItem(sf::Texture& texture, int effect, int x, int y) {
 	mSprite.setTexture(texture);
 	mRect = sf::FloatRect(x, y, 32, 32);
@@ -1031,8 +1215,8 @@ void DropItem::update(float time) {
 	mSprite.setPosition(mRect.left, mRect.top);
 }
 
-void DropItem::action(Player& player) {
-	player.heal(mEffectValue);
+void DropItem::action(GameObject& player) {
+	//player.heal(mEffectValue);
 	mIsMarkedForRemoval = true;
 }
 
@@ -1113,6 +1297,8 @@ void loadConfigFile(config& config, std::string filename = "config.txt") {
 
 }
 
+//FACTORY.
+
 
 
 //  __  __       _       
@@ -1135,20 +1321,10 @@ int main() {
 	//game.run();
 
 
-	//World.
-	std::string levelMapName = "./levels/level1.txt";
-
-	World world;
-	world.loadLevelMap(levelMapName);
-	std::vector<std::vector<int>> levelMap = world.getLevelMap();
-	
-
 	//Clocks.
 	sf::Clock gameClock;
 	sf::Clock invincibilityClock;
 	sf::Clock spawnClock;
-
-
 
 
 	//
@@ -1214,16 +1390,25 @@ int main() {
 
 	sf::Sound emenyHitSound(emenyHitSoundBuffer);
 
+	//World.
+	std::string levelMapName = "./levels/level1.txt";
 
+	World world(&playerTexture, &hpBar, &font);
+	world.loadLevelMap(levelMapName);
+	std::vector<std::vector<int>> levelMap = world.getLevelMap();
+	
 
 	//Game objects.
 	std::vector<DropItem> drops = world.getDrops();
-	std::vector<Enemy> enemies = world.getEnemies();
-
-	Player player(config.playerStartingX, config.playerStartingY,
-		new PlayerInputComponent(), 
-		new PlayerPhysicsComponent(), 
-		new PlayerGraphicsComponent(&playerTexture, &hpBar, &font));
+	std::vector<GameObject> enemies = world.getEnemies();
+	/*
+	GameObject player(  new PlayerInputComponent(), 
+						new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, 120, 120)), 
+						new PlayerGraphicsComponent(&playerTexture, &hpBar, &font),
+						new PlayerCombatComponent(150, 150, 40, 40, 40),
+						new PlayerSocialComponent("Player", "players")  );
+	*/
+	GameObject* player = world.getPlayer();
 
 
 	//Creating window, view.
@@ -1243,54 +1428,60 @@ int main() {
 		//Processing events.
 		sf::Event event;
 		while(mWindow.pollEvent(event)) {
-			if(event.type == sf::Event::Closed)
-				mWindow.close();
+			switch(event.type) {
+				
+				case(sf::Event::Closed):
+					mWindow.close();
+					break;
+
+			}
 		}
 
 		//Updating all objects.
-		player.update(time, levelMap, &config, world);
+		player->update(time, levelMap, &config, world);
 		for(int i = 0; i < enemies.size(); ++i)	
-			enemies[i].update(time, levelMap, &config, world, player);
+			enemies[i].update(time, levelMap, &config, world);
 		for(int i = 0; i < drops.size(); ++i)
 			drops[i].update(time);
 
-
-		//Resolving collisions. Should move to World class methods.
-		//for(int i = 0; i < enemies.size(); ++i)
-		//	if((player.getRect().intersects(enemies[i].getRect())) && (enemies[i].isReadyToAttack()))
-		//		enemies[i].dealDamage(player);
-
-		for(int i = 0; i < drops.size(); ++i)
-			if((player.getRect().intersects(drops[i].getRect())) && (~drops[i].isMarkedForRemoval()) && (player.getHP() != player.getMaxHP()))
-				drops[i].action(player);
+		//Resolving collisions with drop items.
+		//for(int i = 0; i < drops.size(); ++i)
+		//	if((player.getPhysics()->getRect().intersects(drops[i].getRect())) && (~drops[i].isMarkedForRemoval()) && (player.getHP() != player.getMaxHP()))
+		//		drops[i].action(player);
 	
 		//Spawning elves.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			enemies.push_back( *(new Enemy(enemyTexture, 240, 240, font)) );
+			enemies.push_back( *(new GameObject(  new EnemyInputComponent(),
+												  new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, 120, 120), 0.05),
+												  new PlayerGraphicsComponent(&enemyTexture, &hpBar, &font),
+												  new PlayerCombatComponent(150, 150, 40, 40, 2),
+												  new PlayerSocialComponent("Dark Elf", "dark_elves")  )) );
 			spawnClock.restart();
 		}
 
 		//Spawning health potions.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			drops.push_back( *(new DropItem(healthPotionTexture, 40, player.getRect().left + (rand() % 2 - 1) * (rand() % 100), player.getRect().top + (rand() % 2 - 1) * (rand() % 100))) );
+			drops.push_back( *(new DropItem(healthPotionTexture, 40, player->getPhysics()->getRect().left + (rand() % 2 - 1) * (rand() % 100), player->getPhysics()->getRect().top + (rand() % 2 - 1) * (rand() % 100))) );
 			spawnClock.restart();
 		}
 
 
 		//HUD.
 		std::ostringstream hudHealth;
-		std::ostringstream hudMana;
+		//std::ostringstream hudMana;
 		std::ostringstream hudEnemyCount;
 		std::ostringstream hudPlayerCoordinates;
 		std::ostringstream hudMouseCoordinates;
 
-		hudHealth << player.getHP();
-		hudMana << player.getMP();
+		hudHealth << player->getCombat()->getHP();
+		//hudMana << player.getMP();
 		hudEnemyCount << "Number of enemies: " << enemies.size();
-		hudPlayerCoordinates << "X: " << player.getRect().left + config.tileSize / 2 << '\n' << "Y: " << player.getRect().top + config.tileSize / 2;
-		hudMouseCoordinates << "X: " << sf::Mouse::getPosition(mWindow).x << '\n' << "Y: " << sf::Mouse::getPosition(mWindow).y;
+		hudPlayerCoordinates << "X: " << player->getPhysics()->getRect().left + config.tileSize / 2 << '\n'
+							 << "Y: " << player->getPhysics()->getRect().top + config.tileSize / 2;
+		hudMouseCoordinates << "X: " << sf::Mouse::getPosition(mWindow).x << '\n'
+							<< "Y: " << sf::Mouse::getPosition(mWindow).y;
 
-		textMana.setString(hudMana.str());
+		//textMana.setString(hudMana.str());
 		textHealth.setString(hudHealth.str());
 		textEnemyCount.setString(hudEnemyCount.str());
 		textPlayerCoordinates.setString(hudPlayerCoordinates.str());
@@ -1298,8 +1489,8 @@ int main() {
 
 
 		//View.
-		mViewPosition.x = player.getRect().left + config.tileSize / 2 - config.screenWidth / 2;
-		mViewPosition.y = player.getRect().top + config.tileSize / 2 - config.screenHeight / 2;
+		mViewPosition.x = player->getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
+		mViewPosition.y = player->getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 		
 		if(mViewPosition.x < 0)																	mViewPosition.x = 0;
 		if(mViewPosition.x > world.getMapWidth() * config.tileSize - config.screenWidth)		mViewPosition.x = world.getMapWidth() * config.tileSize - config.screenWidth;
@@ -1310,7 +1501,7 @@ int main() {
 		mWindow.setView(mView);
 
 		textHealth.setPosition(mViewPosition.x, mViewPosition.y);
-		textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
+		//textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
 		textEnemyCount.setPosition(mViewPosition.x, mViewPosition.y + textEnemyCount.getCharacterSize() * 2);
 		textPlayerCoordinates.setPosition(mViewPosition.x, mViewPosition.y + textPlayerCoordinates.getCharacterSize() * 3);
 		textMouseCoordinates.setPosition(mViewPosition.x, mViewPosition.y + textPlayerCoordinates.getCharacterSize() * 6);
@@ -1339,17 +1530,14 @@ int main() {
 
 
 		//Rendering all the objects.
-		for(int i = 0; i < enemies.size(); ++i) {
-			mWindow.draw(enemies[i].getSprite());
-			mWindow.draw(enemies[i].getTextName());
-		}
+		for(int i = 0; i < enemies.size(); ++i) 
+			enemies[i].getGraphics()->draw(mWindow);
 
 		for(int i = 0; i < drops.size(); ++i)
 			mWindow.draw(drops[i].getSprite());
 
-		//mWindow.draw(player.getSprite());
-		player.getGraphics()->draw(mWindow);
 
+		player->getGraphics()->draw(mWindow);
 		mWindow.draw(textHealth);
 		mWindow.draw(textMana);
 		mWindow.draw(textEnemyCount);
