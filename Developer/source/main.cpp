@@ -67,7 +67,12 @@ struct config {
 	
 };
 
+struct Message {
 
+	int								id;
+	int								contents;
+
+};
 
 //CLASS PROTOTYPES.
 class World;
@@ -91,6 +96,13 @@ public:
 
 	virtual							~InputComponent();
 	virtual void					update(GameObject&, World&) = 0;
+
+	int								getBadDirection();
+	void							setBadDirection(int);
+
+private:
+
+	int								mBadDirection;
 
 };
 
@@ -281,6 +293,26 @@ public:
 
 };
 
+
+
+class PassiveInputComponent : public InputComponent {
+public:
+
+									PassiveInputComponent(float);
+	virtual void					update(GameObject&, World&);
+
+	float							getChangeDirectionFrequency();
+	void							setChangeDirectionFrequency(float);
+	
+
+private:
+
+	sf::Clock						mMovementClock;
+	float							mChangeDirectionFrequency;
+	int								mDirection;
+
+};
+
 //   _____ _                         
 //  / ____| |                        
 // | |    | | __ _ ___ ___  ___  ___ 
@@ -351,7 +383,7 @@ public:
 									World(sf::Texture*, sf::Texture*, sf::Font*);
 									World(int, int);
 
-	void							resolveMapCollision(sf::FloatRect&, sf::Vector2f, int, int);
+	void							resolveMapCollision(GameObject*, int, int);
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
@@ -430,10 +462,17 @@ private:
 //
 //BASE.
 //
+
 //InputComponent.cpp
 InputComponent::~InputComponent() {}
 
+int InputComponent::getBadDirection() {
+	return mBadDirection;
+}
 
+void InputComponent::setBadDirection(int direction) {
+	mBadDirection = direction;
+}
 
 //PhysicsComponent.cpp
 PhysicsComponent::~PhysicsComponent() {}
@@ -599,16 +638,6 @@ void PlayerInputComponent::update(GameObject& player, World& world) {
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= player.getPhysics()->getSpeed();
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += player.getPhysics()->getSpeed();
 
-	if((movement.x == 0) && (movement.y == 0))	player.getPhysics()->setDirection(0);
-	if((movement.x == 0) && (movement.y < 0))	player.getPhysics()->setDirection(1);
-	if((movement.x > 0) && (movement.y < 0))	player.getPhysics()->setDirection(2);
-	if((movement.x > 0) && (movement.y == 0))	player.getPhysics()->setDirection(3);
-	if((movement.x > 0) && (movement.y > 0))	player.getPhysics()->setDirection(4);
-	if((movement.x == 0) && (movement.y > 0))	player.getPhysics()->setDirection(5);
-	if((movement.x < 0) && (movement.y > 0))	player.getPhysics()->setDirection(6);
-	if((movement.x < 0) && (movement.y == 0))	player.getPhysics()->setDirection(7);
-	if((movement.x < 0) && (movement.y < 0))	player.getPhysics()->setDirection(8);
-
 	player.getPhysics()->setMovement(movement);
 
 }
@@ -626,19 +655,32 @@ PlayerPhysicsComponent::PlayerPhysicsComponent(sf::FloatRect rect, float speed =
 
 void PlayerPhysicsComponent::update(GameObject& player, World& world, int tileSize, float deltaTime) {
 	
-	sf::FloatRect rect = player.getPhysics()->getRect();
 	sf::Vector2f movement = player.getPhysics()->getMovement();
 
+	if((movement.x == 0) && (movement.y == 0))	setDirection(0);
+	if((movement.x == 0) && (movement.y < 0))	setDirection(1);
+	if((movement.x > 0) && (movement.y < 0))	setDirection(2);
+	if((movement.x > 0) && (movement.y == 0))	setDirection(3);
+	if((movement.x > 0) && (movement.y > 0))	setDirection(4);
+	if((movement.x == 0) && (movement.y > 0))	setDirection(5);
+	if((movement.x < 0) && (movement.y > 0))	setDirection(6);
+	if((movement.x < 0) && (movement.y == 0))	setDirection(7);
+	if((movement.x < 0) && (movement.y < 0))	setDirection(8);
+
+	sf::FloatRect rect = player.getPhysics()->getRect();
 	rect.left += movement.x * deltaTime;
-	world.resolveMapCollision(rect, movement, 0, tileSize);
+	player.getPhysics()->setRect(rect);
+	world.resolveMapCollision(&player, 0, tileSize);
+
+	rect = player.getPhysics()->getRect();
 	rect.top += movement.y * deltaTime;
-	world.resolveMapCollision(rect, movement, 1, tileSize);
+	player.getPhysics()->setRect(rect);
+	world.resolveMapCollision(&player, 1, tileSize);
 
 	movement.x = 0;
 	movement.y = 0;
 
 	player.getPhysics()->setMovement(movement);
-	player.getPhysics()->setRect(rect);
 	
 }
 
@@ -778,6 +820,7 @@ void EnemyInputComponent::update(GameObject& source, World& world) {
 	
 
 	if(distance > source.getCombat()->getAttackRange()) {
+
 		/*
 		if(target->getPhysics()->getRect().left > source.getPhysics()->getRect().left)
 			movement.x += source.getPhysics()->getSpeed();
@@ -821,21 +864,48 @@ void EnemyInputComponent::update(GameObject& source, World& world) {
 
 	}
 
+	source.getPhysics()->setMovement(movement);
 
-	if((movement.x == 0) && (movement.y == 0))	source.getPhysics()->setDirection(0);
-	if((movement.x == 0) && (movement.y < 0))	source.getPhysics()->setDirection(1);
-	if((movement.x > 0) && (movement.y < 0))	source.getPhysics()->setDirection(2);
-	if((movement.x > 0) && (movement.y == 0))	source.getPhysics()->setDirection(3);
-	if((movement.x > 0) && (movement.y > 0))	source.getPhysics()->setDirection(4);
-	if((movement.x == 0) && (movement.y > 0))	source.getPhysics()->setDirection(5);
-	if((movement.x < 0) && (movement.y > 0))	source.getPhysics()->setDirection(6);
-	if((movement.x < 0) && (movement.y == 0))	source.getPhysics()->setDirection(7);
-	if((movement.x < 0) && (movement.y < 0))	source.getPhysics()->setDirection(8);
+}
+
+
+//PassiveInputComponent.cpp
+PassiveInputComponent::PassiveInputComponent(float changeDirectionFrequency = 4) {
+	mChangeDirectionFrequency = changeDirectionFrequency;
+	mDirection = rand() % 4 + 1;
+	setBadDirection(0);
+}
+
+void PassiveInputComponent::update(GameObject& source, World& world) {
+
+	sf::Vector2f movement = source.getPhysics()->getMovement();
+
+	if(mMovementClock.getElapsedTime().asSeconds() > mChangeDirectionFrequency) {
+		mDirection = rand() % 4 + 1;
+		mMovementClock.restart();
+	}
+
+	if(getBadDirection() != 0) {
+		mDirection = rand() % 4 + 1;
+		setBadDirection(0);
+	}
+
+	if(mDirection == 1) {movement.x = 0;								movement.y = -source.getPhysics()->getSpeed();}
+	if(mDirection == 2) {movement.x = source.getPhysics()->getSpeed();	movement.y = 0;}
+	if(mDirection == 3) {movement.x = 0;								movement.y = source.getPhysics()->getSpeed();}
+	if(mDirection == 4) {movement.x = -source.getPhysics()->getSpeed();	movement.y = 0;}
 
 	source.getPhysics()->setMovement(movement);
 
 }
 
+float PassiveInputComponent::getChangeDirectionFrequency() {
+	return mChangeDirectionFrequency;
+}
+
+void PassiveInputComponent::setChangeDirectionFrequency(float changeDirectionFrequency) {
+	mChangeDirectionFrequency = changeDirectionFrequency;
+}
 
 //   _____ _                                  _   _               _     
 //  / ____| |                                | | | |             | |    
@@ -854,8 +924,8 @@ World::World(sf::Texture* playerTexture, sf::Texture* hpBar, sf::Font* font) {
 	mMapHeight = 0;
 	mMapWidth = 0;
 
-	mPlayer = new GameObject( new PlayerInputComponent(), 
-							  new PlayerPhysicsComponent(sf::FloatRect(200, 200, 120, 120)), 
+	mPlayer = new GameObject( new PassiveInputComponent(), 
+							  new PlayerPhysicsComponent(sf::FloatRect(250, 200, 120, 120), 0.05), 
 							  new PlayerGraphicsComponent(&*playerTexture, &*hpBar, &*font),
 							  new PlayerCombatComponent(150, 150, 40, 40, 40),
 							  new PlayerSocialComponent("Player", "players") );
@@ -869,19 +939,28 @@ World::World(int mapHeight, int mapWidth) {
 
 }
 
-void World::resolveMapCollision(sf::FloatRect& rect, sf::Vector2f movement, int direction, int tileSize) {
+void World::resolveMapCollision(GameObject* object, int direction, int tileSize) {
+
+	sf::FloatRect rect = object->getPhysics()->getRect();
+	sf::Vector2f movement = object->getPhysics()->getMovement();
 
 	for(int i = rect.top / tileSize; i < (rect.top + rect.height) / tileSize; ++i)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
 
 			if(mLevelMap[i][j] == 'B') {
-					if((movement.x > 0) && (direction == 0)) rect.left = j * tileSize - rect.width;
-					if((movement.x < 0) && (direction == 0)) rect.left = j * tileSize + tileSize;
-					if((movement.y > 0) && (direction == 1)) rect.top = i * tileSize - rect.height;
-					if((movement.y < 0) && (direction == 1)) rect.top = i * tileSize + tileSize;
+
+				if((movement.x > 0) && (direction == 0)) {rect.left = j * tileSize - rect.width;	object->getInput()->setBadDirection(2);}
+				if((movement.x < 0) && (direction == 0)) {rect.left = j * tileSize + tileSize;		object->getInput()->setBadDirection(4);}
+				if((movement.y > 0) && (direction == 1)) {rect.top = i * tileSize - rect.height;	object->getInput()->setBadDirection(3);}
+				if((movement.y < 0) && (direction == 1)) {rect.top = i * tileSize + tileSize;		object->getInput()->setBadDirection(1);}
+
+
+
 			}
 
 		}
+
+	object->getPhysics()->setRect(rect);
 
 }
 
@@ -1080,121 +1159,6 @@ SocialComponent*& GameObject::getSocial() {
 }
 
 
-//OLD ENEMY. DO NOT DELETE.
-//
-//Enemy.cpp
-//
-/*
-Enemy::Enemy(sf::Texture& texture, int x, int y, sf::Font& font) {
-	mSprite.setTexture(texture);
-	mRect = sf::FloatRect(x, y, 120, 110);					//Character x, y, width, height.
-
-	mName = "Enemy";
-	mTextName.setString(mName);
-	mTextName.setFont(font);
-	mTextName.setCharacterSize(30);
-	mTextName.setStyle(sf::Text::Bold);
-	mTextName.setColor(sf::Color::Color(192, 192, 192));
-
-	mSprite.setTextureRect(sf::IntRect(0, 15, 120, 110));
-
-	mDirection = rand() % 4;
-	mSpeed = 0.05;
-
-	mCurrentFrame = 0;
-	mAnimationSpeed = mSpeed * 0.05;
-
-	mIsAlive = true;
-	mHP = 100;
-
-	mDamage = 30;
-	mAttackRange = 80;
-}
-
-void Enemy::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world, GameObject& player) {
-	
-	float deltaX = (player.getPhysics()->getRect().left + player.getPhysics()->getRect().width / 2) - (mRect.left + mRect.width / 2);
-	float deltaY = (player.getPhysics()->getRect().top + player.getPhysics()->getRect().height / 2) - (mRect.top + mRect.height / 2);
-	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
-
-	//New awesome super-AI.
-	if(distance > mAttackRange) {
-		if(player.getPhysics()->getRect().left > mRect.left)
-			mMovement.x += mSpeed;
-		else
-			mMovement.x -= mSpeed;
-
-		if(player.getPhysics()->getRect().top > mRect.top)
-			mMovement.y += mSpeed;
-		else
-			mMovement.y -= mSpeed;
-	} else {
-		mMovement.x = 0;
-		mMovement.y = 0;
-		if(isReadyToAttack())
-			//dealDamage(player);
-			player.getCombat()->takeDamage(40);
-	}
-	
-	
-	//Stupid random AI.
-	if(mMovementClock.getElapsedTime().asSeconds() > 5) {
-		mDirection = rand() % 4;
-		mMovementClock.restart();
-	}
-
-	if(mDirection == 0) {mMovement.x = 0;		mMovement.y = -mSpeed;}
-	if(mDirection == 1) {mMovement.x = mSpeed;	mMovement.y = 0;}
-	if(mDirection == 2) {mMovement.x = 0;		mMovement.y = mSpeed;}
-	if(mDirection == 3) {mMovement.x = -mSpeed;	mMovement.y = 0;}
-	
-	
-	//mPhysics->update(*this, world, config->tileSize, deltaTime);
-	
-	mRect.left += mMovement.x * deltaTime;
-	//collision(levelMap, config);
-	world.resolveMapCollision(mRect, mMovement, 0, config->tileSize);
-	mRect.top += mMovement.y * deltaTime;
-	//collision(levelMap, config);
-	world.resolveMapCollision(mRect, mMovement, 1, config->tileSize);
-	
-	//Enemy animation.
-	mCurrentFrame += mAnimationSpeed * deltaTime;
-	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
-
-	//if(std::abs(deltaX) > std::abs(deltaY)) {
-		if(mMovement.x > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 925, mRect.width, mRect.height));
-		if(mMovement.x < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 667, mRect.width, mRect.height));
-	//} else {
-		if(mMovement.y > 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 535, mRect.width, mRect.height));
-		if(mMovement.y < 0) mSprite.setTextureRect(sf::IntRect(mRect.width * int(mCurrentFrame), 787, mRect.width, mRect.height));
-	//}
-
-	//mMovement.x = 0;
-	//mMovement.y = 0;
-
-	mSprite.setPosition(mRect.left, mRect.top);
-	mTextName.setPosition(mRect.left, mRect.top - mTextName.getCharacterSize());
-
-}
-
-void Enemy::collision(std::vector<std::vector<int>> levelMap, struct config* config) {
-	for(int i = mRect.top / config->tileSize; i < (mRect.top + mRect.height) / config->tileSize; ++i)
-		for(int j = mRect.left / config->tileSize; j < (mRect.left + mRect.width) / config->tileSize; ++j) {
-				
-			if(levelMap[i][j] == 'B') {
-				if(mMovement.x > 0) mRect.left = j * config->tileSize - mRect.width;
-				if(mMovement.x < 0) mRect.left = j * config->tileSize + config->tileSize;
-				if(mMovement.y > 0) mRect.top = i * config->tileSize - mRect.height;
-				if(mMovement.y < 0) mRect.top = i * config->tileSize + config->tileSize;
-				int temp = rand() % 4;
-				if(temp != mDirection) mDirection = temp;
-				//direction = rand() % 4;		//???
-			}
-						
-		}
-}
-*/
 
 //
 //DropItem.cpp
@@ -1451,7 +1415,7 @@ int main() {
 	
 		//Spawning elves.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			enemies.push_back( *(new GameObject(  new EnemyInputComponent(),
+			enemies.push_back( *(new GameObject(  new PassiveInputComponent(),
 												  new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, 120, 120), 0.05),
 												  new PlayerGraphicsComponent(&enemyTexture, &hpBar, &font),
 												  new PlayerCombatComponent(150, 150, 40, 40, 2),
