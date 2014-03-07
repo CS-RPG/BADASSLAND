@@ -27,6 +27,9 @@
 //
 
 
+const float rangeMultiplier = 10;
+
+
 //DataTypes.hpp
 struct Attributes {
 
@@ -74,6 +77,9 @@ struct Message {
 
 };
 
+//
+float calculateDistance(sf::FloatRect, sf::FloatRect);
+
 //CLASS PROTOTYPES.
 class World;
 class Enemy;
@@ -96,14 +102,22 @@ public:
 
 	virtual							~InputComponent();
 	virtual void					update(GameObject&, World&) = 0;
+	void							captureTarget(GameObject&, World&);
 
 	int								getBadDirection();
+	bool							isTargeting();
+	GameObject*						getTarget();
+
 	void							setBadDirection(int);
+	void							setTargeting(bool);
+	void							setTarget(GameObject*);
 
 private:
 
 	int								mBadDirection;
-
+	bool							mIsTargeting;
+	GameObject*						mTarget;
+	
 };
 
 class PhysicsComponent {
@@ -151,6 +165,7 @@ class CombatComponent {
 public:
 
 	virtual							~CombatComponent();
+	virtual void					update(GameObject&, float) = 0;
 	virtual void					attack(GameObject*) = 0;
 	virtual void					takeDamage(float) = 0;
 	//virtual void					heal(float) = 0;
@@ -159,6 +174,7 @@ public:
 	float							getMaxHP();
 	float							getDT();
 	bool							isAlive();
+	bool							isMarkedForRemoval();
 
 	float							getAttackRange();
 	float							getAttackSpeed();
@@ -170,6 +186,7 @@ public:
 	void							setDT(float);
 	void							kill();
 	void							revive();
+	void							setMarkedForRemoval(bool);
 
 	void							setAttackRange(float);
 	void							setAttackSpeed(float);
@@ -183,12 +200,13 @@ private:
 	float							mMaxHP;
 	float							mDT;
 	bool							mIsAlive;
+	bool							mIsMarkedForRemoval;
 
 	float							mAttackRange;
 	float							mAttackSpeed;
 	float							mDamage;
 
-	sf::Clock						mAttackClock;						
+	sf::Clock						mAttackClock;
 
 };
 
@@ -261,6 +279,7 @@ class PlayerCombatComponent : public CombatComponent {
 public:
 
 									PlayerCombatComponent(int, int, float, float, float);
+	virtual void					update(GameObject&, float);
 	virtual void					attack(GameObject*);
 	virtual void					takeDamage(float);
 	//virtual void					heal(float);
@@ -278,11 +297,8 @@ public:
 class EnemyInputComponent : public InputComponent {
 public:
 
+									EnemyInputComponent();
 	virtual void					update(GameObject&, World&);
-
-private:
-
-	float							mFraction;
 
 };
 
@@ -292,7 +308,6 @@ public:
 	virtual void					update(Enemy&, World&, int, float);
 
 };
-
 
 
 class PassiveInputComponent : public InputComponent {
@@ -380,16 +395,14 @@ private:
 class World {
 public:
 
-									World(sf::Texture*, sf::Texture*, sf::Font*);
+									World();
 									World(int, int);
 
 	void							resolveMapCollision(GameObject*, int, int);
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
-	GameObject*&					getPlayer();
-	std::vector<GameObject>&		getEnemies();
-	std::vector<DropItem>&			getDrops();
+	std::vector<GameObject>&		getGameObjects();
 
 	std::vector<std::vector<int>>	getLevelMap();
 	int								getMapHeight();
@@ -397,16 +410,13 @@ public:
 
 private:
 
-	GameObject*						mPlayer;
-
 	std::vector<std::vector<int>>	mLevelMap;
 	std::vector<std::vector<bool>>	mCollisionMap;
 
 	int								mMapHeight;
 	int								mMapWidth;
 
-	std::vector<GameObject>			mEnemies;
-	std::vector<DropItem>			mDrops;
+	std::vector<GameObject>			mGameObjects;
 
 };
 
@@ -466,12 +476,54 @@ private:
 //InputComponent.cpp
 InputComponent::~InputComponent() {}
 
+void InputComponent::captureTarget(GameObject& object, World& world) {
+	
+	float distance = object.getCombat()->getAttackRange() * rangeMultiplier;
+
+	for(int i = 0; i < world.getGameObjects().size(); ++i) {
+
+		float tempDistance = calculateDistance(object.getPhysics()->getRect(), world.getGameObjects()[i].getPhysics()->getRect());
+		if( (object.getSocial()->getFaction() != world.getGameObjects()[i].getSocial()->getFaction()) && 
+			(tempDistance < distance) && 
+			(&(world.getGameObjects()[i]) != &object) ) {
+
+			distance = tempDistance;
+			mTarget = new GameObject(world.getGameObjects()[i]);
+
+		}
+
+	}
+
+	if(mTarget != NULL) {
+		setTargeting(true);
+		std::cout << "WIN\n";
+	} else
+		std::cout << "FAIL\n";
+	
+}
+
 int InputComponent::getBadDirection() {
 	return mBadDirection;
 }
 
+GameObject* InputComponent::getTarget() {
+	return mTarget;
+}
+
+bool InputComponent::isTargeting() {
+	return mIsTargeting;
+}
+
 void InputComponent::setBadDirection(int direction) {
 	mBadDirection = direction;
+}
+
+void InputComponent::setTargeting(bool isTargeting) {
+	mIsTargeting = isTargeting;
+}
+
+void InputComponent::setTarget(GameObject* target) {
+	mTarget = target;
 }
 
 //PhysicsComponent.cpp
@@ -543,6 +595,10 @@ bool CombatComponent::isAlive() {
 	return mIsAlive;
 }
 
+bool CombatComponent::isMarkedForRemoval() {
+	return mIsMarkedForRemoval;
+}
+
 float CombatComponent::getAttackRange() {
 	return mAttackRange;
 }
@@ -584,6 +640,10 @@ void CombatComponent::revive() {
 	mIsAlive = true;
 }
 
+void CombatComponent::setMarkedForRemoval(bool isMarkedForRemoval) {
+	mIsMarkedForRemoval = isMarkedForRemoval;
+}
+
 void CombatComponent::setAttackRange(float attackRange) {
 	mAttackRange = attackRange;
 }
@@ -623,7 +683,7 @@ void SocialComponent::setFaction(sf::String faction) {
 
 
 
-
+ 
 
 //
 //PLAYER
@@ -776,11 +836,21 @@ PlayerCombatComponent::PlayerCombatComponent(int HP, int maxHP, float damage, fl
 	setDamage(damage);
 	setAttackRange(attackRange);
 	setAttackSpeed(attackSpeed);
+	setMarkedForRemoval(false);
+
+}
+
+void PlayerCombatComponent::update(GameObject& object, float deltaTime) {
+
+	if(!isAlive())
+		setMarkedForRemoval(true);
 
 }
 
 void PlayerCombatComponent::takeDamage(float damage) {
 	setHP(getHP() - damage);
+	if(getHP() <= 0)
+		kill();
 }
 
 void PlayerCombatComponent::attack(GameObject* target) {
@@ -795,78 +865,72 @@ PlayerSocialComponent::PlayerSocialComponent(sf::String name, sf::String faction
 }
 
 
-
-
-
 //
 //ENEMY
 //
 //EnemyInputComponent.cpp
-void EnemyInputComponent::update(GameObject& source, World& world) {
+EnemyInputComponent::EnemyInputComponent() {
 
-	GameObject* target = world.getPlayer();
-	sf::Vector2f movement = source.getPhysics()->getMovement();
+	setTargeting(false);
+	setTarget(NULL);
 
-	float deltaX =  (target->getPhysics()->getRect().left + target->getPhysics()->getRect().width / 2) -
-					(source.getPhysics()->getRect().left + source.getPhysics()->getRect().width / 2);
+}
 
-	float deltaY =  (target->getPhysics()->getRect().top + target->getPhysics()->getRect().height / 2) - 
-					(source.getPhysics()->getRect().top + source.getPhysics()->getRect().height / 2);
-	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
-
-	bool movingHorizontal = true;
-	bool movingVertical = false;
-	bool changeDirection = false;
+void EnemyInputComponent::update(GameObject& object, World& world) {
 	
+	sf::Vector2f movement = object.getPhysics()->getMovement();
 
-	if(distance > source.getCombat()->getAttackRange()) {
+	if(getTarget() == &object) {
+		setTargeting(false);
+		setTarget(NULL);
+	}
 
-		/*
-		if(target->getPhysics()->getRect().left > source.getPhysics()->getRect().left)
-			movement.x += source.getPhysics()->getSpeed();
-		else
-			movement.x -= source.getPhysics()->getSpeed();
+	if(!isTargeting()) {
+		captureTarget(object, world);
+		std::cout << "Not targeted.\n";
+	}
 
-		if(target->getPhysics()->getRect().top > source.getPhysics()->getRect().top)
-			movement.y += source.getPhysics()->getSpeed();
-		else
-			movement.y -= source.getPhysics()->getSpeed();
-		*/
+	if(isTargeting()) {
 
-		if(std::abs(deltaX) > std::abs(deltaY) * 1.3) {
-			movingHorizontal = true;
-			movingVertical = false;
+		std::cout << "Targeted.\n";
+		std::cout << getTarget() << '\n';
+		float distance = calculateDistance( object.getPhysics()->getRect(),
+											getTarget()->getPhysics()->getRect() );
+
+		std::cout << distance << '\n';
+
+		if(distance > object.getCombat()->getAttackRange() * rangeMultiplier) {
+			setTargeting(false);
+			return;
 		}
 
-		if(std::abs(deltaY) > std::abs(deltaX) * 1.3) {
-			movingHorizontal = false;
-			movingVertical = true;
+		if(distance > object.getCombat()->getAttackRange()) {
+
+			if(getTarget()->getPhysics()->getRect().left > object.getPhysics()->getRect().left)
+				movement.x += object.getPhysics()->getSpeed();
+			else
+				movement.x -= object.getPhysics()->getSpeed();
+
+			if(getTarget()->getPhysics()->getRect().top > object.getPhysics()->getRect().top)
+				movement.y += object.getPhysics()->getSpeed();
+			else
+				movement.y -= object.getPhysics()->getSpeed();
+
+		} else {
+
+			movement.x = 0;
+			movement.y = 0;
+			if(object.getCombat()->isReadyToAttack())
+				object.getCombat()->attack(getTarget());
+
 		}
-
-		if(movingHorizontal)
-			if(target->getPhysics()->getRect().left > source.getPhysics()->getRect().left)
-				movement.x += source.getPhysics()->getSpeed();
-			else
-				movement.x -= source.getPhysics()->getSpeed();
-		
-		if(movingVertical)
-			if(target->getPhysics()->getRect().top > source.getPhysics()->getRect().top)
-				movement.y += source.getPhysics()->getSpeed();
-			else
-				movement.y -= source.getPhysics()->getSpeed();
-		
-	} else {
-
-		movement.x = 0;
-		movement.y = 0;
-		if(source.getCombat()->isReadyToAttack())
-			source.getCombat()->attack(target);
 
 	}
 
-	source.getPhysics()->setMovement(movement);
+	object.getPhysics()->setMovement(movement);
 
 }
+
 
 
 //PassiveInputComponent.cpp
@@ -919,16 +983,10 @@ void PassiveInputComponent::setChangeDirectionFrequency(float changeDirectionFre
 //
 //World.cpp
 //
-World::World(sf::Texture* playerTexture, sf::Texture* hpBar, sf::Font* font) {
+World::World() {
 
 	mMapHeight = 0;
 	mMapWidth = 0;
-
-	mPlayer = new GameObject( new PassiveInputComponent(), 
-							  new PlayerPhysicsComponent(sf::FloatRect(250, 200, 120, 120), 0.05), 
-							  new PlayerGraphicsComponent(&*playerTexture, &*hpBar, &*font),
-							  new PlayerCombatComponent(150, 150, 40, 40, 40),
-							  new PlayerSocialComponent("Player", "players") );
 
 }
 
@@ -953,8 +1011,6 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 				if((movement.x < 0) && (direction == 0)) {rect.left = j * tileSize + tileSize;		object->getInput()->setBadDirection(4);}
 				if((movement.y > 0) && (direction == 1)) {rect.top = i * tileSize - rect.height;	object->getInput()->setBadDirection(3);}
 				if((movement.y < 0) && (direction == 1)) {rect.top = i * tileSize + tileSize;		object->getInput()->setBadDirection(1);}
-
-
 
 			}
 
@@ -990,20 +1046,11 @@ void World::loadLevelMap(std::string filename) {
 
 void World::deleteLevelMap() {
 	mLevelMap.clear();
-	mEnemies.clear();
-	mDrops.clear();
+	mGameObjects.clear();
 }
 
-GameObject*& World::getPlayer() {
-	return mPlayer;
-}
-
-std::vector<GameObject>& World::getEnemies() {
-	return mEnemies;
-}
-
-std::vector<DropItem>& World::getDrops() {
-	return mDrops;
+std::vector<GameObject>& World::getGameObjects() {
+	return mGameObjects;
 }
 
 std::vector<std::vector<int>> World::getLevelMap() {
@@ -1067,10 +1114,7 @@ void Game::processEvents() {
 
 void Game::update(sf::Time) {
 
-	std::vector<GameObject> enemies = mWorld.getEnemies();
-	std::vector<DropItem> drops = mWorld.getDrops();
 	std::vector<std::vector<int>> levelMap = mWorld.getLevelMap();
-
 
 }
 
@@ -1135,6 +1179,7 @@ void GameObject::update(float deltaTime, std::vector<std::vector<int>> levelMap,
 	mInput->update(*this, world);
 	mPhysics->update(*this, world, config->tileSize, deltaTime);
 	mGraphics->update(*this, deltaTime);
+	mCombat->update(*this, deltaTime);
 
 }
 
@@ -1160,45 +1205,6 @@ SocialComponent*& GameObject::getSocial() {
 
 
 
-//
-//DropItem.cpp
-//
-
-
-
-DropItem::DropItem(sf::Texture& texture, int effect, int x, int y) {
-	mSprite.setTexture(texture);
-	mRect = sf::FloatRect(x, y, 32, 32);
-	mSprite.setTextureRect(sf::IntRect(0, 0, 32, 32));
-	mCurrentFrame = 0;
-	mEffectValue = effect;
-	mIsMarkedForRemoval = false;
-}
-
-void DropItem::update(float time) {
-	mSprite.setPosition(mRect.left, mRect.top);
-}
-
-void DropItem::action(GameObject& player) {
-	//player.heal(mEffectValue);
-	mIsMarkedForRemoval = true;
-}
-
-sf::FloatRect DropItem::getRect() {
-	return mRect;
-}
-
-sf::Sprite DropItem::getSprite() {
-	return mSprite;
-}
-
-bool DropItem::isMarkedForRemoval() {
-	return mIsMarkedForRemoval;
-}
-
-
-
-
 //   _____           _                    __                  _   _                 
 //  / ____|         | |                  / _|                | | (_)                
 // | (___  _   _ ___| |_ ___ _ __ ___   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -1209,11 +1215,21 @@ bool DropItem::isMarkedForRemoval() {
 //         |___/  
 //
 
-//
-//
-//	SOME STUFF.
-//
-//
+
+float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
+
+	float deltaX =  (target.left + target.width / 2) -
+					(object.left + object.width / 2);
+
+	float deltaY =  (target.top + target.height / 2) - 
+					(object.top + object.height / 2);
+
+	float distance = std::sqrt( deltaX * deltaX + deltaY * deltaY);
+
+	return distance;
+
+}
+
 
 //  ______             _               __                  _   _                 
 // |  ____|           (_)             / _|                | | (_)                
@@ -1357,23 +1373,16 @@ int main() {
 	//World.
 	std::string levelMapName = "./levels/level1.txt";
 
-	World world(&playerTexture, &hpBar, &font);
+	World world;
 	world.loadLevelMap(levelMapName);
 	std::vector<std::vector<int>> levelMap = world.getLevelMap();
 	
-
-	//Game objects.
-	std::vector<DropItem> drops = world.getDrops();
-	std::vector<GameObject> enemies = world.getEnemies();
-	/*
-	GameObject player(  new PlayerInputComponent(), 
-						new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, 120, 120)), 
-						new PlayerGraphicsComponent(&playerTexture, &hpBar, &font),
-						new PlayerCombatComponent(150, 150, 40, 40, 40),
-						new PlayerSocialComponent("Player", "players")  );
-	*/
-	GameObject* player = world.getPlayer();
-
+	//Creating player.
+	world.getGameObjects().push_back( *(new GameObject(  new PlayerInputComponent(),
+														 new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize)),
+														 new PlayerGraphicsComponent(&playerTexture, &hpBar, &font),
+														 new PlayerCombatComponent(150, 150, 40, 40, 2),
+														 new PlayerSocialComponent("Player 1", "players")  )) );
 
 	//Creating window, view.
 	sf::RenderWindow mWindow(sf::VideoMode(config.screenWidth, config.screenHeight), "Badass Tales of BADASSLAND!!!!111");
@@ -1383,7 +1392,7 @@ int main() {
 	sf::Vector2f mViewPosition;
 
 	//Game cycle.
-	while(mWindow.isOpen()) {
+	while( (mWindow.isOpen()) && (world.getGameObjects().size() != 0) ) {
 
 		float time = gameClock.getElapsedTime().asMicroseconds();
 		gameClock.restart();
@@ -1401,33 +1410,32 @@ int main() {
 			}
 		}
 
-		//Updating all objects.
-		player->update(time, levelMap, &config, world);
-		for(int i = 0; i < enemies.size(); ++i)	
-			enemies[i].update(time, levelMap, &config, world);
-		for(int i = 0; i < drops.size(); ++i)
-			drops[i].update(time);
-
-		//Resolving collisions with drop items.
-		//for(int i = 0; i < drops.size(); ++i)
-		//	if((player.getPhysics()->getRect().intersects(drops[i].getRect())) && (~drops[i].isMarkedForRemoval()) && (player.getHP() != player.getMaxHP()))
-		//		drops[i].action(player);
-	
-		//Spawning elves.
+				//Spawning elves.
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			enemies.push_back( *(new GameObject(  new PassiveInputComponent(),
-												  new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, 120, 120), 0.05),
-												  new PlayerGraphicsComponent(&enemyTexture, &hpBar, &font),
-												  new PlayerCombatComponent(150, 150, 40, 40, 2),
-												  new PlayerSocialComponent("Dark Elf", "dark_elves")  )) );
+			world.getGameObjects().push_back( *(new GameObject( new EnemyInputComponent(),
+																new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.05),
+																new PlayerGraphicsComponent(&enemyTexture, &hpBar, &font),
+																new PlayerCombatComponent(150, 150, 40, 40, 2),
+																new PlayerSocialComponent("Dark Elf", "dark_elves")  )) );
 			spawnClock.restart();
 		}
 
-		//Spawning health potions.
-		if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			drops.push_back( *(new DropItem(healthPotionTexture, 40, player->getPhysics()->getRect().left + (rand() % 2 - 1) * (rand() % 100), player->getPhysics()->getRect().top + (rand() % 2 - 1) * (rand() % 100))) );
+		if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
+			world.getGameObjects().push_back( *(new GameObject( new PassiveInputComponent(),
+																new PlayerPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.03),
+																new PlayerGraphicsComponent(&playerTexture, &hpBar, &font),
+																new PlayerCombatComponent(150, 150, 40, 40, 2),
+																new PlayerSocialComponent("Green Elf", "green_elves")  )) );
 			spawnClock.restart();
 		}
+
+
+
+		//Updating all objects.
+		//player->update(time, levelMap, &config, world);
+		for(int i = 0; i < world.getGameObjects().size(); ++i)	
+			world.getGameObjects()[i].update(time, levelMap, &config, world);
+
 
 
 		//HUD.
@@ -1437,11 +1445,12 @@ int main() {
 		std::ostringstream hudPlayerCoordinates;
 		std::ostringstream hudMouseCoordinates;
 
-		hudHealth << player->getCombat()->getHP();
+		//hudHealth << player->getCombat()->getHP();
+		hudHealth << world.getGameObjects()[0].getCombat()->getHP();
 		//hudMana << player.getMP();
-		hudEnemyCount << "Number of enemies: " << enemies.size();
-		hudPlayerCoordinates << "X: " << player->getPhysics()->getRect().left + config.tileSize / 2 << '\n'
-							 << "Y: " << player->getPhysics()->getRect().top + config.tileSize / 2;
+		hudEnemyCount << "Number of game objects: " << world.getGameObjects().size();
+		hudPlayerCoordinates << "X: " << world.getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 << '\n'
+							 << "Y: " << world.getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2;
 		hudMouseCoordinates << "X: " << sf::Mouse::getPosition(mWindow).x << '\n'
 							<< "Y: " << sf::Mouse::getPosition(mWindow).y;
 
@@ -1453,8 +1462,8 @@ int main() {
 
 
 		//View.
-		mViewPosition.x = player->getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
-		mViewPosition.y = player->getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
+		mViewPosition.x = world.getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
+		mViewPosition.y = world.getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 		
 		if(mViewPosition.x < 0)																	mViewPosition.x = 0;
 		if(mViewPosition.x > world.getMapWidth() * config.tileSize - config.screenWidth)		mViewPosition.x = world.getMapWidth() * config.tileSize - config.screenWidth;
@@ -1494,28 +1503,24 @@ int main() {
 
 
 		//Rendering all the objects.
-		for(int i = 0; i < enemies.size(); ++i) 
-			enemies[i].getGraphics()->draw(mWindow);
+		for(int i = 0; i < world.getGameObjects().size(); ++i) 
+			world.getGameObjects()[i].getGraphics()->draw(mWindow);
 
-		for(int i = 0; i < drops.size(); ++i)
-			mWindow.draw(drops[i].getSprite());
-
-
-		player->getGraphics()->draw(mWindow);
 		mWindow.draw(textHealth);
 		mWindow.draw(textMana);
 		mWindow.draw(textEnemyCount);
 		mWindow.draw(textPlayerCoordinates);
 		mWindow.draw(textMouseCoordinates);
 		mWindow.display();
-
+		
 		//Deleting objects marked for removal.
-		for(int i = 0; i < drops.size(); ++i)
-			if(drops[i].isMarkedForRemoval()) {
-				drops.erase(drops.begin() + i );
+		for(int i = 0; i < world.getGameObjects().size(); ++i)
+			if(world.getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
+				world.getGameObjects().erase(world.getGameObjects().begin() + i);
 				--i;
+				world.getGameObjects()[i].getInput()->setTargeting(false);
 			}
-
+		
 	}
 
 	return 0;
