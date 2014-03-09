@@ -1,6 +1,10 @@
-#include <SFML/Graphics.hpp>
+//DataTypes.hpp
+#ifndef _DataTypes_hpp_included_
+#define _DataTypes_hpp_included_
 
-//Attributes.
+
+//============Attributes====================
+//
 struct attributes {
 
      int							strength;				//Carry weight, melee damage. 
@@ -10,8 +14,13 @@ struct attributes {
      int							luck;					//Dodge chance, critical damage chance.
 
 };
+//
+//==========================================
 
-//Resistances.
+
+
+//============Resistances===================
+//
 struct resistances {
 
      int							poison;
@@ -22,17 +31,13 @@ struct resistances {
      int							earth;
 
 };
+//
+//==========================================
 
-//Health bar.
-struct healthBar {
 
-	sf::Sprite						mSprite;
-	int								mWidth;
-	int								mHeight;
 
-};
-
-//Structure used for storing config values (your C.O.).
+//============Config========================
+//
 struct config {
 
 	float							invincibilityTime;		
@@ -49,4 +54,8 @@ struct config {
 	std::string						levelMapName;
 
 };
+//
+//==========================================
 
+
+#endif
