@@ -79,7 +79,7 @@ float calculateDistance(sf::FloatRect, sf::FloatRect);
 // | |____| | | | (_| | | | | |  __/ | | | |_| | | | | (__| |_| | (_) | | | \__ \
 // |______|_| |_|\__, |_|_| |_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 //                __/ |                                                          
-//               |___
+//               |___/
 //
 
 
@@ -135,6 +135,17 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 
 
 //FACTORY.
+/*
+GameObject* createPlayer() {
+
+	return new GameObject(	new KeyboardInputComponent(),
+							new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
+							new HumanoidGraphicsComponent(&playerTexture, &hpBar, &font),
+							new HumanoidCombatComponent(150, 150, 40, 40, 2),
+							new HumanoidSocialComponent("Player 1", "players")  );
+
+}
+*/
 
 
 
@@ -164,10 +175,7 @@ int main() {
 	sf::Clock spawnClock;
 
 
-	//
-	//GRAPHICS.
-	//
-	//
+	//===============GRAPHICS======================
 	//
 	sf::RectangleShape rectangle(sf::Vector2f(config.tileSize, config.tileSize));	//For tiles (temporary).
 
@@ -219,13 +227,22 @@ int main() {
 	if(!healthPotionTexture.loadFromFile("./textures/healthPotion.png"))	return 1;
 
 	sf::Sprite tile(tileSet);
+	//
+	//=============================================
 
-	//Sounds.
+
+
+	//===============SOUND=========================
+	//
 	sf::SoundBuffer emenyHitSoundBuffer;
 
 	emenyHitSoundBuffer.loadFromFile("sound1.ogg");
 
 	sf::Sound emenyHitSound(emenyHitSoundBuffer);
+	//
+	//=============================================
+
+
 
 	//World.
 	std::string levelMapName = "./levels/level1.txt";
@@ -234,8 +251,21 @@ int main() {
 	world.loadLevelMap(levelMapName);
 	std::vector<std::vector<int>> levelMap = world.getLevelMap();
 	
+	//Key bindings.
+	sf::Keyboard::Key playerControls[4] = { sf::Keyboard::Key::Up,
+											sf::Keyboard::Key::Down,
+											sf::Keyboard::Key::Left,
+											sf::Keyboard::Key::Right };
+
+	sf::Keyboard::Key enemyControls[4] =  {	sf::Keyboard::Key::W,
+											sf::Keyboard::Key::S,
+											sf::Keyboard::Key::A,
+											sf::Keyboard::Key::D };
+
+
+
 	//Creating player.
-	world.getGameObjects().push_back( *(new GameObject(  new KeyboardInputComponent(),
+	world.getGameObjects().push_back( *(new GameObject(  new KeyboardInputComponent(playerControls),
 														 new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
 														 new HumanoidGraphicsComponent(&playerTexture, &hpBar, &font),
 														 new HumanoidCombatComponent(150, 150, 40, 40, 2),
@@ -278,7 +308,7 @@ int main() {
 		}
 
 		if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			world.getGameObjects().push_back( *(new GameObject( new BotPassiveInputComponent(4),
+			world.getGameObjects().push_back( *(new GameObject( new KeyboardInputComponent(enemyControls),
 																new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.03),
 																new HumanoidGraphicsComponent(&playerTexture, &hpBar, &font),
 																new HumanoidCombatComponent(150, 150, 40, 40, 2),
@@ -289,7 +319,6 @@ int main() {
 
 
 		//Updating all objects.
-		//player->update(time, levelMap, &config, world);
 		for(int i = 0; i < world.getGameObjects().size(); ++i)	
 			world.getGameObjects()[i].update(time, levelMap, &config, world);
 
