@@ -1,25 +1,21 @@
-//World.cpp
+//LocalMap.cpp
 #include <SFML/Graphics.hpp>
 #include <GameObject.hpp>
 #include <DataTypes.hpp>
 #include <fstream>
 #include <sstream>
 
-#include <World.hpp>
+#include <LocalMap.hpp>
 
-//extern sf::Font font;
-//extern int fontCharacterSize;
+extern sf::Font font;
+extern int fontCharacterSize;
 
-//============World======================
+//============LocalMap======================
 //
-World::World(sf::Font& font, int fontCharacterSize, int tileSize, std::string fileName) {
+LocalMap::LocalMap(sf::Font& font, int fontCharacterSize, int tileSize) {
 
-	//setMapHeight(0);
-	//setMapWidth(0);
-
-	mSpawnClock.restart();
-
-	loadLevelMap(fileName);
+	setMapHeight(0);
+	setMapWidth(0);
 
 	//HUD Health.
 	mTextHealth.setFont(font);
@@ -66,42 +62,13 @@ World::World(sf::Font& font, int fontCharacterSize, int tileSize, std::string fi
 
 }
 
-void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
+void LocalMap::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
 	//Updating game objects.
 	for(int i = 0; i < getGameObjects().size(); ++i)	
 		getGameObjects()[i].update(deltaTime, &config, *this);
 	
-	//Deleting objects marked for removal.
-	for(int i = 0; i < getGameObjects().size(); ++i) {
-		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
-
-			getGameObjects().erase(getGameObjects().begin() + i);
-			--i;
-			getGameObjects()[i].getInput()->setTargeting(false);
-
-		}
-	}
-
-	//============Updating View====================
-	//
-	sf::Vector2f viewPosition;
-	viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
-	viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
-		
-	if(viewPosition.x < 0)														viewPosition.x = 0;
-	if(viewPosition.x > getMapWidth() * config.tileSize - config.screenWidth)	viewPosition.x = getMapWidth() * config.tileSize - config.screenWidth;
-	if(viewPosition.y < 0)														viewPosition.y = 0;
-	if(viewPosition.y > getMapHeight() * config.tileSize - config.screenHeight)	viewPosition.y = getMapHeight() * config.tileSize - config.screenHeight;
-
-	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, config.screenWidth, config.screenHeight));
-	window.setView(view);
-	//
-	//=============================================
-
-
-	//===============HUD===========================
-	//
+	//HUD.
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
 	std::ostringstream hudEnemyCount;
@@ -122,17 +89,41 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	mTextPlayerCoordinates.setString(hudPlayerCoordinates.str());
 	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
 
+
+	//View.
+	sf::Vector2f viewPosition;
+	viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
+	viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
+		
+	if(viewPosition.x < 0)														viewPosition.x = 0;
+	if(viewPosition.x > getMapWidth() * config.tileSize - config.screenWidth)	viewPosition.x = getMapWidth() * config.tileSize - config.screenWidth;
+	if(viewPosition.y < 0)														viewPosition.y = 0;
+	if(viewPosition.y > getMapHeight() * config.tileSize - config.screenHeight)	viewPosition.y = getMapHeight() * config.tileSize - config.screenHeight;
+
+	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, config.screenWidth, config.screenHeight));
+	window.setView(view);
+
 	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
 	//textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
 	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + mTextEnemyCount.getCharacterSize() * 2);
 	mTextPlayerCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 3);
 	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 6);
-	//
-	//=============================================
+
+	//Deleting objects marked for removal.
+	for(int i = 0; i < getGameObjects().size(); ++i) {
+		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
+
+			getGameObjects().erase(getGameObjects().begin() + i);
+			--i;
+			//getGameObjects()[i].getInput()->setTargeting(false);
+
+		}
+	}
+
 
 }
 
-void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
+void LocalMap::render(sf::RenderWindow& window, sf::View& view, config& config) {
 
 	//Rendering level map tiles.
 	for(int i = 0; i < getMapHeight(); ++i) {
@@ -165,7 +156,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 	
 }
 
-void World::resolveMapCollision(GameObject* object, int direction, int tileSize) {
+void LocalMap::resolveMapCollision(GameObject* object, int direction, int tileSize) {
 
 	sf::FloatRect rect = object->getPhysics()->getRect();
 	sf::Vector2f movement = object->getPhysics()->getMovement();
@@ -188,7 +179,7 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 
 }
 
-void World::resolveObjectCollision(GameObject* object, int direction) {
+void LocalMap::resolveObjectCollision(GameObject* object, int direction) {
 
 	sf::FloatRect rect = object->getPhysics()->getRect();
 	sf::Vector2f movement = object->getPhysics()->getMovement();
@@ -211,7 +202,7 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 
 }
 
-void World::loadLevelMap(std::string filename) {
+void LocalMap::loadLevelMap(std::string filename) {
 
 	std::ifstream inputFile(filename);
 
@@ -241,11 +232,9 @@ void World::loadLevelMap(std::string filename) {
 
 }
 
-void World::deleteLevelMap() {
-
+void LocalMap::deleteLevelMap() {
 	getLevelMap().clear();
 	getGameObjects().clear();
-
 }
 //
 //==========================================

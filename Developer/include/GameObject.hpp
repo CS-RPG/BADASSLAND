@@ -24,7 +24,7 @@ public:
 												CombatComponent*,
 												SocialComponent* );
 
-	void							update(float, std::vector<std::vector<int>>, struct config*, World&);
+	void							update(float, struct config*, World&);
 
 	InputComponent*&				getInput();
 	PhysicsComponent*&				getPhysics();

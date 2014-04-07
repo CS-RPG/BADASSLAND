@@ -17,7 +17,7 @@ mSocial(social) {
 
 }
 
-void GameObject::update(float deltaTime, std::vector<std::vector<int>> levelMap, struct config* config, World& world) {
+void GameObject::update(float deltaTime, struct config* config, World& world) {
 
 	mInput->update(*this, world);
 	mPhysics->update(*this, world, config->tileSize, deltaTime);

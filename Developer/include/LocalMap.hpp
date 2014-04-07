@@ -1,6 +1,6 @@
-//World.hpp
-#ifndef _World_hpp_included_
-#define _World_hpp_included_
+//LocalMap.hpp
+#ifndef _LocalMap_hpp_included_
+#define _LocalMap_hpp_included_
 
 #include <GameObject.hpp>
 #include <SFML/Graphics.hpp>
@@ -9,26 +9,22 @@
 
 #include <vector>
 
-//============World======================
+//============LocalMap======================
 //
-class World : public State {
+class LocalMap : public State {
 public:
 
-									World(sf::Font& font, int fontCharacterSize, int tileSize, std::string fileName);
+									LocalMap(sf::Font& font, int fontCharacterSize, int tileSize);
 
-	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
-	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
+	void							update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
+	void							render(sf::RenderWindow& window, sf::View& view, config& config);
 
 	void							resolveMapCollision(GameObject*, int, int);
 	void							resolveObjectCollision(GameObject*, int);
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
-	//void							spawnObject(std::string);
-
 private:
-
-	sf::Clock						mSpawnClock;
 
 	std::vector<std::vector<bool>>	mCollisionMap;
 

@@ -11,7 +11,7 @@ public:
 									HumanoidCombatComponent(int, int, float, float, float);
 	virtual void					update(GameObject&, World&);
 	virtual void					attack(GameObject*);
-	virtual void					takeDamage(float);
+	virtual void					takeDamage(/*GameObject*, */float);
 	//virtual void					heal(float);
 
 };

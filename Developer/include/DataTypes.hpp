@@ -2,6 +2,7 @@
 #ifndef _DataTypes_hpp_included_
 #define _DataTypes_hpp_included_
 
+#include <string>
 
 //============Attributes====================
 //

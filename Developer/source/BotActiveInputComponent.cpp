@@ -1,10 +1,4 @@
 //BotActiveInputComponent.cpp
-#include <SFML/Graphics.hpp>
-#include <World.hpp>
-#include <GameObject.hpp>
-
-#include <iostream>
-
 #include <BotActiveInputComponent.hpp>
 
 float calculateDistance(sf::FloatRect, sf::FloatRect);

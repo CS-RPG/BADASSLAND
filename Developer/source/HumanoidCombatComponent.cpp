@@ -27,10 +27,12 @@ void HumanoidCombatComponent::update(GameObject& object, World& world) {
 
 }
 
-void HumanoidCombatComponent::takeDamage(float damage) {
+void HumanoidCombatComponent::takeDamage(/*GameObject* attacker, */float damage) {
 	setHP(getHP() - damage);
-	if(getHP() <= 0)
+	if(getHP() <= 0) {
 		kill();
+		//attacker->getInput()->setTargeting(false);
+	}
 }
 
 void HumanoidCombatComponent::attack(GameObject* target) {
