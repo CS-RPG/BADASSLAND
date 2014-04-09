@@ -15,6 +15,7 @@ public:
 	void							run();
 	void							update(float deltaTime);
 	void							render();
+	void							processEvents();
 
 	void							changeState();
 	void							addState();
@@ -24,10 +25,9 @@ public:
 
 private:
 
-	//Graphics.
-	sf::RenderWindow				mWindow;
+	sf::RenderWindow*				mWindow;
 	sf::View						mView;
-	int								mFPS;
+	float							mFPS_CAP;
 	sf::Font						mFont;
 
 	config							mConfig;

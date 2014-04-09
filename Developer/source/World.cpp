@@ -1,21 +1,44 @@
 //World.cpp
 #include <World.hpp>
 
+extern TextureHolder		gTextureHolder;
 extern sf::Font				gFont;
 extern int					gFontSize;
 
-//============World======================
+//============WORLD======================
 //
-World::World(int tileSize, std::string fileName) {
-
-	//setMapHeight(0);
-	//setMapWidth(0);
+World::World(int tileSize, std::string fileName, config& config) {
 
 	mSpawnClock.restart();
 
 	loadLevelMap(fileName);
 
-	//HUD Health.
+
+	//===============FONT==========================
+	gFont.loadFromFile("sansation.ttf");
+	gFontSize = 30;
+
+
+	//===============TEXTURES======================
+	gTextureHolder.load(Textures::HP_Bar, "./textures/HPBar.png");
+	gTextureHolder.load(Textures::Elf_Red, "./textures/red_elf_sprite_list.png");
+	gTextureHolder.load(Textures::Elf_Green, "./textures/green_elf_sprite_list.png");
+	gTextureHolder.load(Textures::Elf_Yellow, "./textures/yellow_elf_sprite_list.png");
+	//gTextureHolder.load(Textures::TileSet, "./textures/testTileSet.png");
+	//gTextureHolder.load(Textures::HP_Potion, "./textures/healthPotion.png");
+
+	//sf::Sprite tile(tileSet);
+
+
+	//===============SOUND=========================
+	//sf::SoundBuffer emenyHitSoundBuffer;
+
+	//emenyHitSoundBuffer.loadFromFile("sound1.ogg");
+
+	//sf::Sound emenyHitSound(emenyHitSoundBuffer);
+
+
+	//===============HUD HEALTH====================
 	mTextHealth.setFont(gFont);
 	mTextHealth.setString("");
 	mTextHealth.setCharacterSize(gFontSize);
@@ -23,7 +46,8 @@ World::World(int tileSize, std::string fileName) {
 	mTextHealth.setColor(sf::Color::Red);
 	mTextHealth.setPosition(0, 0);
 
-	//HUD Mana.
+
+	//===============HUD MANA======================
 	mTextMana.setFont(gFont);
 	mTextMana.setString("");
 	mTextMana.setCharacterSize(gFontSize);
@@ -31,7 +55,8 @@ World::World(int tileSize, std::string fileName) {
 	mTextMana.setColor(sf::Color::Blue);
 	mTextMana.setPosition(0, gFontSize);
 
-	//HUD Enemy count.
+
+	//===============HUD ENEMY COUNT===============
 	mTextEnemyCount.setFont(gFont);
 	mTextEnemyCount.setString("");
 	mTextEnemyCount.setCharacterSize(gFontSize);
@@ -39,7 +64,8 @@ World::World(int tileSize, std::string fileName) {
 	mTextEnemyCount.setColor(sf::Color::Color(184, 138, 0));
 	mTextEnemyCount.setPosition(0, gFontSize * 2);
 
-	//HUD Player coordinates.
+
+	//===============HUD PLAYER COORDINATES========
 	mTextPlayerCoordinates.setFont(gFont);
 	mTextPlayerCoordinates.setString("");
 	mTextPlayerCoordinates.setCharacterSize(gFontSize);
@@ -47,7 +73,8 @@ World::World(int tileSize, std::string fileName) {
 	mTextPlayerCoordinates.setColor(sf::Color::Color(125, 145, 176));
 	mTextPlayerCoordinates.setPosition(0, gFontSize * 3);
 
-	//HUD Mouse coordinates.
+
+	//===============HUD MOUSE COORDINATES=========
 	mTextMouseCoordinates.setFont(gFont);
 	mTextMouseCoordinates.setString("");
 	mTextMouseCoordinates.setCharacterSize(gFontSize);
@@ -55,15 +82,35 @@ World::World(int tileSize, std::string fileName) {
 	mTextMouseCoordinates.setColor(sf::Color::Color(125, 145, 176));
 	mTextMouseCoordinates.setPosition(0, gFontSize * 6);
 
-	//Tile object.
+
+	//===============TILE OBJECT===================
 	mTile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
+
+
+
+	//===============KEY BINDINGS==================
+	sf::Keyboard::Key playerControls[4] = { sf::Keyboard::Key::Up,
+											sf::Keyboard::Key::Down,
+											sf::Keyboard::Key::Left,
+											sf::Keyboard::Key::Right };
+
+	sf::Keyboard::Key enemyControls[4] =  {	sf::Keyboard::Key::W,		//!!!Move to update.
+											sf::Keyboard::Key::S,		//!!!Move controls to global or somewhere else.
+											sf::Keyboard::Key::A,
+											sf::Keyboard::Key::D };
+
+	//Creating player.
+	getGameObjects().push_back( *(new GameObject(	new KeyboardInputComponent(playerControls),
+													new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
+													new HumanoidGraphicsComponent(Textures::Elf_Green),
+													new HumanoidCombatComponent(150, 150, 40, 40, 2),
+													new HumanoidSocialComponent("Player 1", "yellow_elves")  )) );
 
 }
 
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
-	//===============Updating game logic===========
-	//
+	//===============UPDATING GAME LOGIC===========
 	for(int i = 0; i < getGameObjects().size(); ++i)	
 		getGameObjects()[i].update(deltaTime, &config, *this);
 	
@@ -77,13 +124,10 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 		}
 	}
-	//
-	//=============================================
 
 
-	//===============Spawning objects==============
-	//
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
+	//===============SPAWNING OBJECTS==============
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {	//!!!Replace with a global variable.
 		getGameObjects().push_back( *(new GameObject(	new BotActiveInputComponent(),
 														new DynamicPhysicsComponent(sf::FloatRect(2 * config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.05),
 														new HumanoidGraphicsComponent(Textures::Elf_Red),
@@ -100,12 +144,9 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 														new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  )) );
 		mSpawnClock.restart();
 	}
-	//
-	//=============================================
 
 
-	//============Updating View====================
-	//
+	//============UPDATING VIEW====================
 	sf::Vector2f viewPosition;
 	viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
 	viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
@@ -117,12 +158,9 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, config.screenWidth, config.screenHeight));
 	window.setView(view);
-	//
-	//=============================================
 
 
-	//===============HUD===========================
-	//
+	//===============UPDATING HUD==================
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
 	std::ostringstream hudEnemyCount;
@@ -130,7 +168,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	std::ostringstream hudMouseCoordinates;
 
 	hudHealth << getGameObjects()[0].getCombat()->getHP();
-	//hudMana << player.getMP();
+	//hudMana << getGameObjects()[0].getCombat()->getMP();
 	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
 	hudPlayerCoordinates << "X: " << getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 << '\n'
 						 << "Y: " << getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2;
@@ -148,8 +186,6 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + mTextEnemyCount.getCharacterSize() * 2);
 	mTextPlayerCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 3);
 	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 6);
-	//
-	//=============================================
 
 }
 

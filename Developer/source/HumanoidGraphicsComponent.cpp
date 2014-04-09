@@ -24,15 +24,18 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
 	mSpriteLeft.setTextureRect(sf::IntRect(0, 667, 0, 0));
 	mSpriteRight.setTextureRect(sf::IntRect(0, 925, 0, 0));
 
+
 	//===============HP-Bar========================
 	mHPBarSprite.setTexture(gTextureHolder.get(Textures::HP_Bar));
 	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
+
 
 	//===============Text==========================
 	mText.setFont(gFont);
 	mText.setCharacterSize(gFontSize);
 	mText.setStyle(sf::Text::Bold);
 	mText.setColor(sf::Color::Red);
+
 
 	mCurrentSprite = mSpriteStill;
 
@@ -60,6 +63,7 @@ void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 													player.getPhysics()->getRect().width,
 													player.getPhysics()->getRect().height  ));
 
+
 	//===============HP-Bar========================
 	float hpPercentage = player.getCombat()->getHP() / player.getCombat()->getMaxHP();
 	if(hpPercentage >= 0.6)
@@ -71,6 +75,7 @@ void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 
 	mHPBarSprite.setTextureRect(sf::IntRect(100 * (1 - hpPercentage), 0, 100, 10));
 	mHPBarSprite.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top + player.getPhysics()->getRect().height);
+
 
 	//===============Text==========================
 	mText.setString(player.getSocial()->getName());

@@ -10,46 +10,79 @@ extern int					gFontSize;
 //
 StateMachine::StateMachine() {
 
+	//Config, global settings.
 	loadConfigFile("config.txt");
 	gFont.loadFromFile("sansation.ttf");
 	gFontSize = 30;
 
+	//Creating window, view.
+	mWindow = new sf::RenderWindow(sf::VideoMode(mConfig.screenWidth, mConfig.screenHeight), "Badass Tales of BADASSLAND!!!!111");
+	mView.reset(sf::FloatRect(0, 0, mConfig.screenWidth, mConfig.screenHeight));
+	mView.setViewport(sf::FloatRect(0, 0, 1, 1));
+
+	mFPS_CAP = 60;		//!!!Replace with a global variable.
+
 	std::string levelMapName = "./levels/level1.txt";
-	mCurrentState = new World(mConfig.tileSize, levelMapName);
+	mCurrentState = new World(mConfig.tileSize, levelMapName, mConfig);
 
 }
 
 void StateMachine::run() {
 
-	sf::Time timePerFrame;
+	//sf::Time timePerFrame = sf::seconds(1 / mFPS_CAP);
 	sf::Clock gameLoopClock;
 
-	sf::Time timeSinceLastUpdate = sf::Time::Zero;
+	//sf::Time timeSinceLastUpdate = sf::Time::Zero;
+	
+	while(mWindow->isOpen()/* && (mCurrentState->getGameObjects().size() != 0)*/) {
 
-	while(mWindow.isOpen()) {
+		float deltaTime = gameLoopClock.getElapsedTime().asMicroseconds();
+		deltaTime /= mConfig.gameSpeed;
 
-		timeSinceLastUpdate += gameLoopClock.restart();
+		//timeSinceLastUpdate += gameLoopClock.getElapsedTime();
+		gameLoopClock.restart();
 
-		while(timeSinceLastUpdate > timePerFrame) {
+		//while(timeSinceLastUpdate > timePerFrame) {
 			
-			update(timePerFrame.asSeconds());
+			//timeSinceLastUpdate -= timePerFrame;
+
+			processEvents();
+			update(deltaTime);
 			render();
 
-		}
+		//}
 
 	}
+	
 
 }
 
 void StateMachine::update(float deltaTime) {
 
-	mCurrentState->update(deltaTime, mWindow, mView, mConfig);
+	mCurrentState->update(deltaTime, *mWindow, mView, mConfig);
 
 }
 
 void StateMachine::render() {
 
-	mCurrentState->render(mWindow, mView, mConfig);
+	mWindow->clear(sf::Color::White);
+	mCurrentState->render(*mWindow, mView, mConfig);
+	mWindow->display();
+
+}
+
+void StateMachine::processEvents() {
+
+	sf::Event event;
+	while(mWindow->pollEvent(event)) {
+		switch(event.type) {
+			
+			case(sf::Event::Closed):
+				mWindow->close();
+				break;
+
+		}
+	}
 
 }
 

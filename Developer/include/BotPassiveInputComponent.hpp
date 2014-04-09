@@ -8,11 +8,11 @@
 class BotPassiveInputComponent : public InputComponent {
 public:
 
-									BotPassiveInputComponent(float);
-	virtual void					update(GameObject&, World&);
+									BotPassiveInputComponent(float changeDirectionFrequency);
+	virtual void					update(GameObject& source, World& world);
 
 	float							getChangeDirectionFrequency();
-	void							setChangeDirectionFrequency(float);
+	void							setChangeDirectionFrequency(float changeDirectionFrequency);
 	
 
 private:

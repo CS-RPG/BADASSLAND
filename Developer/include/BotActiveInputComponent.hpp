@@ -14,7 +14,7 @@ class BotActiveInputComponent : public InputComponent {
 public:
 
 									BotActiveInputComponent();
-	virtual void					update(GameObject&, World&);
+	virtual void					update(GameObject& object, World& world);
 
 };
 //

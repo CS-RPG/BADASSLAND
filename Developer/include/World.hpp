@@ -11,7 +11,7 @@
 class World : public State {
 public:
 
-									World(int tileSize, std::string fileName);
+									World(int tileSize, std::string fileName, config& config);
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
