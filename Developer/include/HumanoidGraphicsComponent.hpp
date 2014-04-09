@@ -2,24 +2,20 @@
 #ifndef _HumanoidGraphicsComponent_hpp_included_
 #define _HumanoidGraphicsComponent_hpp_included_
 
-//Prototypes.
-class GameObject;
-
+#include <_includes_badass.hpp>
+#include <_includes_system.hpp>
 
 //============HumanoidGraphicsComponent=====
 //
 class HumanoidGraphicsComponent : public GraphicsComponent {
 public:
 
-									HumanoidGraphicsComponent(sf::Texture*, sf::Texture*, sf::Font*);
+									HumanoidGraphicsComponent(Textures::ID textureID);
 
 	virtual void					update(GameObject&, float);
 	virtual void					draw(sf::RenderWindow&);
 
 private:
-
-	sf::Texture*					mTexture;
-	sf::Texture*					mHPBarTexture;
 
 	sf::Sprite						mCurrentSprite;
 

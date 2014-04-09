@@ -1,22 +1,22 @@
 //HumanoidGraphicsComponent.cpp
-#include <SFML/Graphics.hpp>
-#include <World.hpp>
-#include <GameObject.hpp>
-
 #include <HumanoidGraphicsComponent.hpp>
+
+extern TextureHolder		gTextureHolder;
+extern sf::Font				gFont;
+extern int					gFontSize;
 
 
 //============HumanoidGraphicsComponent=====
 //
-HumanoidGraphicsComponent::HumanoidGraphicsComponent(sf::Texture* texture, sf::Texture* hpTexture, sf::Font* font)
-:mTexture(texture) {
+HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
 
-	mCurrentSprite.setTexture(*mTexture);
-	mSpriteStill.setTexture(*mTexture);
-	mSpriteUp.setTexture(*mTexture);
-	mSpriteDown.setTexture(*mTexture);
-	mSpriteLeft.setTexture(*mTexture);
-	mSpriteRight.setTexture(*mTexture);
+	//===============Sprites=======================
+	mCurrentSprite.setTexture(gTextureHolder.get(textureID));
+	mSpriteStill.setTexture(gTextureHolder.get(textureID));
+	mSpriteUp.setTexture(gTextureHolder.get(textureID));
+	mSpriteDown.setTexture(gTextureHolder.get(textureID));
+	mSpriteLeft.setTexture(gTextureHolder.get(textureID));
+	mSpriteRight.setTexture(gTextureHolder.get(textureID));
 
 	mSpriteStill.setTextureRect(sf::IntRect(0, 15, 120, 120));
 	mSpriteUp.setTextureRect(sf::IntRect(0, 787, 0, 0));
@@ -24,25 +24,27 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(sf::Texture* texture, sf::T
 	mSpriteLeft.setTextureRect(sf::IntRect(0, 667, 0, 0));
 	mSpriteRight.setTextureRect(sf::IntRect(0, 925, 0, 0));
 
-	mHPBarSprite.setTexture(*hpTexture);
+	//===============HP-Bar========================
+	mHPBarSprite.setTexture(gTextureHolder.get(Textures::HP_Bar));
 	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
 
-	mText.setFont(*font);
-	mText.setCharacterSize(30);
+	//===============Text==========================
+	mText.setFont(gFont);
+	mText.setCharacterSize(gFontSize);
 	mText.setStyle(sf::Text::Bold);
 	mText.setColor(sf::Color::Red);
 
 	mCurrentSprite = mSpriteStill;
 
-	mFrameCount = 10;
+	mFrameCount = 10;		//!!!Replace with global variable.
 	mCurrentFrame= 0;
 
 }
 
 void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 
+	//===============Animation=====================
 	if(player.getPhysics()->getDirection() == 0) mCurrentSprite = mSpriteStill;
-
 	if(player.getPhysics()->getDirection() == 3) mCurrentSprite = mSpriteRight;
 	if(player.getPhysics()->getDirection() == 7) mCurrentSprite = mSpriteLeft;
 	if(player.getPhysics()->getDirection() == 5) mCurrentSprite = mSpriteDown;
@@ -58,7 +60,7 @@ void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 													player.getPhysics()->getRect().width,
 													player.getPhysics()->getRect().height  ));
 
-	//HP bar.
+	//===============HP-Bar========================
 	float hpPercentage = player.getCombat()->getHP() / player.getCombat()->getMaxHP();
 	if(hpPercentage >= 0.6)
 		mHPBarSprite.setColor(sf::Color::Green);
@@ -70,7 +72,7 @@ void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 	mHPBarSprite.setTextureRect(sf::IntRect(100 * (1 - hpPercentage), 0, 100, 10));
 	mHPBarSprite.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top + player.getPhysics()->getRect().height);
 
-	//Text.
+	//===============Text==========================
 	mText.setString(player.getSocial()->getName());
 	mText.setPosition(player.getPhysics()->getRect().left, player.getPhysics()->getRect().top - mText.getCharacterSize());
 

@@ -1,21 +1,26 @@
 //StateMachine.cpp
 #include <StateMachine.hpp>
 
+extern TextureHolder		gTextureHolder;
+extern sf::Font				gFont;
+extern int					gFontSize;
+
+
 //============StateMachine==================
 //
 StateMachine::StateMachine() {
 
 	loadConfigFile("config.txt");
-	mFont.loadFromFile("sansation.ttf");
+	gFont.loadFromFile("sansation.ttf");
+	gFontSize = 30;
 
 	std::string levelMapName = "./levels/level1.txt";
-	mCurrentState = new World(mFont, 30, mConfig.tileSize, levelMapName);
+	mCurrentState = new World(mConfig.tileSize, levelMapName);
 
 }
 
 void StateMachine::run() {
 
-	
 	sf::Time timePerFrame;
 	sf::Clock gameLoopClock;
 

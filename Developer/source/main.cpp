@@ -1,76 +1,30 @@
-
-//FONT - BIG.
-//http://patorjk.com/software/taag/
-
-
-//SFML includes.
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
-
-//std includes.
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <stdlib.h>
-#include <ctime>
-#include <sstream>
-#include <vector>
-
-//Badass includes.
-#include <World.hpp>
-#include <GameObject.hpp>
-#include <DataTypes.hpp>
+//  ____          _____           _____ _____ _               _   _ _____  
+// |  _ \   /\   |  __ \   /\    / ____/ ____| |        /\   | \ | |  __ \ 
+// | |_) | /  \  | |  | | /  \  | (___| (___ | |       /  \  |  \| | |  | |
+// |  _ < / /\ \ | |  | |/ /\ \  \___ \\___ \| |      / /\ \ | . ` | |  | |
+// | |_) / ____ \| |__| / ____ \ ____) |___) | |____ / ____ \| |\  | |__| |
+// |____/_/____\_\_____/_/    \_\_____/_____/|______/_/    \_\_| \_|_____/ 
+// |  __ \|  __ \ / __ \     | |  ____/ ____|__   __|                      
+// | |__) | |__) | |  | |    | | |__ | |       | |                         
+// |  ___/|  _  /| |  | |_   | |  __|| |       | |                         
+// | |    | | \ \| |__| | |__| | |___| |____   | |                         
+// |_|    |_|  \_\\____/ \____/|______\_____|  |_|                         
+//                                                        
 
 
-//   _____                                             _       
-//  / ____|                                           | |      
-// | |     ___  _ __ ___  _ __   ___  _ __   ___ _ __ | |_ ___ 
-// | |    / _ \| '_ ` _ \| '_ \ / _ \| '_ \ / _ \ '_ \| __/ __|
-// | |___| (_) | | | | | | |_) | (_) | | | |  __/ | | | |_\__ \
-//  \_____\___/|_| |_| |_| .__/ \___/|_| |_|\___|_| |_|\__|___/
-//                       | |                                   
-//                       |_|
+#include <_includes_badass.hpp>
+#include <_includes_system.hpp>
+
+
+//============GLOBAL VARIABLES==============
 //
+const float			gRangeMultiplier = 6;	//Range multiplier for target capturing.
 
-//============BASE==========================
-#include <InputComponent.hpp>
-#include <PhysicsComponent.hpp>
-#include <GraphicsComponent.hpp>
-#include <CombatComponent.hpp>
-#include <SocialComponent.hpp>
-
-//============INPUT=========================
-#include <KeyboardInputComponent.hpp>
-#include <BotActiveInputComponent.hpp>
-#include <BotPassiveInputComponent.hpp>
-
-//============PHYSICS=======================
-#include <DynamicPhysicsComponent.hpp>
-
-//============GRAPHICS======================
-#include <HumanoidGraphicsComponent.hpp>
-
-//============COMBAT========================
-#include <HumanoidCombatComponent.hpp>
-
-//============SOCIAL========================
-#include <HumanoidSocialComponent.hpp>
-
-
-
-
-//Range multiplier for target capturing.
-const float rangeMultiplier = 6;
-
-//Game font.
-//extern sf::Font font;
-//extern int fontCharacterSize;
-
-
-//FUNCTION PROTOTYPES.
-float calculateDistance(sf::FloatRect, sf::FloatRect);
-
-
+TextureHolder		gTextureHolder;
+sf::Font			gFont;
+int					gFontSize;
+//
+//==========================================
 
 
 //  ______             _               __                  _   _                 
@@ -167,32 +121,23 @@ int main() {
 	loadConfigFile(config, "config.txt");
 
 
-	//Clocks.
+	//===============CLOCKS========================
 	sf::Clock gameClock;
-	sf::Clock spawnClock;
 
 
 	//===============GRAPHICS======================
 	//
 	//Loading font.
-	sf::Font font;
-	font.loadFromFile("sansation.ttf");
-
+	gFont.loadFromFile("sansation.ttf");
+	gFontSize = 30;
 
 	//Loading textures.
-	sf::Texture hpBar;
-	sf::Texture tileSet;
-	sf::Texture greenElfTexture;
-	sf::Texture redElfTexture;
-	sf::Texture yellowElfTexture;
-	sf::Texture healthPotionTexture;
-
-	if(!hpBar.loadFromFile("./textures/HPBar.png"))								return 1;
-	if(!tileSet.loadFromFile("./textures/testTileSet.png"))						return 1;
-	if(!greenElfTexture.loadFromFile("./textures/green_elf_sprite_list.png"))	return 1;
-	if(!redElfTexture.loadFromFile("./textures/red_elf_sprite_list.png"))		return 1;
-	if(!yellowElfTexture.loadFromFile("./textures/yellow_elf_sprite_list.png"))	return 1;
-	if(!healthPotionTexture.loadFromFile("./textures/healthPotion.png"))		return 1;
+	gTextureHolder.load(Textures::HP_Bar, "./textures/HPBar.png");
+	gTextureHolder.load(Textures::Elf_Red, "./textures/red_elf_sprite_list.png");
+	gTextureHolder.load(Textures::Elf_Green, "./textures/green_elf_sprite_list.png");
+	gTextureHolder.load(Textures::Elf_Yellow, "./textures/yellow_elf_sprite_list.png");
+	//gTextureHolder.load(Textures::TileSet, "./textures/testTileSet.png");
+	//gTextureHolder.load(Textures::HP_Potion, "./textures/healthPotion.png");
 
 	//sf::Sprite tile(tileSet);
 	//
@@ -215,7 +160,7 @@ int main() {
 	//World.
 	std::string levelMapName = "./levels/level1.txt";
 
-	World world(font, 30, config.tileSize, levelMapName);
+	World world(config.tileSize, levelMapName);
 	world.loadLevelMap(levelMapName);
 	
 	//Key bindings.
@@ -232,7 +177,7 @@ int main() {
 	//Creating player.
 	world.getGameObjects().push_back( *(new GameObject(  new KeyboardInputComponent(playerControls),
 														 new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
-														 new HumanoidGraphicsComponent(&greenElfTexture, &hpBar, &font),
+														 new HumanoidGraphicsComponent(Textures::Elf_Green),
 														 new HumanoidCombatComponent(150, 150, 40, 40, 2),
 														 new HumanoidSocialComponent("Player 1", "yellow_elves")  )) );
 
@@ -260,26 +205,6 @@ int main() {
 
 			}
 		}
-		
-		//Spawning objects.
-		if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			world.getGameObjects().push_back( *(new GameObject( new BotActiveInputComponent(),
-																new DynamicPhysicsComponent(sf::FloatRect(2 * config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.05),
-																new HumanoidGraphicsComponent(&redElfTexture, &hpBar, &font),
-																new HumanoidCombatComponent(150, 150, 40, 130, 2),
-																new HumanoidSocialComponent("Red Elf", "red_elves")  )) );
-			spawnClock.restart();
-		}
-
-		if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (spawnClock.getElapsedTime().asSeconds() > 0.25)) {
-			world.getGameObjects().push_back( *(new GameObject( new BotActiveInputComponent(/*enemyControls*/),
-																new DynamicPhysicsComponent(sf::FloatRect(3 * config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.03),
-																new HumanoidGraphicsComponent(&yellowElfTexture, &hpBar, &font),
-																new HumanoidCombatComponent(150, 150, 40, 130, 2),
-																new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  )) );
-			spawnClock.restart();
-		}
-		
 
 		//Updating.
 		world.update(deltaTime, mWindow, mView, config);

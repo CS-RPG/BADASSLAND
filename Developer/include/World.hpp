@@ -2,19 +2,16 @@
 #ifndef _World_hpp_included_
 #define _World_hpp_included_
 
-#include <GameObject.hpp>
-#include <SFML/Graphics.hpp>
-#include <DataTypes.hpp>
-#include <State.hpp>
+#include <_includes_system.hpp>
+#include <_includes_badass.hpp>
 
-#include <vector>
 
-//============World======================
+//============World=========================
 //
 class World : public State {
 public:
 
-									World(sf::Font& font, int fontCharacterSize, int tileSize, std::string fileName);
+									World(int tileSize, std::string fileName);
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);

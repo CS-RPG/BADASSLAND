@@ -2,11 +2,9 @@
 #ifndef _StateMachine_hpp_included_
 #define _StateMachine_hpp_included_
 
-#include <DataTypes.hpp>
-#include <State.hpp>
-#include <fstream>
-#include <World.hpp>
-#include <SFML/Graphics.hpp>
+#include <_includes_badass.hpp>
+#include <_includes_system.hpp>
+
 
 //============StateMachine==================
 //
@@ -29,7 +27,7 @@ private:
 	//Graphics.
 	sf::RenderWindow				mWindow;
 	sf::View						mView;
-	float							mFPS;
+	int								mFPS;
 	sf::Font						mFont;
 
 	config							mConfig;
