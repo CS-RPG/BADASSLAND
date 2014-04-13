@@ -17,7 +17,7 @@
 //
 class GameObject {
 public:
-
+									
 									GameObject( InputComponent*,
 												PhysicsComponent*,
 												GraphicsComponent*,
@@ -31,6 +31,7 @@ public:
 	GraphicsComponent*&				getGraphics();
 	CombatComponent*&				getCombat();
 	SocialComponent*&				getSocial();
+	bool							isPlayer();
 
 	void							setInput(InputComponent*);
 	void							setPhysics(PhysicsComponent*);
@@ -38,9 +39,11 @@ public:
 	void							setCombat(CombatComponent*);
 	void							setSocial(SocialComponent*);
 
+	void							setPlayer(bool isPlayer);
 
 private:
 
+	bool							mIsPlayer;
 	InputComponent*					mInput;
 	PhysicsComponent*				mPhysics;
 	GraphicsComponent*				mGraphics;

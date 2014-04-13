@@ -46,6 +46,8 @@ struct config {
 	int								tileSize;						
 
 	int								gameSpeed;
+	float							spawnDelay;
+
 	std::string						levelMapName;
 
 	sf::Keyboard::Key				controls1[4];

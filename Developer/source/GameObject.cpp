@@ -46,6 +46,10 @@ SocialComponent*& GameObject::getSocial() {
 	return mSocial;
 }
 
+bool GameObject::isPlayer() {
+	return mIsPlayer;
+}
+
 void GameObject::setInput(InputComponent* input) {
 	mInput = input;
 }
@@ -64,6 +68,10 @@ void GameObject::setCombat(CombatComponent* combat) {
 
 void GameObject::setSocial(SocialComponent* social) {
 	mSocial = social;
+}
+
+void GameObject::setPlayer(bool isPlayer) {
+	mIsPlayer = isPlayer;
 }
 //
 //==========================================

@@ -5,37 +5,17 @@
 extern sf::Font				gFont;
 extern int					gFontSize;
 
-//extern sf::Keyboard::Key*	gPlayerControls;
-
 
 struct SpawnEntry {
 	
-	int								x;
-	int								y;
-	std::string						objectID;
+	int						x;
+	int						y;
+	std::string				objectID;
 
 };
 
-SpawnEntry* objects;
-int objCount = 0;
-
-//===============KEY BINDINGS==================
-sf::Keyboard::Key gPlayerControls[4] = { sf::Keyboard::Key::Up,
-										 sf::Keyboard::Key::Down,
-										 sf::Keyboard::Key::Left,
-										 sf::Keyboard::Key::Right };
-
-//===============KEY BINDINGS==================
-sf::Keyboard::Key gMinionControls[4] =  {	sf::Keyboard::Key::W,
-											sf::Keyboard::Key::S,
-											sf::Keyboard::Key::A,
-											sf::Keyboard::Key::D };
-
-
-//Factory prototypes.
-GameObject* createPlayer(	sf::Vector2f coordinates,
-							sf::Vector2f size,
-							sf::Keyboard::Key* controls);
+SpawnEntry*					objects;
+int							objectCount = 0;
 
 
 //============WORLD======================
@@ -122,35 +102,48 @@ World::World(std::string fileName, config& config) {
 	mTextMouseCoordinates.setPosition(0, gFontSize * 6);
 
 
+	//===============HUD OUT CONSOLE===============
+	mOutConsole.setFont(gFont);
+	mOutConsole.setString("");
+	mOutConsole.setCharacterSize(gFontSize);
+	mOutConsole.setStyle(sf::Text::Bold);
+	mOutConsole.setColor(sf::Color::Color(sf::Color::Red));
+	mOutConsole.setPosition(0, gFontSize * 9);
+
+
 	//===============TILE OBJECT===================
 	mTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
 
 
-
-	//===============KEY BINDINGS==================
-	sf::Keyboard::Key playerControls[4] = { sf::Keyboard::Key::Up,
-											sf::Keyboard::Key::Down,
-											sf::Keyboard::Key::Left,
-											sf::Keyboard::Key::Right };
-
-	for(int i = 0; i < objCount; ++i)
+	//Spawning objects.
+	//If player exists, rect of the last player, written in level-file, will be the view center.
+	//If not (and there are any objects), rect of the first GameObject will be the view center.
+	bool playerIsPresent = false;
+	for(int i = 0; i < objectCount; ++i)
 		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
+
+	for(int i = 0; i < getGameObjects().size(); ++i) {
+		if(getGameObjects()[i].isPlayer()) {
+			playerIsPresent = true;
+			mCenterObjectN = i;
+			std::cout << "Player exists.\n";
+		}
+	}
+
+	if(!playerIsPresent) 
+		if(getGameObjects().size() != 0)
+			mCenterObjectN = 0;
 	
 }
 
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
-	//===============KEY BINDINGS==================
-	sf::Keyboard::Key enemyControls[4] =  {	sf::Keyboard::Key::W,		//!!!Move to update.
-											sf::Keyboard::Key::S,		//!!!Move controls to global or somewhere else.
-											sf::Keyboard::Key::A,
-											sf::Keyboard::Key::D };
-
-
 	//===============UPDATING GAME LOGIC===========
 	for(int i = 0; i < getGameObjects().size(); ++i)	
 		getGameObjects()[i].update(deltaTime, &config, *this);
 	
+	bool playerIsAlive = false;
+
 	//Deleting objects marked for removal.
 	for(int i = 0; i < getGameObjects().size(); ++i) {
 		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
@@ -159,39 +152,20 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 			--i;
 			//getGameObjects()[i].getInput()->setTargeting(false);
 
-		}
-	}
-
-
-	//===============SPAWNING OBJECTS==============
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
-
-		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
-		spawnObject(Objects::Elf_Enemy, coordinates, config);
-		mSpawnClock.restart();
+		} else if(getGameObjects()[i].isPlayer())
+			playerIsAlive = true;
 
 	}
 
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
-
-		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
-		spawnObject(Objects::Elf_Friendly, coordinates, config);
-		mSpawnClock.restart();
-
-	}
-
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
-
-		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
-		spawnObject(Objects::Elf_Minion, coordinates, config);
-		mSpawnClock.restart();
-
-	}
 
 	//============UPDATING VIEW====================
 	sf::Vector2f viewPosition;
-	viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
-	viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
+	sf::FloatRect screenCenter = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
+
+	viewPosition.x = screenCenter.left + screenCenter.width / 2 - config.screenWidth / 2;
+	viewPosition.y = screenCenter.top + screenCenter.height / 2 - config.screenHeight / 2;
+	//viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
+	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 		
 	if(viewPosition.x < 0)														viewPosition.x = 0;
 	if(viewPosition.x > getMapWidth() * config.tileSize - config.screenWidth)	viewPosition.x = getMapWidth() * config.tileSize - config.screenWidth;
@@ -202,12 +176,64 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	window.setView(view);
 
 
+	//===============SPAWNING OBJECTS==============
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		sf::Vector2i coordinates;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		spawnObject(Objects::Elf_Enemy, coordinates, config);
+		mSpawnClock.restart();
+
+	}
+
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		sf::Vector2i coordinates;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		spawnObject(Objects::Elf_Friendly, coordinates, config);
+		mSpawnClock.restart();
+
+	}
+
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		sf::Vector2i coordinates;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		spawnObject(Objects::Elf_Minion, coordinates, config);
+		mSpawnClock.restart();
+
+	}
+	
+	//Changing focus object.
+	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+		for(int i = 0; i < getGameObjects().size(); ++i) {
+
+			sf::FloatRect rect;
+			rect.left = viewPosition.x + sf::Mouse::getPosition(window).x;
+			rect.top = viewPosition.y + sf::Mouse::getPosition(window).y;
+			rect.width = 1;
+			rect.height = 1;
+			
+			if(rect.intersects(getGameObjects()[i].getPhysics()->getRect())) {
+				mCenterObjectN = i;
+				break;
+			}
+
+		}
+
+	}
+	
+
 	//===============UPDATING HUD==================
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
 	std::ostringstream hudEnemyCount;
 	std::ostringstream hudPlayerCoordinates;
 	std::ostringstream hudMouseCoordinates;
+	std::ostringstream hudOutConsole;
 
 	hudHealth << getGameObjects()[0].getCombat()->getHP();
 	//hudMana << getGameObjects()[0].getCombat()->getMP();
@@ -216,18 +242,23 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 						 << "Y: " << getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2;
 	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << '\n'
 						<< "Y: " << sf::Mouse::getPosition(window).y;
+	if(!playerIsAlive) {
+		hudOutConsole << "Player is dead!\n";
+	}
 
 	//mTextMana.setString(hudMana.str());
 	mTextHealth.setString(hudHealth.str());
 	mTextEnemyCount.setString(hudEnemyCount.str());
 	mTextPlayerCoordinates.setString(hudPlayerCoordinates.str());
 	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
+	mOutConsole.setString(hudOutConsole.str());
 
 	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
 	//textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
 	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + mTextEnemyCount.getCharacterSize() * 2);
 	mTextPlayerCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 3);
 	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 6);
+	mOutConsole.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 9);
 
 }
 
@@ -261,6 +292,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 	window.draw(mTextEnemyCount);
 	window.draw(mTextPlayerCoordinates);
 	window.draw(mTextMouseCoordinates);
+	window.draw(mOutConsole);
 	
 }
 
@@ -283,7 +315,7 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 				}
 			}
 			catch(const std::out_of_range& e) {
-				std::cout << "Bad luck!\n";
+				std::cout << "Bad luck! Out of map range!\n";
 				continue;
 			}
 
@@ -344,13 +376,10 @@ void World::loadLevelMap(std::string filename) {
 	}
 
 	//Loading spawn data.
-	int objectCount = 0;
 	inputFile >> objectCount;
-	objCount = objectCount;///////////
+	std::cout << "Objects to spawn: " << objectCount << '\n';
 
-	std::cout << "Object count: " << objectCount << '\n';
-
-	////delete[] objects;
+	delete[] objects;
 	objects = new SpawnEntry[objectCount];
 	for(int i = 0; i < objectCount; ++i) {
 
@@ -390,6 +419,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 									new HumanoidGraphicsComponent(Textures::Elf_Green),
 									new HumanoidCombatComponent(150, 150, 40, 40, 2),
 									new HumanoidSocialComponent("Player", "players")  );
+			temp->setPlayer(true);
 			break;
 
 		case(Objects::Elf_Enemy):
@@ -401,6 +431,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 									new HumanoidGraphicsComponent(Textures::Elf_Red),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Red Elf", "red_elves")  );
+			temp->setPlayer(false);
 			break;
 
 		case(Objects::Elf_Friendly):
@@ -412,6 +443,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  );
+			temp->setPlayer(false);
 			break;
 
 		case(Objects::Elf_Minion):
@@ -423,6 +455,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Minion", "players")  );
+			temp->setPlayer(false);
 			break;
 
 		default:

@@ -56,6 +56,10 @@ private:
 	sf::Text						mTextEnemyCount;
 	sf::Text						mTextPlayerCoordinates;
 	sf::Text						mTextMouseCoordinates;
+	sf::Text						mOutConsole;
+
+	int								mCenterObjectN;
+	sf::FloatRect					mViewCenter;
 
 };
 //

@@ -113,21 +113,31 @@ void StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	
 	std::string temp;
 
+	//Screen resolution.
 	getline(inputFile, temp);
 	inputFile >> mConfig.screenWidth >> mConfig.screenHeight;
 	inputFile.get();
 	inputFile.get();
 
+	//Tile size.
 	getline(inputFile, temp);
 	inputFile >> mConfig.tileSize;
 	inputFile.get();
 	inputFile.get();
 
+	//Game speed.
 	getline(inputFile, temp);
 	inputFile >> mConfig.gameSpeed;
 	inputFile.get();
 	inputFile.get();
 
+	//Spawn delay (in seconds).
+	getline(inputFile, temp);
+	inputFile >> mConfig.spawnDelay;
+	inputFile.get();
+	inputFile.get();
+
+	//Level map file.
 	getline(inputFile, temp);
 	inputFile >> mConfig.levelMapName;
 	inputFile.get();

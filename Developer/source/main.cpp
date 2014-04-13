@@ -24,13 +24,7 @@ TextureHolder		gTextureHolder;
 sf::Font			gFont;
 int					gFontSize;
 
-/*
-//===============KEY BINDINGS==================
-sf::Keyboard::Key gPlayerControls[4] = { sf::Keyboard::Key::Up,
-										 sf::Keyboard::Key::Down,
-										 sf::Keyboard::Key::Left,
-										 sf::Keyboard::Key::Right };
-*/
+
 //  ______             _               __                  _   _                 
 // |  ____|           (_)             / _|                | | (_)                
 // | |__   _ __   __ _ _ _ __   ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -56,20 +50,6 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 
 }
 
-
-
-//============FACTORY=======================
-GameObject* createPlayer(	sf::Vector2f coordinates,
-							sf::Vector2f size,
-							sf::Keyboard::Key* controls) {
-
-	return new GameObject(	new KeyboardInputComponent(controls),
-							new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, size.x, size.y), 0.1),
-							new HumanoidGraphicsComponent(Textures::Elf_Green),
-							new HumanoidCombatComponent(150, 150, 40, 40, 2),
-							new HumanoidSocialComponent("Player 1", "players")  );
-
-}
 
 
 //  __  __       _       

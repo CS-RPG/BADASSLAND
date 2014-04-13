@@ -28,15 +28,13 @@ private:
 	sf::RenderWindow*				mWindow;
 	sf::View						mView;
 	float							mFPS_CAP;
-	sf::Font						mFont;
 
 	config							mConfig;
 	std::map<std::string,
 		sf::Keyboard::Key>			mControlsMap;
 
 	State*							mCurrentState;
-	std::map<std::string, State>	mStates;
-	//Save							mSave;			
+	std::map<std::string, State>	mStates;			
 
 };
 //
