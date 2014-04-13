@@ -116,8 +116,8 @@ World::World(std::string fileName, config& config) {
 
 
 	//Spawning objects.
-	//If player exists, rect of the last player, written in level-file, will be the view center.
-	//If not (and there are any objects), rect of the first GameObject will be the view center.
+	//If player exists, last player, written in level-file, will be the view center.
+	//If not (and there are any objects), first GameObject will be the view center.
 	bool playerIsPresent = false;
 	for(int i = 0; i < objectCount; ++i)
 		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);

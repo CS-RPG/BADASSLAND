@@ -58,7 +58,7 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 			movement.x = 0;
 			movement.y = 0;
 			if(object.getCombat()->isReadyToAttack())
-				object.getCombat()->attack(getTarget());
+				object.getCombat()->attack(object, getTarget());
 
 		}
 

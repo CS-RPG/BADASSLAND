@@ -10,8 +10,8 @@
 //
 HumanoidCombatComponent::HumanoidCombatComponent(int HP, int maxHP, float damage, float attackRange, float attackSpeed) {
 	
-	setHP(HP);
 	setMaxHP(maxHP);
+	setHP(maxHP);
 
 	setDamage(damage);
 	setAttackRange(attackRange);
@@ -27,17 +27,17 @@ void HumanoidCombatComponent::update(GameObject& object, World& world) {
 
 }
 
-void HumanoidCombatComponent::takeDamage(/*GameObject* attacker, */float damage) {
+void HumanoidCombatComponent::attack(GameObject& attacker, GameObject* target) {
+	target->getCombat()->takeDamage(attacker, getDamage());
+	restartAttackClock();
+}
+
+void HumanoidCombatComponent::takeDamage(GameObject& attacker, float damage) {
 	setHP(getHP() - damage);
 	if(getHP() <= 0) {
 		kill();
-		//attacker->getInput()->setTargeting(false);
+		attacker.getInput()->setTargeting(false);
 	}
-}
-
-void HumanoidCombatComponent::attack(GameObject* target) {
-	target->getCombat()->takeDamage(getDamage());
-	restartAttackClock();
 }
 //
 //==========================================

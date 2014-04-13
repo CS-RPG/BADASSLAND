@@ -8,10 +8,10 @@
 class HumanoidCombatComponent : public CombatComponent {
 public:
 
-									HumanoidCombatComponent(int, int, float, float, float);
-	virtual void					update(GameObject&, World&);
-	virtual void					attack(GameObject*);
-	virtual void					takeDamage(/*GameObject*, */float);
+									HumanoidCombatComponent(int HP, int maxHP, float damage, float attackRange, float attackSpeed);
+	virtual void					update(GameObject& object, World& world);
+	virtual void					attack(GameObject& attacker, GameObject* target);
+	virtual void					takeDamage(GameObject& attacker, float damage);
 	//virtual void					heal(float);
 
 };
