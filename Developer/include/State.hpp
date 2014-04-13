@@ -6,6 +6,7 @@
 #include <DataTypes.hpp>
 #include <GameObject.hpp>
 
+
 //============State=========================
 //
 class State {
@@ -26,6 +27,8 @@ public:
 	void							setMapWidth(int width);
 
 private:
+
+
 
 	std::vector<std::vector<int>>	mLevelMap;
 	std::vector<GameObject>			mGameObjects;

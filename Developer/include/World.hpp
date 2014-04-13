@@ -5,13 +5,28 @@
 #include <_includes_system.hpp>
 #include <_includes_badass.hpp>
 
+extern TextureHolder		gTextureHolder;
 
-//============World=========================
+namespace Objects {
+
+	enum ID {
+
+		Player,
+		Elf_Enemy,
+		Elf_Friendly,
+		Elf_Minion
+
+	};
+
+
+}
+
+//============WORLD=========================
 //
 class World : public State {
 public:
 
-									World(int tileSize, std::string fileName, config& config);
+									World(std::string fileName, config& config);
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
@@ -21,17 +36,20 @@ public:
 	void							loadLevelMap(std::string);
 	void							deleteLevelMap();
 
-	//void							spawnObject(std::string);
+	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
 
 private:
 
 	sf::Clock						mSpawnClock;
 
+	//Spawner							mSpawner;
+
 	std::vector<std::vector<bool>>	mCollisionMap;
 
-	sf::RectangleShape				mTile;
+	std::map<std::string,
+		Objects::ID>				mObjectMap;
 
-	//sf::Font						mFont;
+	sf::RectangleShape				mTile;
 
 	sf::Text						mTextHealth;
 	sf::Text						mTextMana;

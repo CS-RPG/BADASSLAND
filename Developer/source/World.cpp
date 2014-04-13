@@ -1,13 +1,52 @@
 //World.cpp
 #include <World.hpp>
 
-extern TextureHolder		gTextureHolder;
+
 extern sf::Font				gFont;
 extern int					gFontSize;
 
+//extern sf::Keyboard::Key*	gPlayerControls;
+
+
+struct SpawnEntry {
+	
+	int								x;
+	int								y;
+	std::string						objectID;
+
+};
+
+SpawnEntry* objects;
+int objCount = 0;
+
+//===============KEY BINDINGS==================
+sf::Keyboard::Key gPlayerControls[4] = { sf::Keyboard::Key::Up,
+										 sf::Keyboard::Key::Down,
+										 sf::Keyboard::Key::Left,
+										 sf::Keyboard::Key::Right };
+
+//===============KEY BINDINGS==================
+sf::Keyboard::Key gMinionControls[4] =  {	sf::Keyboard::Key::W,
+											sf::Keyboard::Key::S,
+											sf::Keyboard::Key::A,
+											sf::Keyboard::Key::D };
+
+
+//Factory prototypes.
+GameObject* createPlayer(	sf::Vector2f coordinates,
+							sf::Vector2f size,
+							sf::Keyboard::Key* controls);
+
+
 //============WORLD======================
 //
-World::World(int tileSize, std::string fileName, config& config) {
+World::World(std::string fileName, config& config) {
+
+	//Creating mObjectMap.
+	mObjectMap.insert(std::make_pair("Player", Objects::Player));
+	mObjectMap.insert(std::make_pair("Elf_Enemy", Objects::Elf_Enemy));
+	mObjectMap.insert(std::make_pair("Elf_Minion", Objects::Elf_Minion));
+	mObjectMap.insert(std::make_pair("Elf_Friendly", Objects::Elf_Friendly));
 
 	mSpawnClock.restart();
 
@@ -84,7 +123,7 @@ World::World(int tileSize, std::string fileName, config& config) {
 
 
 	//===============TILE OBJECT===================
-	mTile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
+	mTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
 
 
 
@@ -94,22 +133,20 @@ World::World(int tileSize, std::string fileName, config& config) {
 											sf::Keyboard::Key::Left,
 											sf::Keyboard::Key::Right };
 
+	for(int i = 0; i < objCount; ++i)
+		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
+	
+}
+
+void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
+	
+	//===============KEY BINDINGS==================
 	sf::Keyboard::Key enemyControls[4] =  {	sf::Keyboard::Key::W,		//!!!Move to update.
 											sf::Keyboard::Key::S,		//!!!Move controls to global or somewhere else.
 											sf::Keyboard::Key::A,
 											sf::Keyboard::Key::D };
 
-	//Creating player.
-	getGameObjects().push_back( *(new GameObject(	new KeyboardInputComponent(playerControls),
-													new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
-													new HumanoidGraphicsComponent(Textures::Elf_Green),
-													new HumanoidCombatComponent(150, 150, 40, 40, 2),
-													new HumanoidSocialComponent("Player 1", "yellow_elves")  )) );
 
-}
-
-void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
-	
 	//===============UPDATING GAME LOGIC===========
 	for(int i = 0; i < getGameObjects().size(); ++i)	
 		getGameObjects()[i].update(deltaTime, &config, *this);
@@ -127,24 +164,29 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 
 	//===============SPAWNING OBJECTS==============
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {	//!!!Replace with a global variable.
-		getGameObjects().push_back( *(new GameObject(	new BotActiveInputComponent(),
-														new DynamicPhysicsComponent(sf::FloatRect(2 * config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.05),
-														new HumanoidGraphicsComponent(Textures::Elf_Red),
-														new HumanoidCombatComponent(150, 150, 40, 130, 2),
-														new HumanoidSocialComponent("Red Elf", "red_elves")  )) );
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
+
+		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
+		spawnObject(Objects::Elf_Enemy, coordinates, config);
 		mSpawnClock.restart();
+
+	}
+
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
+
+		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
+		spawnObject(Objects::Elf_Friendly, coordinates, config);
+		mSpawnClock.restart();
+
 	}
 
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > 0.25)) {
-		getGameObjects().push_back( *(new GameObject(	new BotActiveInputComponent(/*enemyControls*/),
-														new DynamicPhysicsComponent(sf::FloatRect(3 * config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.03),
-														new HumanoidGraphicsComponent(Textures::Elf_Yellow),
-														new HumanoidCombatComponent(150, 150, 40, 130, 2),
-														new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  )) );
-		mSpawnClock.restart();
-	}
 
+		sf::Vector2i coordinates = sf::Mouse::getPosition(window);
+		spawnObject(Objects::Elf_Minion, coordinates, config);
+		mSpawnClock.restart();
+
+	}
 
 	//============UPDATING VIEW====================
 	sf::Vector2f viewPosition;
@@ -285,6 +327,7 @@ void World::loadLevelMap(std::string filename) {
 	for(int i = 0; i < getMapHeight(); ++i)
 		getLevelMap()[i].resize(getMapWidth());
 
+	//Loading level data.
 	inputFile.get();
 	for(int i = 0; i < getMapHeight(); ++i) {
 		for(int j = 0; j < getMapWidth(); ++j) {
@@ -292,6 +335,24 @@ void World::loadLevelMap(std::string filename) {
 			getLevelMap()[i][j] = int(temp);
 		}
 		inputFile.get();
+	}
+
+	//Loading spawn data.
+	int objectCount = 0;
+	inputFile >> objectCount;
+	objCount = objectCount;///////////
+
+	std::cout << "Object count: " << objectCount << '\n';
+
+	//delete[] objects;
+	objects = new SpawnEntry[objectCount];
+	for(int i = 0; i < objectCount; ++i) {
+
+		inputFile >> objects[i].x >> objects[i].y;
+		inputFile.get();
+		inputFile >> objects[i].objectID;
+		inputFile.get();
+
 	}
 
 	inputFile.close();
@@ -302,6 +363,86 @@ void World::deleteLevelMap() {
 
 	getLevelMap().clear();
 	getGameObjects().clear();
+
+}
+
+void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config) {
+
+	GameObject* temp;
+	bool canSpawn = true;
+
+	switch(objectID) {
+
+		case(Objects::Player):
+
+			temp = new GameObject(	new KeyboardInputComponent(gPlayerControls),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.1),
+									new HumanoidGraphicsComponent(Textures::Elf_Green),
+									new HumanoidCombatComponent(150, 150, 40, 40, 2),
+									new HumanoidSocialComponent("Player", "players")  );
+			break;
+
+		case(Objects::Elf_Enemy):
+
+			temp = new GameObject(	new BotActiveInputComponent(),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.05),
+									new HumanoidGraphicsComponent(Textures::Elf_Red),
+									new HumanoidCombatComponent(150, 150, 40, 130, 2),
+									new HumanoidSocialComponent("Red Elf", "red_elves")  );
+			break;
+
+		case(Objects::Elf_Friendly):
+
+			temp = new GameObject(	new BotPassiveInputComponent(4),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.03),
+									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
+									new HumanoidCombatComponent(150, 150, 40, 130, 2),
+									new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  );
+			break;
+
+		case(Objects::Elf_Minion):
+
+				
+			temp = new GameObject(	new KeyboardInputComponent(gMinionControls),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.04),
+									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
+									new HumanoidCombatComponent(150, 150, 40, 130, 2),
+									new HumanoidSocialComponent("Minion", "players")  );
+			break;
+
+		default:
+
+			break;
+
+	}
+
+	sf::FloatRect objectRect = (*temp).getPhysics()->getRect();
+
+	for(int i = 0; i < getGameObjects().size(); ++i)
+		if((objectRect.intersects(getGameObjects()[i].getPhysics()->getRect())) && (temp != &getGameObjects()[i])) {
+			canSpawn = false;
+			break;
+		}
+	
+	for(int i = objectRect.top / config.tileSize; i < (objectRect.top + objectRect.height) / config.tileSize; ++i)
+		for(int j = objectRect.left / config.tileSize; j < (objectRect.left + objectRect.width) / config.tileSize; ++j)
+			if(getLevelMap()[i][j] == 'B') {
+				canSpawn = false;
+				break;
+			}
+	
+	if(canSpawn) {
+	
+		getGameObjects().push_back(*temp);
+		std::string name = (*temp).getSocial()->getName();
+		std::cout << name.c_str() << " successfully spawned.\n";
+
+	} else {
+
+		std::cout << "Can't spawn here!\n";
+
+	}
+
 
 }
 //

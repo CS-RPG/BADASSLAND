@@ -23,7 +23,7 @@ StateMachine::StateMachine() {
 	mFPS_CAP = 60;		//!!!Replace with a global variable.
 
 	std::string levelMapName = "./levels/level1.txt";
-	mCurrentState = new World(mConfig.tileSize, levelMapName, mConfig);
+	mCurrentState = new World(levelMapName, mConfig);
 
 }
 
@@ -108,11 +108,6 @@ void StateMachine::loadConfigFile(std::string filename = "config.txt") {
 
 	getline(inputFile, temp);
 	inputFile >> mConfig.tileSize;
-	inputFile.get();
-	inputFile.get();
-
-	getline(inputFile, temp);
-	inputFile >> mConfig.playerStartingX >> mConfig.playerStartingY;
 	inputFile.get();
 	inputFile.get();
 

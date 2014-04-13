@@ -23,7 +23,13 @@ TextureHolder		gTextureHolder;
 sf::Font			gFont;
 int					gFontSize;
 
-
+/*
+//===============KEY BINDINGS==================
+sf::Keyboard::Key gPlayerControls[4] = { sf::Keyboard::Key::Up,
+										 sf::Keyboard::Key::Down,
+										 sf::Keyboard::Key::Left,
+										 sf::Keyboard::Key::Right };
+*/
 //  ______             _               __                  _   _                 
 // |  ____|           (_)             / _|                | | (_)                
 // | |__   _ __   __ _ _ _ __   ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -34,41 +40,6 @@ int					gFontSize;
 //               |___/
 //
 
-
-void loadConfigFile(config& config, std::string filename = "config.txt") {
-
-	std::ifstream inputFile;
-	inputFile.open(filename);
-	
-	std::string temp;
-
-	getline(inputFile, temp);
-	inputFile >> config.screenWidth >> config.screenHeight;
-	inputFile.get();
-	inputFile.get();
-
-	getline(inputFile, temp);
-	inputFile >> config.tileSize;
-	inputFile.get();
-	inputFile.get();
-
-	getline(inputFile, temp);
-	inputFile >> config.playerStartingX >> config.playerStartingY;
-	inputFile.get();
-	inputFile.get();
-
-	getline(inputFile, temp);
-	inputFile >> config.gameSpeed;
-	inputFile.get();
-	inputFile.get();
-
-	getline(inputFile, temp);
-	inputFile >> config.levelMapName;
-
-	inputFile.close();
-	return;
-
-}
 
 float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 
@@ -85,18 +56,20 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 }
 
 
-/*
-//============FACTORY=======================
-GameObject* createPlayer() {
 
-	return new GameObject(	new KeyboardInputComponent(),
-							new DynamicPhysicsComponent(sf::FloatRect(config.playerStartingX, config.playerStartingY, config.tileSize, config.tileSize), 0.1),
+//============FACTORY=======================
+GameObject* createPlayer(	sf::Vector2f coordinates,
+							sf::Vector2f size,
+							sf::Keyboard::Key* controls) {
+
+	return new GameObject(	new KeyboardInputComponent(controls),
+							new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, size.x, size.y), 0.1),
 							new HumanoidGraphicsComponent(Textures::Elf_Green),
 							new HumanoidCombatComponent(150, 150, 40, 40, 2),
 							new HumanoidSocialComponent("Player 1", "players")  );
 
 }
-*/
+
 
 //  __  __       _       
 // |  \/  |     (_)      

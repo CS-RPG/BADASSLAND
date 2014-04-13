@@ -4,9 +4,6 @@
 //Size of tiles (in pixels).
 120
 
-//Player starting coordinates (x, y).
-220 220
-
 //Game speed.
 200
 

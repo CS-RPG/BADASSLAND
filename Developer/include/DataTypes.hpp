@@ -41,9 +41,7 @@ struct resistances {
 //
 struct config {
 
-	float							invincibilityTime;		
-	int								playerStartingX;					
-	int								playerStartingY;			
+	float							invincibilityTime;	
 	int								mapHeight;				
 	int								mapWidth;				
 	int								tileSize;						

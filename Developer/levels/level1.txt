@@ -1,13 +1,16 @@
 12 40
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-B                     00         B     B
-B                 0000           B     B
 B                                B     B
 B                                B     B
-B         0000                BBBB     B
 B                                B     B
+B              BBBBB             B     B
+B              BBBBB          BBBB     B
+B              BBBBB             B     B
 BBB                              B     B
 B              BB                BB    B
 B              BB                      B
 B    B         BB         BB           B
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+2
+300 300 Player
+600 600 Elf_Minion
