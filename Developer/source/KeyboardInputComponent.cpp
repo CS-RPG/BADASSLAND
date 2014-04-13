@@ -1,17 +1,15 @@
 //KeyboardInputComponent.cpp
 
 #include <KeyboardInputComponent.hpp>
-
+extern int					gControlsCount;
 
 //============KeyboardInputComponent========
 //
 KeyboardInputComponent::KeyboardInputComponent(sf::Keyboard::Key* keyBindings) {
 
-	mKeyBindings = new sf::Keyboard::Key[4];
-	mKeyBindings[0] = *keyBindings;
-	mKeyBindings[1] = *(keyBindings + 1);
-	mKeyBindings[2] = *(keyBindings + 2);
-	mKeyBindings[3] = *(keyBindings + 3);
+	mKeyBindings = new sf::Keyboard::Key[gControlsCount];
+	for(int i = 0; i < gControlsCount; ++i)
+		mKeyBindings[i] = *(keyBindings + i);
 
 }
 

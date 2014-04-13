@@ -9,3 +9,9 @@
 
 //Name of the level file to load.
 level1.txt
+
+//Controls 1 (Up, Down, Left, Right).
+Up Down Left Right
+
+//Controls 2 (Up, Down, Left, Right).
+W S A D

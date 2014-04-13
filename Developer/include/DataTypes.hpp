@@ -2,7 +2,7 @@
 #ifndef _DataTypes_hpp_included_
 #define _DataTypes_hpp_included_
 
-#include <string>
+#include <_includes_system.hpp>
 
 //============Attributes====================
 //
@@ -40,17 +40,16 @@ struct resistances {
 //============Config========================
 //
 struct config {
-
-	float							invincibilityTime;	
-	int								mapHeight;				
-	int								mapWidth;				
-	int								tileSize;						
+	
 	int								screenWidth;					
 	int								screenHeight;
+	int								tileSize;						
+
 	int								gameSpeed;
-	float							offsetX;				//Map scrolling
-	float							offsetY;				//offset.
 	std::string						levelMapName;
+
+	sf::Keyboard::Key				controls1[4];
+	sf::Keyboard::Key				controls2[4];
 
 };
 //

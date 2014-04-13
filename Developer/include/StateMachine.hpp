@@ -31,6 +31,8 @@ private:
 	sf::Font						mFont;
 
 	config							mConfig;
+	std::map<std::string,
+		sf::Keyboard::Key>			mControlsMap;
 
 	State*							mCurrentState;
 	std::map<std::string, State>	mStates;

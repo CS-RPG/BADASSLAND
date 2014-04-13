@@ -18,6 +18,7 @@
 
 //============GLOBAL VARIABLES==============
 const float			gRangeMultiplier = 6;	//Range multiplier for target capturing.
+int					gControlsCount = 4;		//Number of user-defined controls.
 
 TextureHolder		gTextureHolder;
 sf::Font			gFont;

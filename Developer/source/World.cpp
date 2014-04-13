@@ -157,7 +157,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 			getGameObjects().erase(getGameObjects().begin() + i);
 			--i;
-			getGameObjects()[i].getInput()->setTargeting(false);
+			//getGameObjects()[i].getInput()->setTargeting(false);
 
 		}
 	}
@@ -272,13 +272,19 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 	for(int i = rect.top / tileSize; i < (rect.top + rect.height) / tileSize; ++i)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
 
-			if(getLevelMap()[i][j] == 'B') {
+			try {
+				if(getLevelMap().at(i).at(j) == 'B') {
 
-				if((movement.x > 0) && (direction == 0)) {rect.left = j * tileSize - rect.width;	object->getInput()->setBadDirection(2);}
-				if((movement.x < 0) && (direction == 0)) {rect.left = j * tileSize + tileSize;		object->getInput()->setBadDirection(4);}
-				if((movement.y > 0) && (direction == 1)) {rect.top = i * tileSize - rect.height;	object->getInput()->setBadDirection(3);}
-				if((movement.y < 0) && (direction == 1)) {rect.top = i * tileSize + tileSize;		object->getInput()->setBadDirection(1);}
+					if((movement.x > 0) && (direction == 0)) {rect.left = j * tileSize - rect.width;	object->getInput()->setBadDirection(2);}
+					if((movement.x < 0) && (direction == 0)) {rect.left = j * tileSize + tileSize;		object->getInput()->setBadDirection(4);}
+					if((movement.y > 0) && (direction == 1)) {rect.top = i * tileSize - rect.height;	object->getInput()->setBadDirection(3);}
+					if((movement.y < 0) && (direction == 1)) {rect.top = i * tileSize + tileSize;		object->getInput()->setBadDirection(1);}
 
+				}
+			}
+			catch(const std::out_of_range& e) {
+				std::cout << "Bad luck!\n";
+				continue;
 			}
 
 		}
@@ -293,7 +299,7 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 	sf::Vector2f movement = object->getPhysics()->getMovement();
 
 	for(int i = 0; i < getGameObjects().size(); ++i) {
-
+		
 		sf::FloatRect currentRect = getGameObjects()[i].getPhysics()->getRect();
 		if((rect.intersects(currentRect)) && (object != &getGameObjects()[i])) {
 
@@ -303,7 +309,7 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 			if((movement.y < 0) && (direction == 1)) {rect.top += (currentRect.top + currentRect.height) - rect.top;	object->getInput()->setBadDirection(1);}
 
 		}
-
+		
 	}
 
 	object->getPhysics()->setRect(rect);
@@ -344,7 +350,7 @@ void World::loadLevelMap(std::string filename) {
 
 	std::cout << "Object count: " << objectCount << '\n';
 
-	//delete[] objects;
+	////delete[] objects;
 	objects = new SpawnEntry[objectCount];
 	for(int i = 0; i < objectCount; ++i) {
 
@@ -370,13 +376,17 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 	GameObject* temp;
 	bool canSpawn = true;
+	int width;
+	int height;
 
 	switch(objectID) {
 
 		case(Objects::Player):
 
-			temp = new GameObject(	new KeyboardInputComponent(gPlayerControls),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.1),
+			width = config.tileSize;
+			height = config.tileSize;
+			temp = new GameObject(	new KeyboardInputComponent(config.controls1),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.1),
 									new HumanoidGraphicsComponent(Textures::Elf_Green),
 									new HumanoidCombatComponent(150, 150, 40, 40, 2),
 									new HumanoidSocialComponent("Player", "players")  );
@@ -384,8 +394,10 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 		case(Objects::Elf_Enemy):
 
+			width = config.tileSize;
+			height = config.tileSize;
 			temp = new GameObject(	new BotActiveInputComponent(),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.05),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.05),
 									new HumanoidGraphicsComponent(Textures::Elf_Red),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Red Elf", "red_elves")  );
@@ -393,8 +405,10 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 		case(Objects::Elf_Friendly):
 
+			width = config.tileSize;
+			height = config.tileSize;
 			temp = new GameObject(	new BotPassiveInputComponent(4),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.03),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.03),
 									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  );
@@ -402,9 +416,10 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 		case(Objects::Elf_Minion):
 
-				
-			temp = new GameObject(	new KeyboardInputComponent(gMinionControls),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, config.tileSize, config.tileSize), 0.04),
+			width = config.tileSize;
+			height = config.tileSize;	
+			temp = new GameObject(	new KeyboardInputComponent(config.controls2),
+									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.04),
 									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
 									new HumanoidCombatComponent(150, 150, 40, 130, 2),
 									new HumanoidSocialComponent("Minion", "players")  );
@@ -418,19 +433,29 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 	sf::FloatRect objectRect = (*temp).getPhysics()->getRect();
 
+	//Collision with objects.
 	for(int i = 0; i < getGameObjects().size(); ++i)
 		if((objectRect.intersects(getGameObjects()[i].getPhysics()->getRect())) && (temp != &getGameObjects()[i])) {
 			canSpawn = false;
 			break;
 		}
 	
-	for(int i = objectRect.top / config.tileSize; i < (objectRect.top + objectRect.height) / config.tileSize; ++i)
-		for(int j = objectRect.left / config.tileSize; j < (objectRect.left + objectRect.width) / config.tileSize; ++j)
-			if(getLevelMap()[i][j] == 'B') {
-				canSpawn = false;
-				break;
-			}
-	
+	//Level map collision.
+	try {
+		for(int i = objectRect.top / config.tileSize; i < (objectRect.top + objectRect.height) / config.tileSize; ++i)
+			for(int j = objectRect.left / config.tileSize; j < (objectRect.left + objectRect.width) / config.tileSize; ++j)
+				if(getLevelMap().at(i).at(j) == 'B') {
+					canSpawn = false;
+					break;
+				}
+	}
+	catch(const std::out_of_range& e) {
+
+		std::cout << "Can't spawn here! Out of map range!\n";
+		return;
+
+	}
+
 	if(canSpawn) {
 	
 		getGameObjects().push_back(*temp);

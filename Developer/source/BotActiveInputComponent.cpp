@@ -24,17 +24,17 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 
 	if(!isTargeting()) {
 		captureTarget(object, world);
-		std::cout << "Not targeted.\n";
+		//std::cout << "Not targeted.\n";
 	}
 
 	if(isTargeting()) {
 
-		std::cout << "Targeted.\n";
-		std::cout << getTarget() << '\n';
+		//std::cout << "Targeted.\n";
+		//std::cout << getTarget() << '\n';
 		float distance = calculateDistance( object.getPhysics()->getRect(),
 											getTarget()->getPhysics()->getRect() );
 
-		std::cout << distance << '\n';
+		//std::cout << distance << '\n';
 
 		if(distance > object.getCombat()->getAttackRange() * 6) {	//Change to range multiplier.
 			setTargeting(false);

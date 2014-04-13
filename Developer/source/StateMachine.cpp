@@ -4,11 +4,23 @@
 extern TextureHolder		gTextureHolder;
 extern sf::Font				gFont;
 extern int					gFontSize;
+extern int					gControlsCount;
 
 
 //============StateMachine==================
 //
 StateMachine::StateMachine() {
+
+	//Creating mControlsMap.
+	mControlsMap.insert(std::make_pair("Up", sf::Keyboard::Up));
+	mControlsMap.insert(std::make_pair("Down", sf::Keyboard::Down));
+	mControlsMap.insert(std::make_pair("Left", sf::Keyboard::Left));
+	mControlsMap.insert(std::make_pair("Right", sf::Keyboard::Right));
+
+	mControlsMap.insert(std::make_pair("W", sf::Keyboard::W));
+	mControlsMap.insert(std::make_pair("S", sf::Keyboard::S));
+	mControlsMap.insert(std::make_pair("A", sf::Keyboard::A));
+	mControlsMap.insert(std::make_pair("D", sf::Keyboard::D));
 
 	//Config, global settings.
 	loadConfigFile("config.txt");
@@ -118,6 +130,30 @@ void StateMachine::loadConfigFile(std::string filename = "config.txt") {
 
 	getline(inputFile, temp);
 	inputFile >> mConfig.levelMapName;
+	inputFile.get();
+	inputFile.get();
+
+	//Controls1.
+	std::string key;
+	getline(inputFile, temp);
+	for(int i = 0; i < gControlsCount; ++i) {
+
+		inputFile >> key;
+		mConfig.controls1[i] = mControlsMap[key];
+
+	}
+	inputFile.get();
+	inputFile.get();
+
+
+	//Controls2.
+	getline(inputFile, temp);
+	for(int i = 0; i < gControlsCount; ++i) {
+
+		inputFile >> key;
+		mConfig.controls2[i] = mControlsMap[key];
+
+	}
 
 	inputFile.close();
 	return;
