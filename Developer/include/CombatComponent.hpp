@@ -13,8 +13,8 @@ public:
 
 	virtual							~CombatComponent();
 	virtual void					update(GameObject&, World&) = 0;
-	virtual void					attack(GameObject& attacker, GameObject* target) = 0;
-	virtual void					takeDamage(GameObject& attacker, float damage) = 0;
+	virtual void					attack(GameObject& attacker, GameObject& target) = 0;
+	virtual void					takeDamage(GameObject& attacker, GameObject& target, float damage) = 0;
 	//virtual void					heal(float) = 0;
 
 	float							getHP();

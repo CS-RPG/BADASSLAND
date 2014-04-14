@@ -8,19 +8,22 @@
 float calculateDistance(sf::FloatRect, sf::FloatRect);
 
 
+//extern float				gRangeMultiplier = 6;
+
 //============InputComponent================
 //
 InputComponent::~InputComponent() {}
 
 void InputComponent::captureTarget(GameObject& object, World& world) {
 	
-	float distance = object.getCombat()->getAttackRange() * 6; //Change to range multiplier.
+	float distance = object.getCombat()->getAttackRange() * 6;
+	mTarget = NULL;
 
 	for(int i = 0; i < world.getGameObjects().size(); ++i) {
 
 		float tempDistance = calculateDistance(object.getPhysics()->getRect(), world.getGameObjects()[i].getPhysics()->getRect());
 		if( (object.getSocial()->getFaction() != world.getGameObjects()[i].getSocial()->getFaction()) && 
-			(tempDistance < distance) && 
+			(tempDistance <= distance) && 
 			(&(world.getGameObjects()[i]) != &object) ) {
 
 			distance = tempDistance;
@@ -29,12 +32,15 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 		}
 
 	}
-
+	
 	if(mTarget != NULL) {
 		setTargeting(true);
-		std::cout << "WIN\n";
-	} else
-		std::cout << "FAIL\n";
+		//std::cout << "WIN\n";
+	} else {
+		setTargeting(false);
+		//mTarget = NULL;
+		//std::cout << "FAIL\n";
+	}
 	
 }
 

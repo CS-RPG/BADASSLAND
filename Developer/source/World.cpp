@@ -5,6 +5,8 @@
 extern sf::Font				gFont;
 extern int					gFontSize;
 
+extern float				gZoomRate;
+
 
 struct SpawnEntry {
 	
@@ -31,6 +33,11 @@ World::World(std::string fileName, config& config) {
 	mSpawnClock.restart();
 
 	loadLevelMap(fileName);
+
+
+	//===============VIEW==========================
+	mViewWidth = config.screenWidth;
+	mViewHeight = config.screenHeight;
 
 
 	//===============FONT==========================
@@ -162,8 +169,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	sf::Vector2f viewPosition;
 	sf::FloatRect screenCenter = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
 
-	viewPosition.x = screenCenter.left + screenCenter.width / 2 - config.screenWidth / 2;
-	viewPosition.y = screenCenter.top + screenCenter.height / 2 - config.screenHeight / 2;
+	viewPosition.x = screenCenter.left + screenCenter.width / 2 - mViewWidth / 2;
+	viewPosition.y = screenCenter.top + screenCenter.height / 2 - mViewHeight / 2;
 	//viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
 	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 		
@@ -172,14 +179,20 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if(viewPosition.y < 0)														viewPosition.y = 0;
 	if(viewPosition.y > getMapHeight() * config.tileSize - config.screenHeight)	viewPosition.y = getMapHeight() * config.tileSize - config.screenHeight;
 
-	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, config.screenWidth, config.screenHeight));
+	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
+
+	std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
 	//===============SPAWNING OBJECTS==============
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
+		//coordinates.x = viewPosition.x - (config.screenWidth - mViewWidth) / 2 + sf::Mouse::getPosition(window).x;
+		//coordinates.y = viewPosition.y - (config.screenHeight - mViewHeight) / 2 + sf::Mouse::getPosition(window).y;
+		//coordinates.x = screenCenter.left - mViewWidth / 2;
+		//coordinates.y = screenCenter.top - mViewHeight / 2;
 		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
 		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
 		spawnObject(Objects::Elf_Enemy, coordinates, config);
@@ -190,8 +203,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
 		spawnObject(Objects::Elf_Friendly, coordinates, config);
 		mSpawnClock.restart();
 
@@ -207,7 +220,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	}
 	
-	//Changing focus object.
+	//===============FOCUS OBJECT CHANGING=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
 		for(int i = 0; i < getGameObjects().size(); ++i) {
 
@@ -225,7 +238,24 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		}
 
 	}
+
+	//===============ZOOM==========================
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		mViewWidth *= gZoomRate;
+		mViewHeight *= gZoomRate;
+		mSpawnClock.restart();
+
+	}
 	
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		mViewWidth /= gZoomRate;
+		mViewHeight /= gZoomRate;
+		mSpawnClock.restart();
+
+	}
+
 
 	//===============UPDATING HUD==================
 	std::ostringstream hudHealth;

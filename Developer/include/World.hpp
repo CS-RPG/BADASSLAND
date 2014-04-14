@@ -51,6 +51,9 @@ private:
 
 	sf::RectangleShape				mTile;
 
+	float							mViewWidth;
+	float							mViewHeight;
+
 	sf::Text						mTextHealth;
 	sf::Text						mTextMana;
 	sf::Text						mTextEnemyCount;
@@ -58,8 +61,7 @@ private:
 	sf::Text						mTextMouseCoordinates;
 	sf::Text						mOutConsole;
 
-	int								mCenterObjectN;
-	sf::FloatRect					mViewCenter;
+	int								mCenterObjectN;	//Index of an object which acts as a view center.
 
 };
 //

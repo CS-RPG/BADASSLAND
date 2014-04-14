@@ -17,12 +17,14 @@
 
 
 //============GLOBAL VARIABLES==============
-const float			gRangeMultiplier = 6;	//Range multiplier for target capturing.
+float				gRangeMultiplier = 6;	//Range multiplier for target capturing.
 int					gControlsCount = 4;		//Number of user-defined controls.
 
 TextureHolder		gTextureHolder;
 sf::Font			gFont;
 int					gFontSize;
+
+float				gZoomRate = 1.5;
 
 
 //  ______             _               __                  _   _                 
@@ -50,6 +52,16 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 
 }
 
+
+int directionDFS(sf::Vector2i source, sf::Vector2i destination, World& world) {
+
+	std::vector<bool> used;
+
+
+	return 1;
+
+
+}
 
 
 //  __  __       _       

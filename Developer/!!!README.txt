@@ -1,10 +1,23 @@
-BADASS TALES of BADASSLAND v. 0.7.2 alpha
+BADASS TALES of BADASSLAND v. 0.7.3 alpha
 
 Paul Pushmin,
 Leo Vetlugin
 
 Follow us on GitHub:
 https://github.com/CS-RPG/BADASSLAND
+
+
+
+//===================================\\
+New in 0.7.3:
+(+) - New features.
+(*) - Bug fixes.
+
+PLEASE, don't mess with config and level files (input errors are not handled).
+
+ + Zooming added - PgUp / PgDown.
+ + Battle logs (in console).
+\\===================================//
 
 
 //===================================\\
@@ -16,7 +29,6 @@ PLEASE, don't mess with config and level files (input errors are not handled).
 
  * Fixed targeting bug.
 \\===================================//
-
 
 
 //===================================\\

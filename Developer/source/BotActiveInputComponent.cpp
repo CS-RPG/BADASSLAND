@@ -3,6 +3,7 @@
 
 float calculateDistance(sf::FloatRect, sf::FloatRect);
 
+extern float				gRangeMultiplier;
 
 //============BotActiveInputComponent=======
 //
@@ -34,11 +35,13 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 		float distance = calculateDistance( object.getPhysics()->getRect(),
 											getTarget()->getPhysics()->getRect() );
 
-		//std::cout << distance << '\n';
+		//std::cout << "Distance to target: " << distance << '\n';
 
-		if(distance > object.getCombat()->getAttackRange() * 6) {	//Change to range multiplier.
+		if(distance > object.getCombat()->getAttackRange() * gRangeMultiplier) {
+
 			setTargeting(false);
 			return;
+
 		}
 
 		if(distance > object.getCombat()->getAttackRange()) {
@@ -57,8 +60,8 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 
 			movement.x = 0;
 			movement.y = 0;
-			if(object.getCombat()->isReadyToAttack())
-				object.getCombat()->attack(object, getTarget());
+			if(object.getCombat()->isReadyToAttack() && isTargeting())
+				object.getCombat()->attack(object, *(getTarget()));
 
 		}
 
