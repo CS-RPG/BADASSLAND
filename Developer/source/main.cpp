@@ -24,7 +24,7 @@ TextureHolder		gTextureHolder;
 sf::Font			gFont;
 int					gFontSize;
 
-float				gZoomRate = 1.5;
+float				gMapCollisionAccuracy = 0.03;
 
 
 //  ______             _               __                  _   _                 

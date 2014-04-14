@@ -5,8 +5,7 @@
 extern sf::Font				gFont;
 extern int					gFontSize;
 
-extern float				gZoomRate;
-
+extern float				gMapCollisionAccuracy;
 
 struct SpawnEntry {
 	
@@ -183,7 +182,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	window.setView(view);
 
 
-	std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+
 
 	//===============SPAWNING OBJECTS==============
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
@@ -216,6 +216,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	}
 	
+
 	//===============FOCUS OBJECT CHANGING=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
 		for(int i = 0; i < getGameObjects().size(); ++i) {
@@ -235,19 +236,20 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	}
 
+
 	//===============ZOOM==========================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		mViewWidth *= gZoomRate;
-		mViewHeight *= gZoomRate;
+		mViewWidth *= config.zoomRate;
+		mViewHeight *= config.zoomRate;
 		mSpawnClock.restart();
 
 	}
 	
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		mViewWidth /= gZoomRate;
-		mViewHeight /= gZoomRate;
+		mViewWidth /= config.zoomRate;
+		mViewHeight /= config.zoomRate;
 		mSpawnClock.restart();
 
 	}
@@ -333,10 +335,61 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 			try {
 				if(getLevelMap().at(i).at(j) == 'B') {
 
-					if((movement.x > 0) && (direction == 0)) {rect.left = j * tileSize - rect.width;	object->getInput()->setBadDirection(2);}
-					if((movement.x < 0) && (direction == 0)) {rect.left = j * tileSize + tileSize;		object->getInput()->setBadDirection(4);}
-					if((movement.y > 0) && (direction == 1)) {rect.top = i * tileSize - rect.height;	object->getInput()->setBadDirection(3);}
-					if((movement.y < 0) && (direction == 1)) {rect.top = i * tileSize + tileSize;		object->getInput()->setBadDirection(1);}
+					if((movement.x > 0) && (direction == 0)) {
+						
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize) {
+
+							rect.top = ceil(rect.top);
+							rect.top -= int(rect.top) % 10;
+
+						}
+
+						rect.left = j * tileSize - rect.width;
+						object->getInput()->setBadDirection(2);
+
+					}
+
+					if((movement.x < 0) && (direction == 0)) {
+
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize) {
+
+							rect.top = ceil(rect.top);
+							rect.top -= int(rect.top) % 10;
+
+						}
+
+						rect.left = j * tileSize + tileSize;
+						object->getInput()->setBadDirection(4);
+
+					}
+
+					if((movement.y > 0) && (direction == 1)) {
+
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize) {
+
+							rect.left = ceil(rect.left);
+							rect.left -= int(rect.left) % 10;
+
+						}
+
+						rect.top = i * tileSize - rect.height;
+						object->getInput()->setBadDirection(3);
+
+					}
+
+					if((movement.y < 0) && (direction == 1)) {
+						
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize) {
+
+							rect.left = ceil(rect.left);
+							rect.left -= int(rect.left) % 10;
+
+						}
+
+						rect.top = i * tileSize + tileSize;	
+						object->getInput()->setBadDirection(1);
+
+					}
 
 				}
 			}

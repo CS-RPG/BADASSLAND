@@ -43,6 +43,7 @@ struct config {
 	
 	int								screenWidth;					
 	int								screenHeight;
+	float							zoomRate;
 	int								tileSize;						
 
 	int								gameSpeed;

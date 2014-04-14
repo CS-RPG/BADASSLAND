@@ -3,12 +3,12 @@ BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 B                                B     B
 B                                B     B
 B                                B     B
-B              BBBBB             B     B
-B              BBBBB          BBBB     B
-B              BBBBB             B     B
+B              B   B             B     B
+B              BB BB          BBBB     B
+B              BB BB             B     B
 BBB                              B     B
 B              BB                BB    B
-B              BB                      B
+B                                      B
 B    B         BB         BB           B
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 2

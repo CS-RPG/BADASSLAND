@@ -119,6 +119,12 @@ void StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	inputFile.get();
 	inputFile.get();
 
+	//Zoom rate.
+	getline(inputFile, temp);
+	inputFile >> mConfig.zoomRate;
+	inputFile.get();
+	inputFile.get();
+
 	//Tile size.
 	getline(inputFile, temp);
 	inputFile >> mConfig.tileSize;
