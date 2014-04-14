@@ -221,8 +221,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		for(int i = 0; i < getGameObjects().size(); ++i) {
 
 			sf::FloatRect rect;
-			rect.left = viewPosition.x + sf::Mouse::getPosition(window).x;
-			rect.top = viewPosition.y + sf::Mouse::getPosition(window).y;
+			rect.left = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+			rect.top = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
 			rect.width = 1;
 			rect.height = 1;
 			
