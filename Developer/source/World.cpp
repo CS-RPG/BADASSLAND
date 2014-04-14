@@ -189,12 +189,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		//coordinates.x = viewPosition.x - (config.screenWidth - mViewWidth) / 2 + sf::Mouse::getPosition(window).x;
-		//coordinates.y = viewPosition.y - (config.screenHeight - mViewHeight) / 2 + sf::Mouse::getPosition(window).y;
-		//coordinates.x = screenCenter.left - mViewWidth / 2;
-		//coordinates.y = screenCenter.top - mViewHeight / 2;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
 		spawnObject(Objects::Elf_Enemy, coordinates, config);
 		mSpawnClock.restart();
 
@@ -213,8 +209,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x;
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y;
+		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
 		spawnObject(Objects::Elf_Minion, coordinates, config);
 		mSpawnClock.restart();
 
