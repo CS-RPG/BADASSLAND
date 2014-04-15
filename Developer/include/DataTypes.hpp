@@ -43,6 +43,7 @@ struct config {
 	
 	int								screenWidth;					
 	int								screenHeight;
+	bool							fullscreen;
 	float							zoomRate;
 	int								tileSize;						
 

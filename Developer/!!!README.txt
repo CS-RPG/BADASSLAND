@@ -10,6 +10,19 @@ PLEASE, don't mess with config and level files (input errors are not handled).
 
 
 //============CHANGELOG=========================\\
+New in 0.7.5.1:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Fullscreen mode (in config).
+-----------------------------------------------------------------
+New in 0.7.5:
+(+) - New features.
+(*) - Bug fixes.
+
+ * Fixed resizing bug.
+ * Fixed incorrect input error handling (just config file).
+-----------------------------------------------------------------
 New in 0.7.4:
 (+) - New features.
 (*) - Bug fixes.

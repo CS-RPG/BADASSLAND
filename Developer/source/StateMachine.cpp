@@ -40,7 +40,11 @@ StateMachine::StateMachine() {
 	mPreviousWindowSize = sf::Vector2u(mConfig.screenWidth, mConfig.screenHeight);
 
 	//Creating window, view.
-	mWindow = new sf::RenderWindow(sf::VideoMode(mConfig.screenWidth, mConfig.screenHeight), "Badass Tales of BADASSLAND!!!!111"/*, sf::Style::Fullscreen*/);
+	if(mConfig.fullscreen)
+		mWindow = new sf::RenderWindow(sf::VideoMode(mConfig.screenWidth, mConfig.screenHeight), "Badass Tales of BADASSLAND!!!!111", sf::Style::Fullscreen);
+	else
+		mWindow = new sf::RenderWindow(sf::VideoMode(mConfig.screenWidth, mConfig.screenHeight), "Badass Tales of BADASSLAND!!!!111");
+	
 	mView.reset(sf::FloatRect(0, 0, mConfig.screenWidth, mConfig.screenHeight));
 	mView.setViewport(sf::FloatRect(0, 0, 1, 1));
 
@@ -117,11 +121,11 @@ void StateMachine::processEvents() {
 
 			case(sf::Event::Resized):
 				
-				std::cout << "Window has been resized!\n" << mDisplayAspectRatio << '\n' << event.size.width << " " << event.size.height << '\n';
+				std::cout << "Window has been resized!\n";
 
 				if(float(mWindow->getSize().x / mWindow->getSize().y) != mDisplayAspectRatio) {
 					
-					std::cout << "Incorrect aspect ratio!\n";
+					std::cout << "You shall not pass!\n";
 					mWindow->setSize(mPreviousWindowSize);
 
 				} else {
@@ -163,6 +167,21 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	inputFile >> mConfig.screenWidth >> mConfig.screenHeight;
 	if(mConfig.screenWidth > 2560 || mConfig.screenHeight > 1600 || mConfig.screenWidth < 320 || mConfig.screenHeight < 200) {
 		std::cout << "Incorrect screen resolution!\n";
+		return false;
+	}
+	inputFile.get();
+	inputFile.get();
+
+	//Fullscreen mode flag.
+	getline(inputFile, temp);
+	std::string fullscreenMode;
+	inputFile >> fullscreenMode;
+	if(fullscreenMode == "false")
+		mConfig.fullscreen = false;
+	else if(fullscreenMode == "true")
+		mConfig.fullscreen = true;
+	else {
+		std::cout << "Incorrect fullscreen flag!\n";
 		return false;
 	}
 	inputFile.get();

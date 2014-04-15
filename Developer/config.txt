@@ -1,6 +1,9 @@
 //Screen resolution.
 640 480
 
+//Fullscreen enabled (true / false).
+false
+
 //Zoom rate.
 1.5
 
