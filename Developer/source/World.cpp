@@ -240,16 +240,20 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	//===============ZOOM==========================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		mViewWidth *= config.zoomRate;
-		mViewHeight *= config.zoomRate;
+		if(mViewWidth / config.screenWidth <= 4) {
+			mViewWidth *= config.zoomRate;
+			mViewHeight *= config.zoomRate;
+		}
 		mSpawnClock.restart();
 
 	}
 	
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		mViewWidth /= config.zoomRate;
-		mViewHeight /= config.zoomRate;
+		if(mViewWidth / config.screenWidth >=0.25) {
+			mViewWidth /= config.zoomRate;
+			mViewHeight /= config.zoomRate;
+		}
 		mSpawnClock.restart();
 
 	}

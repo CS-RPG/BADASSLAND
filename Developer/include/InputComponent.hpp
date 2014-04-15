@@ -22,6 +22,7 @@ public:
 	virtual							~InputComponent();
 	virtual void					update(GameObject&, World&) = 0;
 	void							captureTarget(GameObject&, World&);
+	void							moveToTarget(GameObject& object, GameObject& target);
 
 	int								getBadDirection();
 	bool							isTargeting();

@@ -17,15 +17,17 @@
 
 
 //============GLOBAL VARIABLES==============
-float				gRangeMultiplier = 6;	//Range multiplier for target capturing.
-int					gControlsCount = 4;		//Number of user-defined controls.
+float						gRangeMultiplier = 6;	//Range multiplier for target capturing.
+int							gControlsCount = 4;		//Number of user-defined controls.
 
-TextureHolder		gTextureHolder;
-sf::Font			gFont;
-int					gFontSize;
+TextureHolder				gTextureHolder;
+sf::Font					gFont;
+int							gFontSize;
 
-float				gMapCollisionAccuracy = 0.03;
+float						gMapCollisionAccuracy = 0.03;
+float						gMaxWindowSizeMultiplier = 3;
 
+std::vector<sf::Vector2u>	gScreenResolutions;
 
 //  ______             _               __                  _   _                 
 // |  ____|           (_)             / _|                | | (_)                

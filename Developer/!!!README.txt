@@ -1,4 +1,4 @@
-BADASS TALES of BADASSLAND v. 0.7.3.1 alpha
+BADASS TALES of BADASSLAND v. 0.7.4 alpha
 
 Paul Pushmin,
 Leo Vetlugin
@@ -10,6 +10,13 @@ PLEASE, don't mess with config and level files (input errors are not handled).
 
 
 //============CHANGELOG=========================\\
+New in 0.7.4:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Customizable zoom rate (in config).
+ * Fixed map collision detection accuracy bug.
+-----------------------------------------------------------------
 New in 0.7.3.1:
 (+) - New features.
 (*) - Bug fixes.
@@ -33,11 +40,11 @@ New in 0.7.1:
 (+) - New features.
 (*) - Bug fixes.
 
-+ Right-Mouse Button click on an object to change view focus.
-+ Loading key bindings from config file.
-+ List of objects to be spawned on a level.
-* Fixed object collision bug (objects now won't be spawned if they can't be spawned).
-* Fixed game crash after someone is killed (std::vector out_of_range error).
+ + Right-Mouse Button click on an object to change view focus.
+ + Loading key bindings from config file.
+ + List of objects to be spawned on a level.
+ * Fixed object collision bug (objects now won't be spawned if they can't be spawned).
+ * Fixed game crash after someone is killed (std::vector out_of_range error).
 -----------------------------------------------------------------
 
 

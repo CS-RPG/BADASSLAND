@@ -44,6 +44,12 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 	
 }
 
+void InputComponent::moveToTarget(GameObject& object, GameObject& target) {
+
+
+
+}
+
 int InputComponent::getBadDirection() {
 	return mBadDirection;
 }

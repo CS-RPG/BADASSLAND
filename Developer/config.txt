@@ -1,5 +1,5 @@
 //Screen resolution.
-1280 720
+640 480
 
 //Zoom rate.
 1.5
@@ -11,7 +11,7 @@
 200
 
 //Spawn delay (in seconds).
-0.25
+0.15
 
 //Name of the level file to load.
 level1.txt
