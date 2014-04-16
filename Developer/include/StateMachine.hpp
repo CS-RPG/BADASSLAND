@@ -12,6 +12,7 @@ class StateMachine {
 public:
 
 									StateMachine();
+	void							initializeControlsMap();
 	void							run();
 	void							update(float deltaTime);
 	void							render();

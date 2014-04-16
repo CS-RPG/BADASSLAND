@@ -42,9 +42,15 @@ void KeyboardInputComponent::update(GameObject& player, World& world) {
 				float distance = calculateDistance( player.getPhysics()->getRect(),
 											world.getGameObjects()[i].getPhysics()->getRect() );
 
-				if(distance <= player.getCombat()->getAttackRange() * gRangeMultiplier)
+				//If target is within attack range, targeting not myself and target is hostile, ATTACK!!!1111
+				if(distance <= player.getCombat()->getAttackRange() * gRangeMultiplier && 
+					&player != &(world.getGameObjects()[i]) && 
+						world.areEnemies(player, world.getGameObjects()[i])) {
+
 					if(player.getCombat()->isReadyToAttack())
 						player.getCombat()->attack(player, world.getGameObjects()[i]);
+
+				}
 			
 			}
 

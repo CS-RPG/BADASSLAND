@@ -25,10 +25,10 @@ int							objectCount = 0;
 World::World(std::string fileName, config& config) {
 
 	//Creating mObjectMap.
-	mObjectMap.insert(std::make_pair("Player", Objects::Player));
-	mObjectMap.insert(std::make_pair("Elf_Enemy", Objects::Elf_Enemy));
-	mObjectMap.insert(std::make_pair("Elf_Minion", Objects::Elf_Minion));
-	mObjectMap.insert(std::make_pair("Elf_Friendly", Objects::Elf_Friendly));
+	initializeObjectMap();
+
+	//Initializing mFactionKarma;
+	initializeFactionKarmaMap();
 
 	mSpawnClock.restart();
 
@@ -145,6 +145,26 @@ World::World(std::string fileName, config& config) {
 	
 }
 
+void World::initializeObjectMap() {
+
+	mObjectMap.insert(std::make_pair("Player", Objects::Player));
+	mObjectMap.insert(std::make_pair("Elf_Enemy", Objects::Elf_Enemy));
+	mObjectMap.insert(std::make_pair("Elf_Minion", Objects::Elf_Minion));
+	mObjectMap.insert(std::make_pair("Elf_Friendly", Objects::Elf_Friendly));
+
+}
+
+void World::initializeFactionKarmaMap() {
+
+	mFactionKarmaMap.insert(std::make_pair("players", true));
+	mFactionKarmaMap.insert(std::make_pair("gods", true));
+	mFactionKarmaMap.insert(std::make_pair("yellow_elves", true));
+
+	mFactionKarmaMap.insert(std::make_pair("devils", false));
+	mFactionKarmaMap.insert(std::make_pair("red_elves", false));
+
+}
+
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
 	//===============UPDATING GAME LOGIC===========
@@ -159,7 +179,6 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 			getGameObjects().erase(getGameObjects().begin() + i);
 			--i;
-			//getGameObjects()[i].getInput()->setTargeting(false);
 
 		} else if(getGameObjects()[i].isPlayer())
 			playerIsAlive = true;
@@ -299,7 +318,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	std::ostringstream hudMouseCoordinates;
 	std::ostringstream hudOutConsole;
 
-	hudHealth << getGameObjects()[0].getCombat()->getHP();
+	hudHealth << getGameObjects()[mCenterObjectN].getCombat()->getHP();
 	//hudMana << getGameObjects()[0].getCombat()->getMP();
 	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
 	hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
@@ -659,6 +678,19 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 }
 
+bool World::areEnemies(GameObject& object1, GameObject& object2) {
+
+	std::string faction1 = object1.getSocial()->getFaction();
+	std::string faction2 = object2.getSocial()->getFaction();
+
+	if(faction1 == faction2)
+		return false;
+	else if(mFactionKarmaMap[faction1] == mFactionKarmaMap[faction2])
+		return false;
+	return true;
+
+}
+
 std::vector<std::vector<bool>>& World::getCollisionMap() {
 	return mCollisionMap;
 }
@@ -673,6 +705,10 @@ float World::getViewHeight() {
 
 sf::Vector2i World::getMouseCoordinates() {
 	return mMouseCoordinates;
+}
+
+std::map<std::string, bool>& World::getFactionKarmaMap() {
+	return mFactionKarmaMap;
 }
 //
 //==========================================

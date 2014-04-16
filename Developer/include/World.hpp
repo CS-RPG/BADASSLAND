@@ -28,6 +28,9 @@ public:
 
 									World(std::string fileName, config& config);
 
+	void							initializeObjectMap();
+	void							initializeFactionKarmaMap();
+
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
 	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
@@ -37,15 +40,16 @@ public:
 
 	bool							loadLevelMap(std::string);
 	void							buildCollisionMap();
-
 	void							deleteLevelMap();
 
 	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
+	bool							areEnemies(GameObject& object1, GameObject& object2);
 
 	std::vector<std::vector<bool>>&	getCollisionMap();
 	float							getViewWidth();
 	float							getViewHeight();
 	sf::Vector2i					getMouseCoordinates();
+	std::map<std::string, bool>&	getFactionKarmaMap();
 
 private:
 
@@ -57,6 +61,11 @@ private:
 
 	std::map<std::string,
 		Objects::ID>				mObjectMap;
+
+	//Returns true/false depending on karma associated with the faction.
+	//true == good
+	//false == bad
+	std::map<std::string, bool>		mFactionKarmaMap;
 
 	sf::RectangleShape				mTile;
 

@@ -22,7 +22,8 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 	for(int i = 0; i < world.getGameObjects().size(); ++i) {
 
 		float tempDistance = calculateDistance(object.getPhysics()->getRect(), world.getGameObjects()[i].getPhysics()->getRect());
-		if( (object.getSocial()->getFaction() != world.getGameObjects()[i].getSocial()->getFaction()) && 
+
+		if( (world.areEnemies(object, world.getGameObjects()[i])) && 
 			(tempDistance <= distance) && 
 			(&(world.getGameObjects()[i]) != &object) ) {
 
