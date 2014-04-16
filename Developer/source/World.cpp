@@ -197,6 +197,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
+	updateMouseCoordinates(window, config, viewPosition);
 
 	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
@@ -231,7 +232,16 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		mSpawnClock.restart();
 
 	}
+
+	//===============NOCLIP CHEAT==================
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::C)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 	
+		sf::FloatRect rect = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
+		getGameObjects()[mCenterObjectN].setInput(new KeyboardInputComponent(config.controls1));
+		getGameObjects()[mCenterObjectN].setPhysics(new NoClipPhysicsComponent(rect, 0.8));
+		mSpawnClock.restart();						
+
+	}
 
 	//===============FOCUS OBJECT CHANGING=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
@@ -286,16 +296,16 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	hudHealth << getGameObjects()[0].getCombat()->getHP();
 	//hudMana << getGameObjects()[0].getCombat()->getMP();
 	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
-	hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left + config.tileSize / 2 << '\n'
-						 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top + config.tileSize / 2;
+	hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
+						 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top;
 	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << '\n'
 						<< "Y: " << sf::Mouse::getPosition(window).y;
 	if(!playerIsAlive) {
 		hudOutConsole << "Player is dead!\n";
 	}
 
-	//mTextMana.setString(hudMana.str());
 	mTextHealth.setString(hudHealth.str());
+	//mTextMana.setString(hudMana.str());
 	mTextEnemyCount.setString(hudEnemyCount.str());
 	mTextObjectCoordinates.setString(hudObjectCoordinates.str());
 	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
@@ -342,6 +352,13 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 	window.draw(mTextMouseCoordinates);
 	window.draw(mOutConsole);
 	
+}
+
+void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition) {
+
+	mMouseCoordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+	mMouseCoordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+
 }
 
 void World::resolveMapCollision(GameObject* object, int direction, int tileSize) {
@@ -414,10 +431,14 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 				}
 			}
 			catch(const std::out_of_range& e) {
+
 				object->getSocial()->setName("GOD");
+				object->getSocial()->setFaction("gods");
+				object->setPhysics(new NoClipPhysicsComponent(rect, 1));
 				//mGodExists = true;
 				std::cout << "Bad luck! Out of map range!\n";
 				continue;
+
 			}
 
 		}
@@ -633,6 +654,18 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 std::vector<std::vector<bool>>& World::getCollisionMap() {
 	return mCollisionMap;
+}
+
+float World::getViewWidth() {
+	return mViewWidth;
+}
+
+float World::getViewHeight() {
+	return mViewHeight;
+}
+
+sf::Vector2i World::getMouseCoordinates() {
+	return mMouseCoordinates;
 }
 //
 //==========================================

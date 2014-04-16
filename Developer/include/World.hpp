@@ -30,6 +30,7 @@ public:
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
+	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
 
 	void							resolveMapCollision(GameObject*, int, int);
 	void							resolveObjectCollision(GameObject*, int);
@@ -42,12 +43,15 @@ public:
 	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
 
 	std::vector<std::vector<bool>>&	getCollisionMap();
+	float							getViewWidth();
+	float							getViewHeight();
+	sf::Vector2i					getMouseCoordinates();
 
 private:
 
 	sf::Clock						mSpawnClock;
 
-	//Spawner							mSpawner;
+	sf::Vector2i					mMouseCoordinates;
 
 	std::vector<std::vector<bool>>	mCollisionMap;
 

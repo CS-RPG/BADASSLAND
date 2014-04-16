@@ -2,7 +2,8 @@
 #ifndef _DynamicPhysicsComponent_hpp_included_
 #define _DynamicPhysicsComponent_hpp_included_
 
-#include <PhysicsComponent.hpp>
+#include <_includes_badass.hpp>
+#include <_includes_system.hpp>
 
 
 //============DynamicPhysicsComponent=======

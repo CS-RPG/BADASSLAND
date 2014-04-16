@@ -1,4 +1,4 @@
-BADASS TALES of BADASSLAND v. 0.7.4 alpha
+BADASS TALES of BADASSLAND v. 0.7.6 alpha
 
 Paul Pushmin,
 Leo Vetlugin
@@ -10,6 +10,16 @@ PLEASE, don't mess with config and level files (input errors are not handled).
 
 
 //============CHANGELOG=========================\\
+New in 0.7.6:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Player attack enabled.
+ + Improved view / zoom.
+ + GOD.
+ * Fixed resizing division by zero bug.
+-----------------------------------------------------------------
+
 New in 0.7.5.1:
 (+) - New features.
 (*) - Bug fixes.

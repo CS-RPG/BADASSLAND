@@ -56,17 +56,6 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 }
 
 
-int directionDFS(sf::Vector2i source, sf::Vector2i destination, World& world) {
-
-	std::vector<bool> used;
-
-
-	return 1;
-
-
-}
-
-
 //  __  __       _       
 // |  \/  |     (_)      
 // | \  / | __ _ _ _ __  

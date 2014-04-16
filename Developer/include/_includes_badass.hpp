@@ -46,6 +46,7 @@
 
 //============PHYSICS=======================
 #include <DynamicPhysicsComponent.hpp>
+#include <NoClipPhysicsComponent.hpp>
 
 //============GRAPHICS======================
 #include <HumanoidGraphicsComponent.hpp>

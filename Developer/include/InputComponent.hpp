@@ -23,16 +23,20 @@ public:
 	virtual void					update(GameObject&, World&) = 0;
 	void							captureTarget(GameObject&, World&);
 	void							moveToTarget(GameObject& object, GameObject& target);
+	bool							createPath(sf::Vector2i source, sf::Vector2i destination, World& world);
 
 	int								getBadDirection();
 	bool							isTargeting();
 	GameObject*						getTarget();
+	sf::Vector2i*&					getPath();
 
 	void							setBadDirection(int);
 	void							setTargeting(bool);
 	void							setTarget(GameObject*);
 
 private:
+
+	sf::Vector2i*					mPath;
 
 	int								mBadDirection;
 	bool							mIsTargeting;

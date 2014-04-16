@@ -50,12 +50,23 @@ void InputComponent::moveToTarget(GameObject& object, GameObject& target) {
 
 }
 
+bool InputComponent::createPath(sf::Vector2i source, sf::Vector2i destination, World& world) {
+
+	std::vector<std::vector<int>> tempMap = world.getLevelMap();
+	return true;
+
+}
+
 int InputComponent::getBadDirection() {
 	return mBadDirection;
 }
 
 GameObject* InputComponent::getTarget() {
 	return mTarget;
+}
+
+sf::Vector2i*& InputComponent::getPath() {
+	return mPath;
 }
 
 bool InputComponent::isTargeting() {
