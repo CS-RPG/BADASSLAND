@@ -33,7 +33,16 @@ World::World(std::string fileName, config& config) {
 	mSpawnClock.restart();
 
 	//===============LEVEL, COLLISION MAP==========
-	loadLevelMap(fileName);
+	if(!loadLevelMap(fileName)) {
+
+		std::cout << "Level file error!\n" << "Press space to exit.\n";
+		mTerminateGame = true;
+		while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
+		return;
+
+	} else
+		mTerminateGame = false;
+
 	buildCollisionMap();
 
 
@@ -127,6 +136,7 @@ World::World(std::string fileName, config& config) {
 	//Spawning objects.
 	//If player exists, last player, written in level-file, will be the view center.
 	//If not (and there are any objects), first GameObject will be the view center.
+	mCenterObjectN = 0;
 	bool playerIsPresent = false;
 	for(int i = 0; i < objectCount; ++i)
 		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
@@ -167,6 +177,9 @@ void World::initializeFactionKarmaMap() {
 
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
+	if(mTerminateGame)
+		window.close();
+
 	//===============UPDATING GAME LOGIC===========
 	for(int i = 0; i < getGameObjects().size(); ++i)	
 		getGameObjects()[i].update(deltaTime, &config, *this);
@@ -188,7 +201,13 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	//============UPDATING VIEW====================
 	sf::Vector2f viewPosition;
-	sf::FloatRect screenCenter = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
+	sf::FloatRect screenCenter;
+	if(getGameObjects().size() != 0)	
+		screenCenter = getGameObjects().at(mCenterObjectN).getPhysics()->getRect();
+	else {
+		screenCenter.left = mViewWidth / 2;
+		screenCenter.top = mViewHeight / 2;
+	}
 
 	viewPosition.x = screenCenter.left + screenCenter.width / 2 - mViewWidth / 2;
 	viewPosition.y = screenCenter.top + screenCenter.height / 2 - mViewHeight / 2;
@@ -216,9 +235,32 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
+	//Updating mMouseCoordinates.
 	updateMouseCoordinates(window, config, viewPosition);
 
 	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+
+
+	//===============ZOOM==========================
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+		
+		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
+			mViewWidth *= config.zoomRate;
+			mViewHeight *= config.zoomRate;
+		}
+		mSpawnClock.restart();
+
+	}
+	
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		if(mViewWidth / config.screenWidth >= 1 / gMaxZoomRate) {
+			mViewWidth /= config.zoomRate;
+			mViewHeight /= config.zoomRate;
+		}
+		mSpawnClock.restart();
+
+	}
 
 
 	//===============SPAWNING OBJECTS==============
@@ -238,6 +280,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
 		spawnObject(Objects::Elf_Friendly, coordinates, config);
+		//getGameObjects()[getGameObjects().size() - 1].update(deltaTime, &config, *this);	//
 		mSpawnClock.restart();
 
 	}
@@ -248,6 +291,16 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
 		spawnObject(Objects::Elf_Minion, coordinates, config);
+		mSpawnClock.restart();
+
+	}
+
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::P)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		sf::Vector2i coordinates;
+		coordinates.x = getMouseCoordinates().x;
+		coordinates.y = getMouseCoordinates().y;
+		spawnObject(Objects::Player, coordinates, config);
 		mSpawnClock.restart();
 
 	}
@@ -288,28 +341,6 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	}
 
 
-	//===============ZOOM==========================
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
-		
-		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
-			mViewWidth *= config.zoomRate;
-			mViewHeight *= config.zoomRate;
-		}
-		mSpawnClock.restart();
-
-	}
-	
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
-
-		if(mViewWidth / config.screenWidth >= 1 / gMaxZoomRate) {
-			mViewWidth /= config.zoomRate;
-			mViewHeight /= config.zoomRate;
-		}
-		mSpawnClock.restart();
-
-	}
-
-
 	//===============UPDATING HUD==================
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
@@ -318,16 +349,21 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	std::ostringstream hudMouseCoordinates;
 	std::ostringstream hudOutConsole;
 
-	hudHealth << getGameObjects()[mCenterObjectN].getCombat()->getHP();
-	//hudMana << getGameObjects()[0].getCombat()->getMP();
+	if(getGameObjects().size() != 0) {
+		
+		hudHealth << getGameObjects()[mCenterObjectN].getCombat()->getHP();
+		//hudMana << getGameObjects()[mCenterObjectN].getCombat()->getMP();	
+		hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
+							 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top;
+
+	}
+
 	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
-	hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
-						 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top;
 	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << '\n'
 						<< "Y: " << sf::Mouse::getPosition(window).y;
-	if(!playerIsAlive) {
+
+	if(!playerIsAlive)
 		hudOutConsole << "Player is dead!\n";
-	}
 
 	mTextHealth.setString(hudHealth.str());
 	//mTextMana.setString(hudMana.str());
@@ -505,10 +541,10 @@ bool World::loadLevelMap(std::string filename) {
 
 	inputFile >> height >> width;
 
-	//if(height <= 0 || width <= 0) {
-	//	std::cout << "Incorrect map size!\n";
-	//	return false;
-	//}
+	if(height <= 0 || width <= 0) {
+		std::cout << "Incorrect map size!\n";
+		return false;
+	}
 
 	setMapHeight(height);
 	setMapWidth(width);
@@ -522,14 +558,28 @@ bool World::loadLevelMap(std::string filename) {
 	inputFile.get();
 	for(int i = 0; i < getMapHeight(); ++i) {
 		for(int j = 0; j < getMapWidth(); ++j) {
+			
+			if(inputFile.eof()) {
+				
+				std::cout << "Unexpected end of level file!\n";
+				return false;
+
+			}
 			char temp = inputFile.get();
 			getLevelMap()[i][j] = int(temp);
+
 		}
 		inputFile.get();
 	}
 
 	//Loading spawn data.
 	inputFile >> objectCount;
+	
+	if(objectCount < 0) {
+		std::cout << "Incorrect object count!\n";
+		return false;
+	}
+
 	std::cout << "Objects to spawn: " << objectCount << '\n';
 
 	delete[] objects;

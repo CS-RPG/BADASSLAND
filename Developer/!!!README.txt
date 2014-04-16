@@ -1,4 +1,4 @@
-BADASS TALES of BADASSLAND v. 0.7.6 alpha
+BADASS TALES of BADASSLAND v. 0.7.6.1 alpha
 
 Paul Pushmin,
 Leo Vetlugin
@@ -6,10 +6,17 @@ Leo Vetlugin
 Follow us on GitHub:
 https://github.com/CS-RPG/BADASSLAND
 
-PLEASE, don't mess with config and level files (input errors are not handled).
-
 
 //============CHANGELOG=========================\\
+New in 0.7.6.1:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Invincibility combat component for GOD.
+ * Fixed stack overflow bug (GODs recursively attacking each other).
+ * Fixed object attacking itself bug.
+ * Fixed incorrect level file input.
+-----------------------------------------------------------------
 New in 0.7.6:
 (+) - New features.
 (*) - Bug fixes.
@@ -100,6 +107,10 @@ Player - controls1
 									 
 Right-Mouse Button - change focus to 
 a different game object.
+
+Left-Mouse Button - ATTACK!!!11
+
+Super-God Mode - ~
 
 PgUp / PgDown - Zoom In / Out
 

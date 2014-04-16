@@ -18,9 +18,11 @@ StateMachine::StateMachine() {
 
 	//Loading config.
 	if(!loadConfigFile("config.txt")) {
+
 		std::cout << "Config file error!\n" << "Press space to exit.\n";
 		mTerminateGame = true;
 		return;
+
 	} else
 		mTerminateGame = false;
 
@@ -352,7 +354,6 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	}
 	inputFile.get();
 	inputFile.get();
-
 
 	//Controls2.
 	getline(inputFile, temp);

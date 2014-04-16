@@ -53,6 +53,8 @@ public:
 
 private:
 
+	bool							mTerminateGame;
+
 	sf::Clock						mSpawnClock;
 
 	sf::Vector2i					mMouseCoordinates;
