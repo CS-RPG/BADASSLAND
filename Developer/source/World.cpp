@@ -206,8 +206,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+		coordinates.x = getMouseCoordinates().x;
+		coordinates.y = getMouseCoordinates().y;
 		spawnObject(Objects::Elf_Enemy, coordinates, config);
 		mSpawnClock.restart();
 
@@ -216,8 +216,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+		coordinates.x = getMouseCoordinates().x;
+		coordinates.y = getMouseCoordinates().y;
 		spawnObject(Objects::Elf_Friendly, coordinates, config);
 		mSpawnClock.restart();
 
@@ -226,19 +226,25 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		sf::Vector2i coordinates;
-		coordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
-		coordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+		coordinates.x = getMouseCoordinates().x;
+		coordinates.y = getMouseCoordinates().y;
 		spawnObject(Objects::Elf_Minion, coordinates, config);
 		mSpawnClock.restart();
 
 	}
 
 	//===============NOCLIP CHEAT==================
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::C)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::Tilde)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 	
 		sf::FloatRect rect = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
+		
+		getGameObjects()[mCenterObjectN].getSocial()->setName("GOD");
+		getGameObjects()[mCenterObjectN].getSocial()->setFaction("gods");
+
 		getGameObjects()[mCenterObjectN].setInput(new KeyboardInputComponent(config.controls1));
-		getGameObjects()[mCenterObjectN].setPhysics(new NoClipPhysicsComponent(rect, 0.8));
+		getGameObjects()[mCenterObjectN].setPhysics(new NoClipPhysicsComponent(rect, 1));
+		getGameObjects()[mCenterObjectN].setCombat(new InvincibleCombatComponent(9999, 9999, 9999, 9999, 9999));
+
 		mSpawnClock.restart();						
 
 	}
@@ -248,8 +254,8 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 		for(int i = 0; i < getGameObjects().size(); ++i) {
 
 			sf::FloatRect rect;
-			rect.left = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
-			rect.top = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+			rect.left = getMouseCoordinates().x;
+			rect.top = getMouseCoordinates().y;
 			rect.width = 1;
 			rect.height = 1;
 			
@@ -265,7 +271,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	//===============ZOOM==========================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
-
+		
 		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
 			mViewWidth *= config.zoomRate;
 			mViewHeight *= config.zoomRate;
@@ -435,6 +441,7 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 				object->getSocial()->setName("GOD");
 				object->getSocial()->setFaction("gods");
 				object->setPhysics(new NoClipPhysicsComponent(rect, 1));
+				object->setCombat(new InvincibleCombatComponent(9999, 9999, 9999, 9999, 9999));
 				//mGodExists = true;
 				std::cout << "Bad luck! Out of map range!\n";
 				continue;
@@ -565,7 +572,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 			temp = new GameObject(	new KeyboardInputComponent(config.controls1),
 									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.1),
 									new HumanoidGraphicsComponent(Textures::Elf_Green),
-									new HumanoidCombatComponent(150, 150, 40, 40, 2),
+									new HumanoidCombatComponent(150, 150, 40, 100, 2),
 									new HumanoidSocialComponent("Player", "players")  );
 			temp->setPlayer(true);
 			break;

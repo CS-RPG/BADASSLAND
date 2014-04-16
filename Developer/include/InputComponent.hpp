@@ -28,7 +28,7 @@ public:
 	int								getBadDirection();
 	bool							isTargeting();
 	GameObject*						getTarget();
-	sf::Vector2i*&					getPath();
+	std::vector<sf::Vector2i>&		getPath();
 
 	void							setBadDirection(int);
 	void							setTargeting(bool);
@@ -36,7 +36,7 @@ public:
 
 private:
 
-	sf::Vector2i*					mPath;
+	std::vector<sf::Vector2i>		mPath;
 
 	int								mBadDirection;
 	bool							mIsTargeting;

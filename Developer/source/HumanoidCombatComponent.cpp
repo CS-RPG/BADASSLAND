@@ -1,8 +1,4 @@
 //HumanoidCombatComponent.cpp
-#include <SFML/Graphics.hpp>
-#include <World.hpp>
-#include <GameObject.hpp>
-
 #include <HumanoidCombatComponent.hpp>
 
 
@@ -35,8 +31,14 @@ void HumanoidCombatComponent::attack(GameObject& attacker, GameObject& target) {
 void HumanoidCombatComponent::takeDamage(GameObject& attacker, GameObject& target, float damage) {
 
 	setHP(getHP() - damage);
-	std::string name = attacker.getSocial()->getName();
-	std::printf("%s deals %.0f damage to %s.\n", std::string(attacker.getSocial()->getName()).c_str(), damage, std::string(target.getSocial()->getName()).c_str());
+	std::string attackerName = std::string(attacker.getSocial()->getName());
+	std::string targetName = std::string(target.getSocial()->getName());
+	
+	if(&attacker == &target)
+		targetName = "himself";
+
+	std::cout << attackerName << " deals " << damage << " damage to " << targetName << ".\n";
+	//std::printf("%s deals %.0f damage to %s.\n", attackerName.c_str(), damage, targetName.c_str());
 	
 	if(getHP() <= 0) {
 

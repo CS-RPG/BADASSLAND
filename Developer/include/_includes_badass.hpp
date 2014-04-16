@@ -53,6 +53,7 @@
 
 //============COMBAT========================
 #include <HumanoidCombatComponent.hpp>
+#include <InvincibleCombatComponent.hpp>
 
 //============SOCIAL========================
 #include <HumanoidSocialComponent.hpp>

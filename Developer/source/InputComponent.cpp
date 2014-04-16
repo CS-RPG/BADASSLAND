@@ -34,12 +34,14 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 	}
 	
 	if(mTarget != NULL) {
+		
 		setTargeting(true);
-		//std::cout << "WIN\n";
+
 	} else {
+		
 		setTargeting(false);
 		//mTarget = NULL;
-		//std::cout << "FAIL\n";
+		
 	}
 	
 }
@@ -65,7 +67,7 @@ GameObject* InputComponent::getTarget() {
 	return mTarget;
 }
 
-sf::Vector2i*& InputComponent::getPath() {
+std::vector<sf::Vector2i>& InputComponent::getPath() {
 	return mPath;
 }
 
