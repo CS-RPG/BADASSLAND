@@ -24,8 +24,9 @@ TextureHolder				gTextureHolder;
 sf::Font					gFont;
 int							gFontSize;
 
-float						gMapCollisionAccuracy = 0.03;
+float						gMapCollisionAccuracy = 0.05;
 float						gMaxWindowSizeMultiplier = 3;
+float						gMaxZoomRate = 8;
 
 std::vector<sf::Vector2u>	gScreenResolutions;
 

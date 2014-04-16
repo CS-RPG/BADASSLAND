@@ -6,6 +6,7 @@ extern sf::Font				gFont;
 extern int					gFontSize;
 
 extern float				gMapCollisionAccuracy;
+extern float				gMaxZoomRate;
 
 struct SpawnEntry {
 	
@@ -172,17 +173,25 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	viewPosition.y = screenCenter.top + screenCenter.height / 2 - mViewHeight / 2;
 	//viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
 	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
-		
+	
 	if(viewPosition.x < 0)														viewPosition.x = 0;
-	if(viewPosition.x > getMapWidth() * config.tileSize - config.screenWidth)	viewPosition.x = getMapWidth() * config.tileSize - config.screenWidth;
+	if(viewPosition.x > getMapWidth() * config.tileSize - mViewWidth)			viewPosition.x = getMapWidth() * config.tileSize - mViewWidth;
 	if(viewPosition.y < 0)														viewPosition.y = 0;
-	if(viewPosition.y > getMapHeight() * config.tileSize - config.screenHeight)	viewPosition.y = getMapHeight() * config.tileSize - config.screenHeight;
+	if(viewPosition.y > getMapHeight() * config.tileSize - mViewHeight)			viewPosition.y = getMapHeight() * config.tileSize - mViewHeight;
+
+	//View at center when whole map fits on a screen.
+	if(mViewWidth > getMapWidth() * config.tileSize)
+		viewPosition.x = - (mViewWidth - getMapWidth() * config.tileSize) / 2;
+
+	if(mViewHeight> getMapHeight() * config.tileSize)
+		viewPosition.y = - (mViewHeight - getMapHeight() * config.tileSize) / 2;
+
 
 	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
 
-	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+	std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
 
 	//===============SPAWNING OBJECTS==============
@@ -240,7 +249,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	//===============ZOOM==========================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		if(mViewWidth / config.screenWidth <= 4) {
+		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
 			mViewWidth *= config.zoomRate;
 			mViewHeight *= config.zoomRate;
 		}
@@ -250,7 +259,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-		if(mViewWidth / config.screenWidth >=0.25) {
+		if(mViewWidth / config.screenWidth >= 1 / gMaxZoomRate) {
 			mViewWidth /= config.zoomRate;
 			mViewHeight /= config.zoomRate;
 		}
