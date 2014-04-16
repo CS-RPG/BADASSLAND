@@ -123,7 +123,7 @@ void StateMachine::processEvents() {
 				
 				std::cout << "Window has been resized!\n";
 
-				if(float(mWindow->getSize().x / mWindow->getSize().y) != mDisplayAspectRatio) {
+				if(mWindow->getSize().y != 0 && float(mWindow->getSize().x / mWindow->getSize().y) != mDisplayAspectRatio) {
 					
 					std::cout << "You shall not pass!\n";
 					mWindow->setSize(mPreviousWindowSize);
@@ -159,7 +159,11 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 
 	std::ifstream inputFile;
 	inputFile.open(filename);
-	
+	if(!inputFile.good()) {
+		std::cout << "Config file doesn't exist!\n";
+		return false;
+	}
+
 	std::string temp;
 
 	//Screen resolution.
@@ -232,7 +236,7 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	inputFile >> mConfig.levelMapName;
 	std::ifstream testInputFile("./levels/" + mConfig.levelMapName);
 	if(!testInputFile.good()) {
-		std::cout << "File doesn't exist!\n";
+		std::cout << "Level file doesn't exist!\n";
 		return false;
 	}
 	
