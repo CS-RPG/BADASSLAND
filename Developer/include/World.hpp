@@ -33,10 +33,15 @@ public:
 
 	void							resolveMapCollision(GameObject*, int, int);
 	void							resolveObjectCollision(GameObject*, int);
-	void							loadLevelMap(std::string);
+
+	bool							loadLevelMap(std::string);
+	void							buildCollisionMap();
+
 	void							deleteLevelMap();
 
 	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
+
+	std::vector<std::vector<bool>>&	getCollisionMap();
 
 private:
 
@@ -57,7 +62,7 @@ private:
 	sf::Text						mTextHealth;
 	sf::Text						mTextMana;
 	sf::Text						mTextEnemyCount;
-	sf::Text						mTextPlayerCoordinates;
+	sf::Text						mTextObjectCoordinates;
 	sf::Text						mTextMouseCoordinates;
 	sf::Text						mOutConsole;
 

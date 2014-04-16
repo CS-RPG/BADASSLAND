@@ -18,11 +18,36 @@ StateMachine::StateMachine() {
 	mControlsMap.insert(std::make_pair("Down", sf::Keyboard::Down));
 	mControlsMap.insert(std::make_pair("Left", sf::Keyboard::Left));
 	mControlsMap.insert(std::make_pair("Right", sf::Keyboard::Right));
-
+	
+	mControlsMap.insert(std::make_pair("Q", sf::Keyboard::Q));
 	mControlsMap.insert(std::make_pair("W", sf::Keyboard::W));
-	mControlsMap.insert(std::make_pair("S", sf::Keyboard::S));
+	mControlsMap.insert(std::make_pair("E", sf::Keyboard::E));
+	mControlsMap.insert(std::make_pair("R", sf::Keyboard::R));
+	mControlsMap.insert(std::make_pair("T", sf::Keyboard::T));
+	mControlsMap.insert(std::make_pair("Y", sf::Keyboard::Y));
+	mControlsMap.insert(std::make_pair("U", sf::Keyboard::U));
+	mControlsMap.insert(std::make_pair("I", sf::Keyboard::I));
+	mControlsMap.insert(std::make_pair("O", sf::Keyboard::O));
+	mControlsMap.insert(std::make_pair("P", sf::Keyboard::P));
+
 	mControlsMap.insert(std::make_pair("A", sf::Keyboard::A));
+	mControlsMap.insert(std::make_pair("S", sf::Keyboard::S));
 	mControlsMap.insert(std::make_pair("D", sf::Keyboard::D));
+	mControlsMap.insert(std::make_pair("F", sf::Keyboard::F));
+	mControlsMap.insert(std::make_pair("G", sf::Keyboard::G));
+	mControlsMap.insert(std::make_pair("H", sf::Keyboard::H));
+	mControlsMap.insert(std::make_pair("J", sf::Keyboard::J));
+	mControlsMap.insert(std::make_pair("K", sf::Keyboard::K));
+	mControlsMap.insert(std::make_pair("L", sf::Keyboard::L));
+
+	mControlsMap.insert(std::make_pair("Z", sf::Keyboard::Z));
+	mControlsMap.insert(std::make_pair("X", sf::Keyboard::X));
+	mControlsMap.insert(std::make_pair("C", sf::Keyboard::C));
+	mControlsMap.insert(std::make_pair("V", sf::Keyboard::V));
+	mControlsMap.insert(std::make_pair("B", sf::Keyboard::B));
+	mControlsMap.insert(std::make_pair("N", sf::Keyboard::N));
+	mControlsMap.insert(std::make_pair("M", sf::Keyboard::M));
+	
 
 	//Loading config.
 	if(!loadConfigFile("config.txt")) {

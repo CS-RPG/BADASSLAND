@@ -32,7 +32,9 @@ World::World(std::string fileName, config& config) {
 
 	mSpawnClock.restart();
 
+	//===============LEVEL, COLLISION MAP==========
 	loadLevelMap(fileName);
+	buildCollisionMap();
 
 
 	//===============VIEW==========================
@@ -92,12 +94,12 @@ World::World(std::string fileName, config& config) {
 
 
 	//===============HUD PLAYER COORDINATES========
-	mTextPlayerCoordinates.setFont(gFont);
-	mTextPlayerCoordinates.setString("");
-	mTextPlayerCoordinates.setCharacterSize(gFontSize);
-	mTextPlayerCoordinates.setStyle(sf::Text::Bold);
-	mTextPlayerCoordinates.setColor(sf::Color::Color(125, 145, 176));
-	mTextPlayerCoordinates.setPosition(0, gFontSize * 3);
+	mTextObjectCoordinates.setFont(gFont);
+	mTextObjectCoordinates.setString("");
+	mTextObjectCoordinates.setCharacterSize(gFontSize);
+	mTextObjectCoordinates.setStyle(sf::Text::Bold);
+	mTextObjectCoordinates.setColor(sf::Color::Color(125, 145, 176));
+	mTextObjectCoordinates.setPosition(0, gFontSize * 3);
 
 
 	//===============HUD MOUSE COORDINATES=========
@@ -174,24 +176,29 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	//viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
 	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 	
-	if(viewPosition.x < 0)														viewPosition.x = 0;
-	if(viewPosition.x > getMapWidth() * config.tileSize - mViewWidth)			viewPosition.x = getMapWidth() * config.tileSize - mViewWidth;
-	if(viewPosition.y < 0)														viewPosition.y = 0;
-	if(viewPosition.y > getMapHeight() * config.tileSize - mViewHeight)			viewPosition.y = getMapHeight() * config.tileSize - mViewHeight;
+	//If focus object is within level borders, do the View optimization stuff.
+	if(screenCenter.left > 0 &&	screenCenter.left < getMapWidth() * config.tileSize &&
+			screenCenter.top > 0 &&	screenCenter.top < getMapHeight() * config.tileSize) {
+	
+		if(viewPosition.x < 0)													viewPosition.x = 0;
+		if(viewPosition.x > getMapWidth() * config.tileSize - mViewWidth)		viewPosition.x = getMapWidth() * config.tileSize - mViewWidth;
+		if(viewPosition.y < 0)													viewPosition.y = 0;
+		if(viewPosition.y > getMapHeight() * config.tileSize - mViewHeight)		viewPosition.y = getMapHeight() * config.tileSize - mViewHeight;
 
-	//View at center when whole map fits on a screen.
-	if(mViewWidth > getMapWidth() * config.tileSize)
-		viewPosition.x = - (mViewWidth - getMapWidth() * config.tileSize) / 2;
+		//View at center when whole map fits on a screen.
+		if(mViewWidth > getMapWidth() * config.tileSize)
+			viewPosition.x = - (mViewWidth - getMapWidth() * config.tileSize) / 2;
 
-	if(mViewHeight> getMapHeight() * config.tileSize)
-		viewPosition.y = - (mViewHeight - getMapHeight() * config.tileSize) / 2;
-
-
+		if(mViewHeight> getMapHeight() * config.tileSize)
+			viewPosition.y = - (mViewHeight - getMapHeight() * config.tileSize) / 2;
+	
+	}
+	
 	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
 
-	std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
 
 	//===============SPAWNING OBJECTS==============
@@ -272,15 +279,15 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
 	std::ostringstream hudEnemyCount;
-	std::ostringstream hudPlayerCoordinates;
+	std::ostringstream hudObjectCoordinates;
 	std::ostringstream hudMouseCoordinates;
 	std::ostringstream hudOutConsole;
 
 	hudHealth << getGameObjects()[0].getCombat()->getHP();
 	//hudMana << getGameObjects()[0].getCombat()->getMP();
 	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
-	hudPlayerCoordinates << "X: " << getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 << '\n'
-						 << "Y: " << getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2;
+	hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left + config.tileSize / 2 << '\n'
+						 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top + config.tileSize / 2;
 	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << '\n'
 						<< "Y: " << sf::Mouse::getPosition(window).y;
 	if(!playerIsAlive) {
@@ -290,16 +297,16 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	//mTextMana.setString(hudMana.str());
 	mTextHealth.setString(hudHealth.str());
 	mTextEnemyCount.setString(hudEnemyCount.str());
-	mTextPlayerCoordinates.setString(hudPlayerCoordinates.str());
+	mTextObjectCoordinates.setString(hudObjectCoordinates.str());
 	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
 	mOutConsole.setString(hudOutConsole.str());
 
 	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
-	//textMana.setPosition(mViewPosition.x, mViewPosition.y + textMana.getCharacterSize());
-	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + mTextEnemyCount.getCharacterSize() * 2);
-	mTextPlayerCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 3);
-	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 6);
-	mOutConsole.setPosition(viewPosition.x, viewPosition.y + mTextPlayerCoordinates.getCharacterSize() * 9);
+	//textMana.setPosition(mViewPosition.x, mViewPosition.y + gFontSize);
+	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + gFontSize * 2);
+	mTextObjectCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 3);
+	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 6);
+	mOutConsole.setPosition(viewPosition.x, viewPosition.y + gFontSize * 9);
 
 }
 
@@ -331,7 +338,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 	window.draw(mTextHealth);
 	//window.draw(mTextMana);
 	window.draw(mTextEnemyCount);
-	window.draw(mTextPlayerCoordinates);
+	window.draw(mTextObjectCoordinates);
 	window.draw(mTextMouseCoordinates);
 	window.draw(mOutConsole);
 	
@@ -346,7 +353,7 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
 
 			try {
-				if(getLevelMap().at(i).at(j) == 'B') {
+				if(getCollisionMap().at(i).at(j)) {
 
 					if((movement.x > 0) && (direction == 0)) {
 						
@@ -407,6 +414,8 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 				}
 			}
 			catch(const std::out_of_range& e) {
+				object->getSocial()->setName("GOD");
+				//mGodExists = true;
 				std::cout << "Bad luck! Out of map range!\n";
 				continue;
 			}
@@ -440,7 +449,7 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 
 }
 
-void World::loadLevelMap(std::string filename) {
+bool World::loadLevelMap(std::string filename) {
 
 	std::ifstream inputFile(filename);
 
@@ -448,6 +457,11 @@ void World::loadLevelMap(std::string filename) {
 	int width;
 
 	inputFile >> height >> width;
+
+	//if(height <= 0 || width <= 0) {
+	//	std::cout << "Incorrect map size!\n";
+	//	return false;
+	//}
 
 	setMapHeight(height);
 	setMapWidth(width);
@@ -483,6 +497,27 @@ void World::loadLevelMap(std::string filename) {
 	}
 
 	inputFile.close();
+
+	return true;
+
+}
+
+void World::buildCollisionMap() {
+
+	//Resizing the array.
+	getCollisionMap().resize(getMapHeight());
+	for(int i = 0; i < getMapHeight(); ++i)
+		getCollisionMap()[i].resize(getMapWidth());
+
+	for(int i = 0; i < getMapHeight(); ++i)
+		for(int j = 0; j < getMapWidth(); ++j) {
+
+			if(getLevelMap().at(i).at(j) == 'B')
+				getCollisionMap().at(i).at(j) = true;
+			else
+				getCollisionMap().at(i).at(j) = false;
+
+		}
 
 }
 
@@ -569,7 +604,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 	try {
 		for(int i = objectRect.top / config.tileSize; i < (objectRect.top + objectRect.height) / config.tileSize; ++i)
 			for(int j = objectRect.left / config.tileSize; j < (objectRect.left + objectRect.width) / config.tileSize; ++j)
-				if(getLevelMap().at(i).at(j) == 'B') {
+				if(getCollisionMap().at(i).at(j)) {
 					canSpawn = false;
 					break;
 				}
@@ -594,6 +629,10 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 	}
 
 
+}
+
+std::vector<std::vector<bool>>& World::getCollisionMap() {
+	return mCollisionMap;
 }
 //
 //==========================================

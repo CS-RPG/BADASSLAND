@@ -26,7 +26,7 @@ int							gFontSize;
 
 float						gMapCollisionAccuracy = 0.05;
 float						gMaxWindowSizeMultiplier = 3;
-float						gMaxZoomRate = 8;
+float						gMaxZoomRate = 10;
 
 std::vector<sf::Vector2u>	gScreenResolutions;
 
