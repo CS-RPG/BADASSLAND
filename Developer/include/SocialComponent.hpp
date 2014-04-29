@@ -2,7 +2,7 @@
 #ifndef _SocialComponent_hpp_included_
 #define _SocialComponent_hpp_included_
 
-#include <SFML/Graphics.hpp>
+#include <_includes_system.hpp>
 
 
 //============SocialComponent===============

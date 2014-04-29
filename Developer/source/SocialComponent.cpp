@@ -1,5 +1,4 @@
 //SocialComponent.cpp
-#include <SFML/Graphics.hpp>
 
 #include <SocialComponent.hpp>
 

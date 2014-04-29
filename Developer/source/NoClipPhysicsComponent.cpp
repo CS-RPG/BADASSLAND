@@ -14,6 +14,7 @@ NoClipPhysicsComponent::NoClipPhysicsComponent(sf::FloatRect rect, float speed =
 
 void NoClipPhysicsComponent::update(GameObject& player, World& world, int tileSize, float deltaTime) {
 	
+	player.setNoClip(true);
 	sf::Vector2f movement = player.getPhysics()->getMovement();
 
 	if((movement.x == 0) && (movement.y == 0))	setDirection(0);

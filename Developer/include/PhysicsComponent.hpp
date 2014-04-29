@@ -7,7 +7,7 @@
 class World;
 class GameObject;
 
-#include <SFML/Graphics.hpp>
+#include <_includes_system.hpp>
 
 
 //============PhysicsComponent==============

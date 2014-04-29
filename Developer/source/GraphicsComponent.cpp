@@ -1,5 +1,4 @@
 //GraphicsComponent.cpp
-#include <SFML/Graphics.hpp>
 
 #include <GraphicsComponent.hpp>
 

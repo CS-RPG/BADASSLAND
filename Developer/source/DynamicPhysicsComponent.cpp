@@ -26,19 +26,22 @@ void DynamicPhysicsComponent::update(GameObject& player, World& world, int tileS
 	if((movement.x < 0) && (movement.y == 0))	setDirection(7);
 	if((movement.x < 0) && (movement.y < 0))	setDirection(8);
 
+	//Horizontal movement & resolving collisions.
 	sf::FloatRect rect = player.getPhysics()->getRect();
 	rect.left += movement.x * deltaTime;
 	player.getPhysics()->setRect(rect);
 	world.resolveObjectCollision(&player, 0);
 	world.resolveMapCollision(&player, 0, tileSize);
+	
+	movement.x = 0;
 
+	//Vertical movement & resolving collisions.
 	rect = player.getPhysics()->getRect();
 	rect.top += movement.y * deltaTime;
 	player.getPhysics()->setRect(rect);
 	world.resolveObjectCollision(&player, 1);
 	world.resolveMapCollision(&player, 1, tileSize);
 
-	movement.x = 0;
 	movement.y = 0;
 
 	player.getPhysics()->setMovement(movement);

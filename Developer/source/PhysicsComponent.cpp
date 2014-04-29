@@ -1,5 +1,4 @@
 //PhysicsComponent.cpp
-#include <SFML/Graphics.hpp>
 
 #include <PhysicsComponent.hpp>
 

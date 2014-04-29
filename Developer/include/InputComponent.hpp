@@ -7,10 +7,7 @@
 class World;
 class GameObject;
 
-#include <SFML/Graphics.hpp>
-
-#include <iostream>
-#include <vector>
+#include <_includes_system.hpp>
 
 
 

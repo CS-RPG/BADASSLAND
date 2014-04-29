@@ -2,6 +2,7 @@
 #ifndef _BotPassiveInputComponent_hpp_included_
 #define _BotPassiveInputComponent_hpp_included_
 
+#include <_includes_system.hpp>
 
 //============BotPassiveInputComponent======
 //

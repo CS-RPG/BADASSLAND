@@ -1,5 +1,4 @@
 //HumanoidSocialComponent.cpp
-#include <SFML/Graphics.hpp>
 
 #include <HumanoidSocialComponent.hpp>
 

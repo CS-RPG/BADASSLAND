@@ -15,6 +15,8 @@ mGraphics(graphics),
 mCombat(combat),
 mSocial(social) {
 
+	setNoClip(false);
+
 }
 
 void GameObject::update(float deltaTime, struct config* config, World& world) {
@@ -50,6 +52,10 @@ bool GameObject::isPlayer() {
 	return mIsPlayer;
 }
 
+bool GameObject::isNoClip() {
+	return mIsNoClip;
+}
+
 void GameObject::setInput(InputComponent* input) {
 	mInput = input;
 }
@@ -72,6 +78,10 @@ void GameObject::setSocial(SocialComponent* social) {
 
 void GameObject::setPlayer(bool isPlayer) {
 	mIsPlayer = isPlayer;
+}
+
+void GameObject::setNoClip(bool isNoClip) {
+	mIsNoClip = isNoClip;
 }
 //
 //==========================================

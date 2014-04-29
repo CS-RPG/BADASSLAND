@@ -24,7 +24,7 @@ TextureHolder				gTextureHolder;
 sf::Font					gFont;
 int							gFontSize;
 
-float						gMapCollisionAccuracy = 0.05;
+float						gMapCollisionAccuracy = 0.05;		//Should be less than 1.
 float						gMaxWindowSizeMultiplier = 3;
 float						gMaxZoomRate = 10;
 

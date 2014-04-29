@@ -117,7 +117,7 @@ World::World(std::string fileName, config& config) {
 	mTextMouseCoordinates.setCharacterSize(gFontSize);
 	mTextMouseCoordinates.setStyle(sf::Text::Bold);
 	mTextMouseCoordinates.setColor(sf::Color::Color(125, 145, 176));
-	mTextMouseCoordinates.setPosition(0, gFontSize * 6);
+	mTextMouseCoordinates.setPosition(0, gFontSize * 7);
 
 
 	//===============HUD OUT CONSOLE===============
@@ -126,7 +126,7 @@ World::World(std::string fileName, config& config) {
 	mOutConsole.setCharacterSize(gFontSize);
 	mOutConsole.setStyle(sf::Text::Bold);
 	mOutConsole.setColor(sf::Color::Color(sf::Color::Red));
-	mOutConsole.setPosition(0, gFontSize * 9);
+	mOutConsole.setPosition(0, gFontSize * 10);
 
 
 	//===============TILE OBJECT===================
@@ -175,19 +175,42 @@ void World::initializeFactionKarmaMap() {
 
 }
 
+void World::onCreate() {
+
+	for(int i = 0; i < getSharedObjects().size(); ++i) {
+		
+		
+		getGameObjects().push_back(getSharedObjects().back());
+		getSharedObjects().pop_back();
+	}
+
+}
+
+void World::onExit() {
+
+	for(int i = 0; i < getGameObjects().size(); ++i)
+		if(getGameObjects()[i].isPlayer())
+			getSharedObjects().push_back(getGameObjects()[i]);
+
+}
+
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
 	if(mTerminateGame)
 		window.close();
 
+	//sf::Vector2i windowPosition = window.getPosition();
+	//std::cout << windowPosition.x << " " << windowPosition.y << '\n';
+
 	//===============UPDATING GAME LOGIC===========
-	for(int i = 0; i < getGameObjects().size(); ++i)	
+	for(int i = 0; i < getGameObjects().size(); ++i)
 		getGameObjects()[i].update(deltaTime, &config, *this);
 	
 	bool playerIsAlive = false;
 
 	//Deleting objects marked for removal.
 	for(int i = 0; i < getGameObjects().size(); ++i) {
+
 		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
 
 			getGameObjects().erase(getGameObjects().begin() + i);
@@ -240,6 +263,97 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
+
+	//===============HANDLING INPUT================
+	handleInput(config);
+
+
+	//===============UPDATING HUD==================
+	std::ostringstream hudHealth;
+	//std::ostringstream hudMana;
+	std::ostringstream hudEnemyCount;
+	std::ostringstream hudObjectCoordinates;
+	std::ostringstream hudMouseCoordinates;
+	std::ostringstream hudOutConsole;
+
+	if(getGameObjects().size() != 0) {
+		
+		hudHealth << getGameObjects()[mCenterObjectN].getCombat()->getHP();
+		//hudMana << getGameObjects()[mCenterObjectN].getCombat()->getMP();	
+		hudObjectCoordinates	<< std::string(getGameObjects()[mCenterObjectN].getSocial()->getName()) << ":\n"
+								<< "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
+								<< "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top;
+
+	}
+
+	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
+	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << ' '	<< "Y: " << sf::Mouse::getPosition(window).y << '\n'
+						<< "X: " << getMouseCoordinates().x << ' '	<< "Y: " << getMouseCoordinates().y;
+
+	if(!playerIsAlive)
+		hudOutConsole << "Player is dead!\n";
+
+	mTextHealth.setString(hudHealth.str());
+	//mTextMana.setString(hudMana.str());
+	mTextEnemyCount.setString(hudEnemyCount.str());
+	mTextObjectCoordinates.setString(hudObjectCoordinates.str());
+	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
+	mOutConsole.setString(hudOutConsole.str());
+
+	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
+	//textMana.setPosition(mViewPosition.x, mViewPosition.y + gFontSize);
+	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + gFontSize * 2);
+	mTextObjectCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 3);
+	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 7);
+	mOutConsole.setPosition(viewPosition.x, viewPosition.y + gFontSize * 10);
+
+}
+
+void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
+
+	//Rendering level map tiles.
+	for(int i = 0; i < getMapHeight(); ++i) {
+		for(int j = 0; j < getMapWidth(); ++j) {
+				
+			switch(getLevelMap()[i][j]) {
+				case 'B': mTile.setFillColor(sf::Color::Black); break;
+				case '0': mTile.setFillColor(sf::Color::Green); break;
+				default: continue;
+			}
+
+			mTile.setPosition(config.tileSize * j, config.tileSize * i);
+			window.draw(mTile);
+
+		}
+	}
+
+	//Rendering objects.
+	for(int i = 0; i < getGameObjects().size(); ++i) 
+		getGameObjects()[i].getGraphics()->draw(window);
+
+	/*
+	//Reconfiguring view for HUD rendering.
+	sf::FloatRect viewRect;
+	viewRect.left = view.getCenter().x - mViewWidth / 2;
+	viewRect.top = view.getCenter().y - mViewHeight / 2;
+	viewRect.width = config.screenWidth;
+	viewRect.height = config.screenHeight;
+
+	view.reset(viewRect);
+	window.setView(view);
+	*/
+
+	//Rendering HUD.
+	window.draw(mTextHealth);
+	//window.draw(mTextMana);
+	window.draw(mTextEnemyCount);
+	window.draw(mTextObjectCoordinates);
+	window.draw(mTextMouseCoordinates);
+	window.draw(mOutConsole);
+	
+}
+
+void World::handleInput(config& config) {
 
 	//===============ZOOM==========================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
@@ -305,7 +419,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	}
 
-	//===============NOCLIP CHEAT==================
+	//===============GODMODE CHEAT=================
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::Tilde)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 	
 		sf::FloatRect rect = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
@@ -323,6 +437,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	//===============FOCUS OBJECT CHANGING=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+
 		for(int i = 0; i < getGameObjects().size(); ++i) {
 
 			sf::FloatRect rect;
@@ -340,79 +455,28 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	}
 
+	//Deleting objects.
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::Delete)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
-	//===============UPDATING HUD==================
-	std::ostringstream hudHealth;
-	//std::ostringstream hudMana;
-	std::ostringstream hudEnemyCount;
-	std::ostringstream hudObjectCoordinates;
-	std::ostringstream hudMouseCoordinates;
-	std::ostringstream hudOutConsole;
+		for(int i = 0; i < getGameObjects().size(); ++i) {
 
-	if(getGameObjects().size() != 0) {
-		
-		hudHealth << getGameObjects()[mCenterObjectN].getCombat()->getHP();
-		//hudMana << getGameObjects()[mCenterObjectN].getCombat()->getMP();	
-		hudObjectCoordinates << "X: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().left << '\n'
-							 << "Y: " << getGameObjects()[mCenterObjectN].getPhysics()->getRect().top;
-
-	}
-
-	hudEnemyCount << "Number of game objects: " << getGameObjects().size();
-	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << '\n'
-						<< "Y: " << sf::Mouse::getPosition(window).y;
-
-	if(!playerIsAlive)
-		hudOutConsole << "Player is dead!\n";
-
-	mTextHealth.setString(hudHealth.str());
-	//mTextMana.setString(hudMana.str());
-	mTextEnemyCount.setString(hudEnemyCount.str());
-	mTextObjectCoordinates.setString(hudObjectCoordinates.str());
-	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
-	mOutConsole.setString(hudOutConsole.str());
-
-	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
-	//textMana.setPosition(mViewPosition.x, mViewPosition.y + gFontSize);
-	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + gFontSize * 2);
-	mTextObjectCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 3);
-	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 6);
-	mOutConsole.setPosition(viewPosition.x, viewPosition.y + gFontSize * 9);
-
-}
-
-void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
-
-	//Rendering level map tiles.
-	for(int i = 0; i < getMapHeight(); ++i) {
-		for(int j = 0; j < getMapWidth(); ++j) {
-				
-			switch(getLevelMap()[i][j]) {
-				case 'B': mTile.setFillColor(sf::Color::Black); break;
-				case '0': mTile.setFillColor(sf::Color::Green); break;
-				default: continue;
+			sf::FloatRect rect;
+			rect.left = getMouseCoordinates().x;
+			rect.top = getMouseCoordinates().y;
+			rect.width = 1;
+			rect.height = 1;
+			
+			if(rect.intersects(getGameObjects()[i].getPhysics()->getRect())) {
+				getGameObjects()[i].getCombat()->setMarkedForRemoval(true);
+				break;
 			}
 
-			mTile.setPosition(config.tileSize * j, config.tileSize * i);
-			window.draw(mTile);
-			//tile.setPosition(config.tileSize * j, config.tileSize * i);
-			//window.draw(tile);
-
 		}
+
+		mSpawnClock.restart();
+
 	}
 
-	//Rendering objects.
-	for(int i = 0; i < getGameObjects().size(); ++i) 
-		getGameObjects()[i].getGraphics()->draw(window);
-
-	//Rendering HUD.
-	window.draw(mTextHealth);
-	//window.draw(mTextMana);
-	window.draw(mTextEnemyCount);
-	window.draw(mTextObjectCoordinates);
-	window.draw(mTextMouseCoordinates);
-	window.draw(mOutConsole);
-	
 }
 
 void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition) {
@@ -433,58 +497,70 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 			try {
 				if(getCollisionMap().at(i).at(j)) {
 
+					//Right.
 					if((movement.x > 0) && (direction == 0)) {
 						
-						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize) {
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
 
 							rect.top = ceil(rect.top);
 							rect.top -= int(rect.top) % 10;
 
 						}
 
+						//rect.left = (int(rect.left) / tileSize) * tileSize;
 						rect.left = j * tileSize - rect.width;
+						//rect.left -= int(rect.left) % tileSize;
 						object->getInput()->setBadDirection(2);
 
 					}
 
+					//Left.
 					if((movement.x < 0) && (direction == 0)) {
 
-						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize) {
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
 
 							rect.top = ceil(rect.top);
 							rect.top -= int(rect.top) % 10;
 
 						}
 
+						//rect.left = (int(rect.left + rect.width) / tileSize) * tileSize;
 						rect.left = j * tileSize + tileSize;
+						//rect.left -= int(rect.left) % tileSize - rect.width;
 						object->getInput()->setBadDirection(4);
 
 					}
 
+					//Down.
 					if((movement.y > 0) && (direction == 1)) {
 
-						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize) {
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
 
 							rect.left = ceil(rect.left);
 							rect.left -= int(rect.left) % 10;
 
 						}
 
+						//rect.top = (int(rect.top) / tileSize) * tileSize;
 						rect.top = i * tileSize - rect.height;
+						//rect.top -= int(rect.top) % tileSize;
 						object->getInput()->setBadDirection(3);
 
 					}
 
+					//Up.
 					if((movement.y < 0) && (direction == 1)) {
 						
-						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize) {
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
 
 							rect.left = ceil(rect.left);
 							rect.left -= int(rect.left) % 10;
 
 						}
 
+						//rect.top = (int(rect.top + rect.height) / tileSize) * tileSize;
 						rect.top = i * tileSize + tileSize;	
+						//rect.top -= int(rect.top) % tileSize - rect.height;
 						object->getInput()->setBadDirection(1);
 
 					}
@@ -495,8 +571,8 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 
 				object->getSocial()->setName("GOD");
 				object->getSocial()->setFaction("gods");
-				object->setPhysics(new NoClipPhysicsComponent(rect, 1));
-				object->setCombat(new InvincibleCombatComponent(9999, 9999, 9999, 9999, 9999));
+				//object->setPhysics(new NoClipPhysicsComponent(rect, 1));
+				//object->setCombat(new InvincibleCombatComponent(9999, 9999, 9999, 9999, 9999));
 				//mGodExists = true;
 				std::cout << "Bad luck! Out of map range!\n";
 				continue;
@@ -517,7 +593,7 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 	for(int i = 0; i < getGameObjects().size(); ++i) {
 		
 		sf::FloatRect currentRect = getGameObjects()[i].getPhysics()->getRect();
-		if((rect.intersects(currentRect)) && (object != &getGameObjects()[i])) {
+		if(rect.intersects(currentRect) && object != &getGameObjects()[i] && !getGameObjects()[i].isNoClip()) {
 
 			if((movement.x > 0) && (direction == 0)) {rect.left -= (rect.left + rect.width) - currentRect.left;			object->getInput()->setBadDirection(2);}
 			if((movement.x < 0) && (direction == 0)) {rect.left += (currentRect.left + currentRect.width) - rect.left;	object->getInput()->setBadDirection(4);}
@@ -526,6 +602,10 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 
 		}
 		
+	}
+
+	if(rect.left < -120 || rect.left > 120 * 40 || rect.top > 12 * 120 || rect.top < -120) {
+		std::cout << "ObjectCollision Error\n";
 	}
 
 	object->getPhysics()->setRect(rect);

@@ -1,7 +1,8 @@
 //GraphicsComponent.hpp
-
 #ifndef _GraphicsComponent_hpp_included_
 #define _GraphicsComponent_hpp_included_
+
+#include <_includes_system.hpp>
 
 //Prototypes.
 class GameObject;

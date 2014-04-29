@@ -1,5 +1,4 @@
 //CombatComponent.cpp
-#include <SFML/Graphics.hpp>
 #include <World.hpp>
 
 #include <CombatComponent.hpp>

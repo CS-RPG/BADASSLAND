@@ -2,6 +2,8 @@
 #ifndef _CombatComponent_hpp_included_
 #define _CombatComponent_hpp_included_
 
+#include <_includes_system.hpp>
+
 //Prototypes.
 class GameObject;
 

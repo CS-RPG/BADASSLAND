@@ -1,5 +1,4 @@
 //BotPassiveInputComponent.cpp
-#include <SFML/Graphics.hpp>
 #include <World.hpp>
 #include <GameObject.hpp>
 

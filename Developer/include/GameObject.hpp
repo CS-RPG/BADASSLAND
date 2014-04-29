@@ -10,7 +10,7 @@
 
 #include <DataTypes.hpp>
 
-#include <vector>
+#include <_includes_system.hpp>
 
 
 //============GameObject====================
@@ -31,7 +31,9 @@ public:
 	GraphicsComponent*&				getGraphics();
 	CombatComponent*&				getCombat();
 	SocialComponent*&				getSocial();
+
 	bool							isPlayer();
+	bool							isNoClip();
 
 	void							setInput(InputComponent*);
 	void							setPhysics(PhysicsComponent*);
@@ -40,10 +42,13 @@ public:
 	void							setSocial(SocialComponent*);
 
 	void							setPlayer(bool isPlayer);
+	void							setNoClip(bool isNoClip);
 
 private:
 
 	bool							mIsPlayer;
+	bool							mIsNoClip;
+
 	InputComponent*					mInput;
 	PhysicsComponent*				mPhysics;
 	GraphicsComponent*				mGraphics;

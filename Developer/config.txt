@@ -1,5 +1,5 @@
 //Screen resolution.
-640 480
+1280 720
 
 //Fullscreen enabled (true / false).
 false

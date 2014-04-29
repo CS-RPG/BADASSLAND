@@ -31,8 +31,12 @@ public:
 	void							initializeObjectMap();
 	void							initializeFactionKarmaMap();
 
+	void							onCreate();
+	void							onExit();
+
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
+	virtual void					handleInput(config& config);
 	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
 
 	void							resolveMapCollision(GameObject*, int, int);

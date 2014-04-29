@@ -4,8 +4,8 @@
 
 #include <_includes_system.hpp>
 
-//============Attributes====================
-//
+
+//============ATTRIBUTES====================
 struct attributes {
 
      int							strength;				//Carry weight, melee damage. 
@@ -15,13 +15,9 @@ struct attributes {
      int							luck;					//Dodge chance, critical damage chance.
 
 };
-//
-//==========================================
 
 
-
-//============Resistances===================
-//
+//============RESISTANCES===================
 struct resistances {
 
      int							poison;
@@ -32,13 +28,9 @@ struct resistances {
      int							earth;
 
 };
-//
-//==========================================
 
 
-
-//============Config========================
-//
+//============CONFIG========================
 struct config {
 	
 	int								screenWidth;					
@@ -56,8 +48,15 @@ struct config {
 	sf::Keyboard::Key				controls2[4];
 
 };
-//
-//==========================================
+
+
+//============MESSAGE=======================
+struct Message {
+
+	std::string						messageID;
+	char**							args;
+
+};
 
 
 #endif

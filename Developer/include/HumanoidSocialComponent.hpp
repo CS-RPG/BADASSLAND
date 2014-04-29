@@ -4,6 +4,7 @@
 
 #include <SocialComponent.hpp>
 
+#include <_includes_system.hpp>
 
 //============HumanoidSocialComponent=======
 //

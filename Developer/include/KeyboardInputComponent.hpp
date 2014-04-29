@@ -2,7 +2,8 @@
 #ifndef _KeyboardInputComponent_hpp_included_
 #define _KeyboardInputComponent_hpp_included_
 
-#include <SFML/Graphics.hpp>
+#include <_includes_system.hpp>
+
 #include <World.hpp>
 #include <GameObject.hpp>
 
