@@ -41,6 +41,8 @@ public:
 
 	void							resolveMapCollision(GameObject*, int, int);
 	void							resolveObjectCollision(GameObject*, int);
+	std::vector<sf::Vector2i>		getAdjacentTiles(sf::Vector2i tile);
+	bool							wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vector<sf::Vector2i>& path);
 
 	bool							loadLevelMap(std::string);
 	void							buildCollisionMap();
@@ -74,6 +76,10 @@ private:
 	std::map<std::string, bool>		mFactionKarmaMap;
 
 	sf::RectangleShape				mTile;
+
+	bool							mGridActive;
+	sf::RectangleShape				mVerticalLine;
+	sf::RectangleShape				mHorizontalLine;
 
 	float							mViewWidth;
 	float							mViewHeight;

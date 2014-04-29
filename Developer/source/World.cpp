@@ -2,11 +2,15 @@
 #include <World.hpp>
 
 
+void outputMap(std::vector<std::vector<int>> map);
+void outputPath(std::vector<sf::Vector2i>& path);
+
 extern sf::Font				gFont;
 extern int					gFontSize;
 
 extern float				gMapCollisionAccuracy;
 extern float				gMaxZoomRate;
+extern float				gGridThickness;
 
 struct SpawnEntry {
 	
@@ -133,6 +137,16 @@ World::World(std::string fileName, config& config) {
 	mTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
 
 
+	//===============GRID==========================
+	mVerticalLine = sf::RectangleShape(sf::Vector2f(mViewWidth, gGridThickness));
+	mHorizontalLine = sf::RectangleShape(sf::Vector2f(gGridThickness, mViewHeight));
+	
+	mVerticalLine.setFillColor(sf::Color::Black);
+	mHorizontalLine.setFillColor(sf::Color::Black);
+
+	mGridActive = false;
+	
+
 	//Spawning objects.
 	//If player exists, last player, written in level-file, will be the view center.
 	//If not (and there are any objects), first GameObject will be the view center.
@@ -238,6 +252,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
 	
 	//If focus object is within level borders, do the View optimization stuff.
+	//If not, just focus on the object.
 	if(screenCenter.left > 0 &&	screenCenter.left < getMapWidth() * config.tileSize &&
 			screenCenter.top > 0 &&	screenCenter.top < getMapHeight() * config.tileSize) {
 	
@@ -260,6 +275,10 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 	//Updating mMouseCoordinates.
 	updateMouseCoordinates(window, config, viewPosition);
+
+	//Updating grid.
+	mVerticalLine.setSize(sf::Vector2f(getMapWidth() * config.tileSize, gGridThickness * mViewWidth / config.screenWidth));
+	mHorizontalLine.setSize(sf::Vector2f(gGridThickness * mViewHeight / config.screenHeight, getMapHeight() * config.tileSize));
 
 	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
 
@@ -325,6 +344,22 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 			window.draw(mTile);
 
 		}
+	}
+
+	//Rendering grid.
+	if(mGridActive) {
+
+		for(int i = 0; i < getMapHeight(); ++i)
+			for(int j = 0; j < getMapWidth(); ++j) {
+			
+				mHorizontalLine.setPosition(config.tileSize * j, 0);
+				mVerticalLine.setPosition(0, config.tileSize * i);
+
+				window.draw(mHorizontalLine);
+				window.draw(mVerticalLine);
+
+			}
+
 	}
 
 	//Rendering objects.
@@ -477,6 +512,34 @@ void World::handleInput(config& config) {
 
 	}
 
+
+	//Pathfinding.
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::M)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		sf::Vector2i destination;
+		destination.x = getMouseCoordinates().x / config.tileSize;
+		destination.y = getMouseCoordinates().y / config.tileSize;
+
+		sf::Vector2i source;
+		source.x = getGameObjects()[mCenterObjectN].getPhysics()->getRect().left / config.tileSize;
+		source.y = getGameObjects()[mCenterObjectN].getPhysics()->getRect().top / config.tileSize;
+
+		std::vector<sf::Vector2i> path;
+		wavePathFind(source, destination, path);
+
+		mSpawnClock.restart();
+
+	}
+
+
+	//Grid ON / OFF.
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::L)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		mGridActive ^= 1;
+		mSpawnClock.restart();
+
+	}
+
 }
 
 void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition) {
@@ -609,6 +672,115 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 	}
 
 	object->getPhysics()->setRect(rect);
+
+}
+
+std::vector<sf::Vector2i> World::getAdjacentTiles(sf::Vector2i tile) {
+
+	std::vector<sf::Vector2i> result;
+
+	if (tile.x - 1 >= 0)
+		result.push_back(sf::Vector2i(tile.x - 1, tile.y));
+
+	if (tile.x + 1 <= getMapWidth())
+		result.push_back(sf::Vector2i(tile.x + 1, tile.y));
+
+	if (tile.y - 1 >= 0)
+		result.push_back(sf::Vector2i(tile.x, tile.y - 1));
+
+	if (tile.y + 1 <= getMapHeight())
+		result.push_back(sf::Vector2i(tile.x, tile.y + 1));
+
+	return result;
+
+}
+
+bool World::wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vector<sf::Vector2i>& path) {
+
+	//If source / destination is a wall tile.
+	if (getCollisionMap()[source.y][source.x] || getCollisionMap()[destination.y][destination.x]) {
+		std::cout << "WALL\n";
+		return false;
+	}
+
+
+	int mapHeight = getMapHeight();
+	int mapWidth = getMapWidth();
+
+
+	//Creating work space.
+	std::vector<std::vector<int>> map;
+	map.resize(mapHeight);
+	for (int i = 0; i < mapHeight; ++i)
+		map[i].resize(mapWidth);
+
+	for (int i = 0; i < mapHeight; ++i)
+		for (int j = 0; j < mapWidth; ++j)
+			if(getCollisionMap()[i][j])
+				map[i][j] = 1;
+			else
+				map[i][j] = 0;
+
+	//Wave starting value.
+	int wave = 2;
+
+	bool stop;
+
+	//Marking starting point.
+	map[source.y][source.x] = wave;
+
+	for (bool stop = false; !stop && map[destination.y][destination.x] == 0; ++wave) {
+
+		//Current step visualization.
+		std::cout << "\nStep: " << wave - 1 << '\n';
+		outputMap(map);
+		std::cout << '\n';
+
+		stop = true;
+
+		for (int i = 0; i < mapHeight; ++i)
+			for (int j = 0; j < mapWidth; ++j)
+				if (map[i][j] == wave) {
+
+					//Marking all adjacent non-marked tiles with (wave + 1).
+					std::vector<sf::Vector2i> tiles = getAdjacentTiles(sf::Vector2i(j, i));
+					for (int k = 0; k < tiles.size(); ++k)
+						if (map[tiles[k].y][tiles[k].x] == 0) {
+							map[tiles[k].y][tiles[k].x] = wave + 1;
+							stop = false;
+						}
+
+				}
+
+	}
+
+	if (map[destination.y][destination.x] == 0)
+		return false;
+
+	//Constructing path.
+	path.clear();
+	path.resize(wave - 1);
+	
+	sf::Vector2i currentTile = destination;
+	path[wave - 2] = currentTile;
+
+
+	for (; wave > 2;) {
+
+		path[wave - 2] = currentTile;
+		--wave;
+
+		std::vector<sf::Vector2i> tiles = getAdjacentTiles(currentTile);
+		for (int i = 0; i < tiles.size(); ++i)
+			if (map[tiles[i].y][tiles[i].x] == wave)
+				currentTile = tiles[i];
+
+	}
+	path[0] = sf::Vector2i(source.x, source.y);
+	
+	outputPath(path);
+
+	return true;
 
 }
 

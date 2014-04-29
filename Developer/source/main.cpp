@@ -27,6 +27,7 @@ int							gFontSize;
 float						gMapCollisionAccuracy = 0.05;		//Should be less than 1.
 float						gMaxWindowSizeMultiplier = 3;
 float						gMaxZoomRate = 10;
+float						gGridThickness = 1.5;
 
 std::vector<sf::Vector2u>	gScreenResolutions;
 
@@ -55,6 +56,22 @@ float calculateDistance(sf::FloatRect object, sf::FloatRect target) {
 
 }
 
+void outputMap(std::vector<std::vector<int>> map) {
+	
+	for (int i = 0; i < map.size(); ++i) {
+		for (int j = 0; j < map[0].size(); ++j)
+			std::cout << map[i][j];
+		std::cout << '\n';
+	}
+
+}
+
+void outputPath(std::vector<sf::Vector2i>& path) {
+
+	for (int i = 0; i < path.size(); ++i)
+		std::cout << path[i].x + 1 << ' ' << path[i].y + 1 << '\n';
+
+}
 
 //  __  __       _       
 // |  \/  |     (_)      

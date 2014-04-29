@@ -45,6 +45,8 @@ private:
 	std::vector<GameObject>			mGameObjects;
 	/*static*/ std::vector<GameObject>	mSharedObjects;
 
+	//std::map<sf::Keyboard::Key,	void function()>	mControlsMap;
+
 	int								mMapHeight;
 	int								mMapWidth;
 
