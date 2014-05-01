@@ -17,14 +17,12 @@ KeyboardInputComponent::KeyboardInputComponent(sf::Keyboard::Key* keyBindings) {
 
 }
 
-void KeyboardInputComponent::update(GameObject& player, World& world) {
+void KeyboardInputComponent::update(GameObject& player, World& world, config& config) {
 
-	sf::Vector2f movement = player.getPhysics()->getMovement();
-
-	if(sf::Keyboard::isKeyPressed(mKeyBindings[0]))	movement.y -= player.getPhysics()->getSpeed();
-	if(sf::Keyboard::isKeyPressed(mKeyBindings[1]))	movement.y += player.getPhysics()->getSpeed();
-	if(sf::Keyboard::isKeyPressed(mKeyBindings[2]))	movement.x -= player.getPhysics()->getSpeed();
-	if(sf::Keyboard::isKeyPressed(mKeyBindings[3]))	movement.x += player.getPhysics()->getSpeed();
+	if(sf::Keyboard::isKeyPressed(mKeyBindings[0]))	moveUp(player);
+	if(sf::Keyboard::isKeyPressed(mKeyBindings[1]))	moveDown(player);
+	if(sf::Keyboard::isKeyPressed(mKeyBindings[2]))	moveLeft(player);
+	if(sf::Keyboard::isKeyPressed(mKeyBindings[3]))	moveRight(player);
 
 	//===============ATTACK=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -57,8 +55,6 @@ void KeyboardInputComponent::update(GameObject& player, World& world) {
 		}
 
 	}
-
-	player.getPhysics()->setMovement(movement);
 
 }
 //

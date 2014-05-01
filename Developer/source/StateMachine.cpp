@@ -27,8 +27,9 @@ StateMachine::StateMachine() {
 		while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
 		return;
 
-	} else
+	} else {
 		mTerminateGame = false;
+	}
 
 	gFont.loadFromFile("sansation.ttf");
 	gFontSize = 30;
@@ -43,6 +44,8 @@ StateMachine::StateMachine() {
 	else
 		mWindow = new sf::RenderWindow(sf::VideoMode(mConfig.screenWidth, mConfig.screenHeight), "Badass Tales of BADASSLAND!!!!111");
 	
+	//mWindow->setFramerateLimit(30);
+
 	mView.reset(sf::FloatRect(0, 0, mConfig.screenWidth, mConfig.screenHeight));
 	mView.setViewport(sf::FloatRect(0, 0, 1, 1));
 

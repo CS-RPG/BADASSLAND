@@ -8,6 +8,7 @@
 #include <GameObject.hpp>
 
 #include <InputComponent.hpp>
+#include <_includes_badass.hpp>
 
 
 //============KeyboardInputComponent========
@@ -16,7 +17,7 @@ class KeyboardInputComponent : public InputComponent {
 public:
 
 									KeyboardInputComponent(sf::Keyboard::Key*);
-	virtual void					update(GameObject&, World&);
+	virtual void					update(GameObject&, World&, config& config);
 
 private:
 

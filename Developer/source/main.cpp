@@ -17,14 +17,14 @@
 
 
 //============GLOBAL VARIABLES==============
-float						gRangeMultiplier = 6;	//Range multiplier for target capturing.
+float						gRangeMultiplier = 60;	//Range multiplier for target capturing.
 int							gControlsCount = 4;		//Number of user-defined controls.
 
 TextureHolder				gTextureHolder;
 sf::Font					gFont;
 int							gFontSize;
 
-float						gMapCollisionAccuracy = 0.05;		//Should be less than 1.
+float						gMapCollisionAccuracy = 0.08;		//Should be less than 1.
 float						gMaxWindowSizeMultiplier = 3;
 float						gMaxZoomRate = 10;
 float						gGridThickness = 1.5;
@@ -68,6 +68,7 @@ void outputMap(std::vector<std::vector<int>> map) {
 
 void outputPath(std::vector<sf::Vector2i>& path) {
 
+	std::cout << "\nPath:\n";
 	for (int i = 0; i < path.size(); ++i)
 		std::cout << path[i].x + 1 << ' ' << path[i].y + 1 << '\n';
 

@@ -137,6 +137,12 @@ World::World(std::string fileName, config& config) {
 	mTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
 
 
+	//===============PATH HIGHLIGHT================
+	mPathTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
+	mPathTile.setFillColor(sf::Color::Green);
+	mPathHighlight = false;
+
+
 	//===============GRID==========================
 	mVerticalLine = sf::RectangleShape(sf::Vector2f(mViewWidth, gGridThickness));
 	mHorizontalLine = sf::RectangleShape(sf::Vector2f(gGridThickness, mViewHeight));
@@ -227,6 +233,9 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 
 		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
 
+			if(i == mCenterObjectN && i != 0)
+				--mCenterObjectN;
+
 			getGameObjects().erase(getGameObjects().begin() + i);
 			--i;
 
@@ -242,6 +251,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if(getGameObjects().size() != 0)	
 		screenCenter = getGameObjects().at(mCenterObjectN).getPhysics()->getRect();
 	else {
+		mCenterObjectN = 0;
 		screenCenter.left = mViewWidth / 2;
 		screenCenter.top = mViewHeight / 2;
 	}
@@ -344,6 +354,19 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 			window.draw(mTile);
 
 		}
+	}
+
+	//Path highlight.
+	if(mPathHighlight) {
+
+		for(int i = 0; i < getGameObjects()[mCenterObjectN].getInput()->getPath().size(); ++i) {
+
+			sf::Vector2i tilePosition = getGameObjects()[mCenterObjectN].getInput()->getPath()[i];
+			mPathTile.setPosition(tilePosition.x * config.tileSize, tilePosition.y * config.tileSize);
+			window.draw(mPathTile);
+
+		}
+
 	}
 
 	//Rendering grid.
@@ -526,6 +549,7 @@ void World::handleInput(config& config) {
 
 		std::vector<sf::Vector2i> path;
 		wavePathFind(source, destination, path);
+		outputPath(path);
 
 		mSpawnClock.restart();
 
@@ -536,6 +560,15 @@ void World::handleInput(config& config) {
 	if((sf::Keyboard::isKeyPressed(sf::Keyboard::L)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
 
 		mGridActive ^= 1;
+		mSpawnClock.restart();
+
+	}
+
+
+	//Path highlight ON / OFF.
+	if((sf::Keyboard::isKeyPressed(sf::Keyboard::B)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+
+		mPathHighlight ^= 1;
 		mSpawnClock.restart();
 
 	}
@@ -552,7 +585,7 @@ void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf:
 void World::resolveMapCollision(GameObject* object, int direction, int tileSize) {
 
 	sf::FloatRect rect = object->getPhysics()->getRect();
-	sf::Vector2f movement = object->getPhysics()->getMovement();
+	sf::Vector2f movement = object->getPhysics()->getMovement();					
 
 	for(int i = rect.top / tileSize; i < (rect.top + rect.height) / tileSize; ++i)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
@@ -563,13 +596,13 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 					//Right.
 					if((movement.x > 0) && (direction == 0)) {
 						
-						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize/* && object->isPlayer()*/) {
 
 							rect.top = ceil(rect.top);
 							rect.top -= int(rect.top) % 10;
 
 						}
-
+						
 						//rect.left = (int(rect.left) / tileSize) * tileSize;
 						rect.left = j * tileSize - rect.width;
 						//rect.left -= int(rect.left) % tileSize;
@@ -579,14 +612,14 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 
 					//Left.
 					if((movement.x < 0) && (direction == 0)) {
-
-						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
+						
+						if(int(rect.top) % tileSize <= gMapCollisionAccuracy * tileSize/* && object->isPlayer()*/) {
 
 							rect.top = ceil(rect.top);
 							rect.top -= int(rect.top) % 10;
 
 						}
-
+						
 						//rect.left = (int(rect.left + rect.width) / tileSize) * tileSize;
 						rect.left = j * tileSize + tileSize;
 						//rect.left -= int(rect.left) % tileSize - rect.width;
@@ -596,14 +629,14 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 
 					//Down.
 					if((movement.y > 0) && (direction == 1)) {
-
-						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
+						
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize/* && object->isPlayer()*/) {
 
 							rect.left = ceil(rect.left);
 							rect.left -= int(rect.left) % 10;
 
 						}
-
+						
 						//rect.top = (int(rect.top) / tileSize) * tileSize;
 						rect.top = i * tileSize - rect.height;
 						//rect.top -= int(rect.top) % tileSize;
@@ -614,13 +647,13 @@ void World::resolveMapCollision(GameObject* object, int direction, int tileSize)
 					//Up.
 					if((movement.y < 0) && (direction == 1)) {
 						
-						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize && object->isPlayer()) {
+						if(int(rect.left) % tileSize <= gMapCollisionAccuracy * tileSize/* && object->isPlayer()*/) {
 
 							rect.left = ceil(rect.left);
 							rect.left -= int(rect.left) % 10;
 
 						}
-
+						
 						//rect.top = (int(rect.top + rect.height) / tileSize) * tileSize;
 						rect.top = i * tileSize + tileSize;	
 						//rect.top -= int(rect.top) % tileSize - rect.height;
@@ -732,9 +765,8 @@ bool World::wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vec
 	for (bool stop = false; !stop && map[destination.y][destination.x] == 0; ++wave) {
 
 		//Current step visualization.
-		std::cout << "\nStep: " << wave - 1 << '\n';
-		outputMap(map);
-		std::cout << '\n';
+		//std::cout << "\nStep: " << wave - 1 << '\n';
+		//outputMap(map);
 
 		stop = true;
 
@@ -778,7 +810,9 @@ bool World::wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vec
 	}
 	path[0] = sf::Vector2i(source.x, source.y);
 	
-	outputPath(path);
+	path.erase(path.begin());
+
+	//outputPath(path);
 
 	return true;
 
@@ -905,7 +939,7 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 			temp = new GameObject(	new BotActiveInputComponent(),
 									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.05),
 									new HumanoidGraphicsComponent(Textures::Elf_Red),
-									new HumanoidCombatComponent(150, 150, 40, 130, 2),
+									new HumanoidCombatComponent(150, 150, 40, 180, 2),
 									new HumanoidSocialComponent("Red Elf", "red_elves")  );
 			temp->setPlayer(false);
 			break;

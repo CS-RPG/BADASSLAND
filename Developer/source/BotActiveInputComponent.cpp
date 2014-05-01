@@ -3,20 +3,21 @@
 
 float calculateDistance(sf::FloatRect, sf::FloatRect);
 
+void outputPath(std::vector<sf::Vector2i>& path);
+
 extern float				gRangeMultiplier;
 
 //============BotActiveInputComponent=======
 //
 BotActiveInputComponent::BotActiveInputComponent() {
 
+	setBadDirection(0);
 	setTargeting(false);
 	setTarget(NULL);
 
 }
 
-void BotActiveInputComponent::update(GameObject& object, World& world) {
-	
-	sf::Vector2f movement = object.getPhysics()->getMovement();
+void BotActiveInputComponent::update(GameObject& object, World& world, config& config) {
 
 	if(getTarget() == &object) {
 		setTargeting(false);
@@ -30,9 +31,11 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 
 	if(isTargeting()) {
 
+		sf::FloatRect objectRect = object.getPhysics()->getRect();
+
 		//std::cout << "Targeted.\n";
 		//std::cout << getTarget() << '\n';
-		float distance = calculateDistance( object.getPhysics()->getRect(),
+		float distance = calculateDistance( objectRect,
 											getTarget()->getPhysics()->getRect() );
 
 		//std::cout << "Distance to target: " << distance << '\n';
@@ -46,28 +49,17 @@ void BotActiveInputComponent::update(GameObject& object, World& world) {
 
 		if(distance > object.getCombat()->getAttackRange()) {
 
-			if(getTarget()->getPhysics()->getRect().left > object.getPhysics()->getRect().left)
-				movement.x += object.getPhysics()->getSpeed();
-			else
-				movement.x -= object.getPhysics()->getSpeed();
-
-			if(getTarget()->getPhysics()->getRect().top > object.getPhysics()->getRect().top)
-				movement.y += object.getPhysics()->getSpeed();
-			else
-				movement.y -= object.getPhysics()->getSpeed();
+			moveToTarget(object, *getTarget(), world, config.tileSize);
 
 		} else {
 
-			movement.x = 0;
-			movement.y = 0;
+			stop(object);
 			if(object.getCombat()->isReadyToAttack() && isTargeting())
 				object.getCombat()->attack(object, *(getTarget()));
 
 		}
 
 	}
-
-	object.getPhysics()->setMovement(movement);
 
 }
 //

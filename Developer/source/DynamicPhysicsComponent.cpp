@@ -1,6 +1,7 @@
 //DynamicPhysicsComponent.cpp
 #include <DynamicPhysicsComponent.hpp>
 
+extern float				gMapCollisionAccuracy;
 
 //============DynamicPhysicsComponent=======
 //

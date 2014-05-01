@@ -21,7 +21,7 @@ mSocial(social) {
 
 void GameObject::update(float deltaTime, struct config* config, World& world) {
 
-	mInput->update(*this, world);
+	mInput->update(*this, world, *config);
 	mPhysics->update(*this, world, config->tileSize, deltaTime);
 	mGraphics->update(*this, deltaTime);
 	mCombat->update(*this, world);

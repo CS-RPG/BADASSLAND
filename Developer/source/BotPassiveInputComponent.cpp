@@ -13,7 +13,7 @@ BotPassiveInputComponent::BotPassiveInputComponent(float changeDirectionFrequenc
 	setBadDirection(0);
 }
 
-void BotPassiveInputComponent::update(GameObject& source, World& world) {
+void BotPassiveInputComponent::update(GameObject& source, World& world, config& config) {
 
 	sf::Vector2f movement = source.getPhysics()->getMovement();
 

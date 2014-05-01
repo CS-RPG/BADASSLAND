@@ -77,6 +77,9 @@ private:
 
 	sf::RectangleShape				mTile;
 
+	bool							mPathHighlight;
+	sf::RectangleShape				mPathTile;
+
 	bool							mGridActive;
 	sf::RectangleShape				mVerticalLine;
 	sf::RectangleShape				mHorizontalLine;
