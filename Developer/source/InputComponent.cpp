@@ -93,14 +93,24 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 
 	sf::FloatRect objectRect = object.getPhysics()->getRect();
 	float speed = object.getPhysics()->getSpeed();
-
-	if(int(objectRect.left) % 120 < speed)
+	/*
+	if(int(objectRect.left) % 120 + (objectRect.left - int(objectRect.left)) < speed)
 		objectRect.left = floor(objectRect.left);
 
-	if(int(objectRect.top) % 120 < speed)
+	if(int(objectRect.top) % 120 + (objectRect.top - int(objectRect.top)) < speed)
 		objectRect.top = floor(objectRect.top);
 
 	object.getPhysics()->setRect(objectRect);
+	*/
+
+	//Solving float rounding problems.
+	if(abs(objectRect.left - tile.x * tileSize) < speed)
+		objectRect.left = tile.x * tileSize;
+	if(abs(objectRect.top - tile.y * tileSize) < speed)
+		objectRect.top = tile.y * tileSize;
+
+	object.getPhysics()->setRect(objectRect);
+
 
 	if(objectRect.left != tile.x * tileSize) {
 
@@ -119,6 +129,8 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 			moveDown(object, tile.y * tileSize - objectRect.top);
 
 	}
+
+	object.getPhysics()->setRect(objectRect);
 
 }
 

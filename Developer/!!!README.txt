@@ -1,4 +1,4 @@
-BADASS TALES of BADASSLAND v. 0.7.6.1 alpha
+BADASS TALES of BADASSLAND v. 0.8 alpha
 
 Paul Pushmin,
 Leo Vetlugin
@@ -8,6 +8,14 @@ https://github.com/CS-RPG/BADASSLAND
 
 
 //============CHANGELOG=========================\\
+New in 0.8:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Pathfinding for enemy AI introduced (though AI movements are not very smooth)/
+ + Path highlighting (Keyboard - B).
+ + Grid overlay introduced (Keyboard - L).
+-----------------------------------------------------------------
 New in 0.7.6.1:
 (+) - New features.
 (*) - Bug fixes.
