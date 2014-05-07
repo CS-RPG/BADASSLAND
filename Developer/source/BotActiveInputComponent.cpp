@@ -21,6 +21,9 @@ BotActiveInputComponent::BotActiveInputComponent() {
 
 	setUpdateFrequency(1);	///EXTERMINATE!!!!
 
+	setChangeDirectionFrequency(4);
+	setDirection(rand() % 4 + 1);
+
 }
 
 void BotActiveInputComponent::update(GameObject& object, World& world, config& config) {
@@ -69,6 +72,7 @@ void BotActiveInputComponent::update(GameObject& object, World& world, config& c
 
 		getPath().clear();
 		setPathExists(false);
+		wander(object);
 
 	}
 

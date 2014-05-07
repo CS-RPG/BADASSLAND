@@ -157,19 +157,19 @@ World::World(std::string fileName, config& config) {
 	//If player exists, last player, written in level-file, will be the view center.
 	//If not (and there are any objects), first GameObject will be the view center.
 	mCenterObjectN = 0;
-	bool playerIsPresent = false;
+	mIsPlayerAlive = false;
 	for(int i = 0; i < objectCount; ++i)
 		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
 
 	for(int i = 0; i < getGameObjects().size(); ++i) {
 		if(getGameObjects()[i].isPlayer()) {
-			playerIsPresent = true;
+			mIsPlayerAlive = true;
 			mCenterObjectN = i;
 			std::cout << "Player exists.\n";
 		}
 	}
 
-	if(!playerIsPresent) 
+	if(!mIsPlayerAlive) 
 		if(getGameObjects().size() != 0)
 			mCenterObjectN = 0;
 	
@@ -219,86 +219,101 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if(mTerminateGame)
 		window.close();
 
-	//===============UPDATING GAME LOGIC===========
-	std::vector<GameObject>::iterator current = getGameObjects().begin();
-	std::vector<GameObject>::const_iterator end = getGameObjects().end();
+	updateObjects(deltaTime, config);
+	updateView(window, view, config);
+	updateMouseCoordinates(window, config, mViewPosition);
+	updateGrid(config);
+
+	handleInput(config);
+
+	updateHUD(window);
+
+}
+
+void World::updateObjects(float deltaTime, config& config) {
+
+	myGameObjectIter current = getGameObjects().begin();
+	myGameObjectConstIter end = getGameObjects().end();
 
 	for(; current != end; ++current)
 		(*current).update(deltaTime, &config, *this);
-
-
-	bool playerIsAlive = false;
 
 	//Deleting objects marked for removal.
 	for(int i = 0; i < getGameObjects().size(); ++i) {
 
 		if(getGameObjects()[i].getCombat()->isMarkedForRemoval()) {
 
+			if(getGameObjects()[i].isPlayer())
+				mIsPlayerAlive = false;
+
 			if(i == mCenterObjectN && i != 0)
 				--mCenterObjectN;
+
+			getGameObjects()[i].getCombat()->update(getGameObjects()[i], *this);
 
 			getGameObjects().erase(getGameObjects().begin() + i);
 			--i;
 
-		} else if(getGameObjects()[i].isPlayer())
-			playerIsAlive = true;
+		} 
 
 	}
 
+}
 
-	//============UPDATING VIEW====================
-	sf::Vector2f viewPosition;
-	sf::FloatRect screenCenter;
+void World::updateView(sf::RenderWindow& window, sf::View& view, config& config) {
+
 	if(getGameObjects().size() != 0)	
-		screenCenter = getGameObjects().at(mCenterObjectN).getPhysics()->getRect();
+		mScreenCenter = getGameObjects().at(mCenterObjectN).getPhysics()->getRect();
 	else {
 		mCenterObjectN = 0;
-		screenCenter.left = mViewWidth / 2;
-		screenCenter.top = mViewHeight / 2;
+		mScreenCenter.left = mViewWidth / 2;
+		mScreenCenter.top = mViewHeight / 2;
 	}
 
-	viewPosition.x = screenCenter.left + screenCenter.width / 2 - mViewWidth / 2;
-	viewPosition.y = screenCenter.top + screenCenter.height / 2 - mViewHeight / 2;
-	//viewPosition.x = getGameObjects()[0].getPhysics()->getRect().left + config.tileSize / 2 - config.screenWidth / 2;
-	//viewPosition.y = getGameObjects()[0].getPhysics()->getRect().top + config.tileSize / 2 - config.screenHeight / 2;
+	mViewPosition.x = mScreenCenter.left + mScreenCenter.width / 2 - mViewWidth / 2;
+	mViewPosition.y = mScreenCenter.top + mScreenCenter.height / 2 - mViewHeight / 2;
 	
 	//If focus object is within level borders, do the View optimization stuff.
 	//If not, just focus on the object.
-	if(screenCenter.left > 0 &&	screenCenter.left < getMapWidth() * config.tileSize &&
-			screenCenter.top > 0 &&	screenCenter.top < getMapHeight() * config.tileSize) {
+	if(mScreenCenter.left > 0 && mScreenCenter.left < getMapWidth() * config.tileSize &&
+			mScreenCenter.top > 0 && mScreenCenter.top < getMapHeight() * config.tileSize ||
+			getGameObjects().size() == 0) {
 	
-		if(viewPosition.x < 0)													viewPosition.x = 0;
-		if(viewPosition.x > getMapWidth() * config.tileSize - mViewWidth)		viewPosition.x = getMapWidth() * config.tileSize - mViewWidth;
-		if(viewPosition.y < 0)													viewPosition.y = 0;
-		if(viewPosition.y > getMapHeight() * config.tileSize - mViewHeight)		viewPosition.y = getMapHeight() * config.tileSize - mViewHeight;
+		if(mViewPosition.x < 0)													mViewPosition.x = 0;
+		if(mViewPosition.x > getMapWidth() * config.tileSize - mViewWidth)		mViewPosition.x = getMapWidth() * config.tileSize - mViewWidth;
+		if(mViewPosition.y < 0)													mViewPosition.y = 0;
+		if(mViewPosition.y > getMapHeight() * config.tileSize - mViewHeight)	mViewPosition.y = getMapHeight() * config.tileSize - mViewHeight;
 
 		//View at center when whole map fits on a screen.
 		if(mViewWidth > getMapWidth() * config.tileSize)
-			viewPosition.x = - (mViewWidth - getMapWidth() * config.tileSize) / 2;
+			mViewPosition.x = - (mViewWidth - getMapWidth() * config.tileSize) / 2;
 
 		if(mViewHeight> getMapHeight() * config.tileSize)
-			viewPosition.y = - (mViewHeight - getMapHeight() * config.tileSize) / 2;
+			mViewPosition.y = - (mViewHeight - getMapHeight() * config.tileSize) / 2;
 	
 	}
 	
-	view.reset(sf::FloatRect(viewPosition.x, viewPosition.y, mViewWidth, mViewHeight));
+	view.reset(sf::FloatRect(mViewPosition.x, mViewPosition.y, mViewWidth, mViewHeight));
 	window.setView(view);
 
-	//Updating mMouseCoordinates.
-	updateMouseCoordinates(window, config, viewPosition);
+}
 
-	//Updating grid.
+void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition) {
+
+	mMouseCoordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
+	mMouseCoordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
+
+}
+
+void World::updateGrid(config& config) {
+
 	mVerticalLine.setSize(sf::Vector2f(getMapWidth() * config.tileSize, gGridThickness * mViewWidth / config.screenWidth));
 	mHorizontalLine.setSize(sf::Vector2f(gGridThickness * mViewHeight / config.screenHeight, getMapHeight() * config.tileSize));
 
-	//std::cout << "View position: " << viewPosition.x << " " << viewPosition.y << '\n';
+}
 
+void World::updateHUD(sf::RenderWindow& window) {
 
-	//===============HANDLING INPUT================
-	handleInput(config);
-
-
-	//===============UPDATING HUD==================
 	std::ostringstream hudHealth;
 	//std::ostringstream hudMana;
 	std::ostringstream hudEnemyCount;
@@ -320,7 +335,7 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	hudMouseCoordinates << "X: " << sf::Mouse::getPosition(window).x << ' '	<< "Y: " << sf::Mouse::getPosition(window).y << '\n'
 						<< "X: " << getMouseCoordinates().x << ' '	<< "Y: " << getMouseCoordinates().y;
 
-	if(!playerIsAlive)
+	if(!mIsPlayerAlive)
 		hudOutConsole << "Player is dead!\n";
 
 	mTextHealth.setString(hudHealth.str());
@@ -330,12 +345,12 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	mTextMouseCoordinates.setString(hudMouseCoordinates.str());
 	mOutConsole.setString(hudOutConsole.str());
 
-	mTextHealth.setPosition(viewPosition.x, viewPosition.y);
+	mTextHealth.setPosition(mViewPosition.x, mViewPosition.y);
 	//textMana.setPosition(mViewPosition.x, mViewPosition.y + gFontSize);
-	mTextEnemyCount.setPosition(viewPosition.x, viewPosition.y + gFontSize * 2);
-	mTextObjectCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 3);
-	mTextMouseCoordinates.setPosition(viewPosition.x, viewPosition.y + gFontSize * 7);
-	mOutConsole.setPosition(viewPosition.x, viewPosition.y + gFontSize * 10);
+	mTextEnemyCount.setPosition(mViewPosition.x, mViewPosition.y + gFontSize * 2);
+	mTextObjectCoordinates.setPosition(mViewPosition.x, mViewPosition.y + gFontSize * 3);
+	mTextMouseCoordinates.setPosition(mViewPosition.x, mViewPosition.y + gFontSize * 7);
+	mOutConsole.setPosition(mViewPosition.x, mViewPosition.y + gFontSize * 10);
 
 }
 
@@ -390,7 +405,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 	for(int i = 0; i < getGameObjects().size(); ++i) 
 		getGameObjects()[i].getGraphics()->draw(window);
 
-	/*
+	
 	//Reconfiguring view for HUD rendering.
 	sf::FloatRect viewRect;
 	viewRect.left = view.getCenter().x - mViewWidth / 2;
@@ -400,7 +415,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 
 	view.reset(viewRect);
 	window.setView(view);
-	*/
+	
 
 	//Rendering HUD.
 	window.draw(mTextHealth);
@@ -415,7 +430,7 @@ void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
 void World::handleInput(config& config) {
 
 	//===============ZOOM==========================
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 		
 		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
 			mViewWidth *= config.zoomRate;
@@ -425,7 +440,7 @@ void World::handleInput(config& config) {
 
 	}
 	
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		if(mViewWidth / config.screenWidth >= 1 / gMaxZoomRate) {
 			mViewWidth /= config.zoomRate;
@@ -437,7 +452,7 @@ void World::handleInput(config& config) {
 
 
 	//===============SPAWNING OBJECTS==============
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::G) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
@@ -447,7 +462,7 @@ void World::handleInput(config& config) {
 
 	}
 
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::H)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::H) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
@@ -458,7 +473,7 @@ void World::handleInput(config& config) {
 
 	}
 
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::F)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::F) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
@@ -468,7 +483,7 @@ void World::handleInput(config& config) {
 
 	}
 
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::P)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
@@ -479,7 +494,7 @@ void World::handleInput(config& config) {
 	}
 
 	//===============GODMODE CHEAT=================
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::Tilde)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Tilde) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay && getGameObjects().size() != 0) {
 	
 		sf::FloatRect rect = getGameObjects()[mCenterObjectN].getPhysics()->getRect();
 		
@@ -497,14 +512,14 @@ void World::handleInput(config& config) {
 	//===============FOCUS OBJECT CHANGING=========
 	if(sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
 
+		sf::FloatRect rect;
+		rect.left = getMouseCoordinates().x;
+		rect.top = getMouseCoordinates().y;
+		rect.width = 1;
+		rect.height = 1;
+
 		for(int i = 0; i < getGameObjects().size(); ++i) {
 
-			sf::FloatRect rect;
-			rect.left = getMouseCoordinates().x;
-			rect.top = getMouseCoordinates().y;
-			rect.width = 1;
-			rect.height = 1;
-			
 			if(rect.intersects(getGameObjects()[i].getPhysics()->getRect())) {
 				mCenterObjectN = i;
 				break;
@@ -515,18 +530,21 @@ void World::handleInput(config& config) {
 	}
 
 	//Deleting objects.
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::Delete)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Delete) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
+	
+		sf::FloatRect rect;
+		rect.left = getMouseCoordinates().x;
+		rect.top = getMouseCoordinates().y;
+		rect.width = 1;
+		rect.height = 1;		
 
-		for(int i = 0; i < getGameObjects().size(); ++i) {
+		myGameObjectIter current = getGameObjects().begin();
+		myGameObjectConstIter end = getGameObjects().end();
 
-			sf::FloatRect rect;
-			rect.left = getMouseCoordinates().x;
-			rect.top = getMouseCoordinates().y;
-			rect.width = 1;
-			rect.height = 1;
-			
-			if(rect.intersects(getGameObjects()[i].getPhysics()->getRect())) {
-				getGameObjects()[i].getCombat()->setMarkedForRemoval(true);
+		for(; current != end; ++current) {
+
+			if(rect.intersects(current->getPhysics()->getRect())) {
+				current->getCombat()->setMarkedForRemoval(true);
 				break;
 			}
 
@@ -538,7 +556,7 @@ void World::handleInput(config& config) {
 
 
 	//Pathfinding.
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::M)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::M) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay && getGameObjects().size() != 0) {
 
 		sf::Vector2i destination;
 		destination.x = getMouseCoordinates().x / config.tileSize;
@@ -558,7 +576,7 @@ void World::handleInput(config& config) {
 
 
 	//Grid ON / OFF.
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::L)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::L) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		mGridActive ^= 1;
 		mSpawnClock.restart();
@@ -567,19 +585,12 @@ void World::handleInput(config& config) {
 
 
 	//Path highlight ON / OFF.
-	if((sf::Keyboard::isKeyPressed(sf::Keyboard::B)) && (mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay)) {
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::B) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
 		mPathHighlight ^= 1;
 		mSpawnClock.restart();
 
 	}
-
-}
-
-void World::updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition) {
-
-	mMouseCoordinates.x = viewPosition.x + sf::Mouse::getPosition(window).x / (config.screenWidth / mViewWidth);
-	mMouseCoordinates.y = viewPosition.y + sf::Mouse::getPosition(window).y / (config.screenWidth / mViewWidth);
 
 }
 
@@ -687,8 +698,8 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 	sf::FloatRect rect = object->getPhysics()->getRect();
 	sf::Vector2f movement = object->getPhysics()->getMovement();
 
-	std::vector<GameObject>::iterator current = getGameObjects().begin();
-	std::vector<GameObject>::const_iterator end = getGameObjects().end();
+	myGameObjectIter current = getGameObjects().begin();
+	myGameObjectConstIter end = getGameObjects().end();
 
 	for(; current != end; ++current) {
 		
@@ -1051,6 +1062,14 @@ sf::Vector2i World::getMouseCoordinates() {
 
 std::map<std::string, bool>& World::getFactionKarmaMap() {
 	return mFactionKarmaMap;
+}
+
+bool World::isPlayerAlive() {
+	return mIsPlayerAlive;
+}
+
+void World::setPlayerAlive(bool isAlive) {
+	mIsPlayerAlive = isAlive;
 }
 //
 //==========================================

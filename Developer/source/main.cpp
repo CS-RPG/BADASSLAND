@@ -15,6 +15,8 @@
 #include <_includes_badass.hpp>
 #include <_includes_system.hpp>
 
+//#define myGameObjectIter std::vector<GameObject>::iterator
+//#define myGameObjectConstIter std::vector<GameObject>::const_iterator
 
 //============GLOBAL VARIABLES==============
 float						gRangeMultiplier = 60;	//Range multiplier for target capturing.

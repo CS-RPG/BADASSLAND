@@ -44,6 +44,8 @@ public:
 	void							setPlayer(bool isPlayer);
 	void							setNoClip(bool isNoClip);
 
+	bool							operator==(GameObject& other);
+
 private:
 
 	bool							mIsPlayer;

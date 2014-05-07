@@ -24,6 +24,7 @@ public:
 	void							moveToTarget(GameObject& object, GameObject& target, World& world, int tileSize);
 	void							moveToTile(GameObject& object, sf::Vector2i tile, int tileSize);
 
+	void							wander(GameObject& object);
 	void							stop(GameObject& object);
 	void							moveLeft(GameObject& object);
 	void							moveRight(GameObject& object);
@@ -48,6 +49,8 @@ public:
 	void							setTarget(GameObject*);
 	void							setPathExists(bool pathExists);
 	void							setUpdateFrequency(float updateTime);
+	void							setDirection(int direction);
+	void							setChangeDirectionFrequency(float changeDirectionFrequency);
 
 private:
 
@@ -57,8 +60,15 @@ private:
 	float							mUpdateFrequency;
 
 	int								mBadDirection;
+	
+	//Targeting.
 	bool							mIsTargeting;
 	GameObject*						mTarget;
+
+	//Wandering.
+	sf::Clock						mMovementClock;
+	float							mChangeDirectionFrequency;
+	int								mDirection;
 	
 };
 //

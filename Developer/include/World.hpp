@@ -5,6 +5,9 @@
 #include <_includes_system.hpp>
 #include <_includes_badass.hpp>
 
+//#define myGameObjectIter std::vector<GameObject>::iterator
+//#define myGameObjectConstIter std::vector<GameObject>::const_iterator
+
 extern TextureHolder		gTextureHolder;
 
 namespace Objects {
@@ -35,9 +38,15 @@ public:
 	void							onExit();
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
+
+	virtual void					updateObjects(float deltaTime, config& config);
+	virtual void					updateView(sf::RenderWindow& window, sf::View& view, config& config);
+	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
+	virtual void					updateGrid(config& config);
+	virtual void					updateHUD(sf::RenderWindow& window);
+
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					handleInput(config& config);
-	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
 
 	//Direction:
 	//0 == horizontal
@@ -62,6 +71,9 @@ public:
 	float							getViewHeight();
 	sf::Vector2i					getMouseCoordinates();
 	std::map<std::string, bool>&	getFactionKarmaMap();
+	bool							isPlayerAlive();
+
+	void							setPlayerAlive(bool isAlive);
 
 private:
 
@@ -93,6 +105,8 @@ private:
 	sf::RectangleShape				mVerticalLine;
 	sf::RectangleShape				mHorizontalLine;
 
+	sf::Vector2f					mViewPosition;
+	sf::FloatRect					mScreenCenter;
 	float							mViewWidth;
 	float							mViewHeight;
 
@@ -103,6 +117,8 @@ private:
 	sf::Text						mTextMouseCoordinates;
 	sf::Text						mOutConsole;
 
+	bool							mIsPlayerAlive;
+	myGameObjectIter				mCenterObject;	//!!!! To be used in future. I hope.
 	int								mCenterObjectN;	//Index of an object which acts as a view center.
 
 };

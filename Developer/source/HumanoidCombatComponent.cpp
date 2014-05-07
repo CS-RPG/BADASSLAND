@@ -18,8 +18,12 @@ HumanoidCombatComponent::HumanoidCombatComponent(int HP, int maxHP, float damage
 
 void HumanoidCombatComponent::update(GameObject& object, World& world) {
 
-	if(!isAlive())
+	if(!isAlive()) {
+
+		deleteFromAttackers(object, world);
 		setMarkedForRemoval(true);
+
+	}
 
 }
 
@@ -43,7 +47,7 @@ void HumanoidCombatComponent::takeDamage(GameObject& attacker, GameObject& targe
 	if(getHP() <= 0) {
 
 		kill();
-		std::printf("%s is killed by %s.\n", std::string(target.getSocial()->getName()).c_str(), std::string(attacker.getSocial()->getName()).c_str());
+		std::printf("%s is killed by %s.\n", targetName.c_str(), attackerName.c_str());
 		attacker.getInput()->setTargeting(false);
 
 	}

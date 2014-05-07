@@ -21,8 +21,8 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 	float distance = object.getCombat()->getAttackRange() * 6;
 	mTarget = NULL;
 
-	std::vector<GameObject>::iterator current = world.getGameObjects().begin();
-	std::vector<GameObject>::const_iterator end = world.getGameObjects().end();
+	myGameObjectIter current = world.getGameObjects().begin();
+	myGameObjectConstIter end = world.getGameObjects().end();
 
 	for(; current != end; ++current) {
 
@@ -166,6 +166,25 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 
 	if(reachedX && reachedY)
 		getPath().erase(getPath().begin());
+
+}
+
+void InputComponent::wander(GameObject& object) {
+
+	if(mMovementClock.getElapsedTime().asSeconds() > mChangeDirectionFrequency) {
+		mDirection = rand() % 4 + 1;
+		mMovementClock.restart();
+	}
+
+	if(getBadDirection() != 0) {
+		mDirection = rand() % 4 + 1;
+		setBadDirection(0);
+	}
+
+	if(mDirection == 1) moveUp(object);
+	if(mDirection == 2) moveRight(object);
+	if(mDirection == 3) moveDown(object);
+	if(mDirection == 4) moveLeft(object);
 
 }
 
@@ -318,6 +337,14 @@ void InputComponent::setPathExists(bool pathExists) {
 
 void InputComponent::setUpdateFrequency(float updateTime) {
 	mUpdateFrequency = updateTime;
+}
+
+void InputComponent::setDirection(int direction) {
+	mDirection = direction;
+}
+
+void InputComponent::setChangeDirectionFrequency(float changeDirectionFrequency) {
+	mChangeDirectionFrequency = changeDirectionFrequency;
 }
 //
 //==========================================

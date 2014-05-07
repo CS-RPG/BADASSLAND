@@ -11,17 +11,9 @@ class BotPassiveInputComponent : public InputComponent {
 public:
 
 									BotPassiveInputComponent(float changeDirectionFrequency);
-	virtual void					update(GameObject& source, World& world, config& config);
-
-	float							getChangeDirectionFrequency();
-	void							setChangeDirectionFrequency(float changeDirectionFrequency);
-	
+	virtual void					update(GameObject& source, World& world, config& config);	
 
 private:
-
-	sf::Clock						mMovementClock;
-	float							mChangeDirectionFrequency;
-	int								mDirection;
 
 };
 //

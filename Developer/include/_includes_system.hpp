@@ -2,6 +2,10 @@
 #ifndef __includes_system_hpp_
 #define __includes_system_hpp_
 
+//My type defines.
+#define myGameObjectIter std::vector<GameObject>::iterator
+#define myGameObjectConstIter std::vector<GameObject>::const_iterator
+
 
 //SFML includes.
 #include <SFML/Graphics.hpp>

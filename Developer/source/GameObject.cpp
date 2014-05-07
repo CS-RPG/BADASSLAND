@@ -83,6 +83,17 @@ void GameObject::setPlayer(bool isPlayer) {
 void GameObject::setNoClip(bool isNoClip) {
 	mIsNoClip = isNoClip;
 }
+
+bool GameObject::operator==(GameObject& other) {
+
+	if(	mInput == other.mInput &&
+		mPhysics == other.mPhysics &&
+		mGraphics == other.mGraphics &&
+		mCombat == other.mCombat &&
+		mSocial == other.mSocial)
+		return true;
+	return false;
+
+}
 //
 //==========================================
-

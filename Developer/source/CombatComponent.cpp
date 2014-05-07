@@ -8,6 +8,25 @@
 //
 CombatComponent::~CombatComponent() {}
 
+void CombatComponent::deleteFromAttackers(GameObject& object, World& world) {
+
+	myGameObjectIter current = world.getGameObjects().begin();
+	myGameObjectConstIter end = world.getGameObjects().end();
+	int attackers = 0;
+
+	for(; current != end; ++current) {
+		/*
+		if(*(current->getInput()->getTarget()) == object) {
+			current->getInput()->setTargeting(false);
+			current->getInput()->setPathExists(false);
+			++attackers;
+		}
+		*/
+	}
+	std::cout << attackers << '\n';
+
+}
+
 float CombatComponent::getHP() {
 	return mHP;
 }

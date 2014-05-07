@@ -18,6 +18,7 @@ public:
 	virtual void					attack(GameObject& attacker, GameObject& target) = 0;
 	virtual void					takeDamage(GameObject& attacker, GameObject& target, float damage) = 0;
 	//virtual void					heal(float) = 0;
+	void							deleteFromAttackers(GameObject& object, World& world);
 
 	float							getHP();
 	float							getMaxHP();
@@ -55,6 +56,7 @@ private:
 	float							mAttackSpeed;
 	float							mDamage;
 
+	std::vector<GameObject>			mFollowers;
 	sf::Clock						mAttackClock;
 
 };
