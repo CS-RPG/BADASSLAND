@@ -21,16 +21,19 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 	float distance = object.getCombat()->getAttackRange() * 6;
 	mTarget = NULL;
 
-	for(int i = 0; i < world.getGameObjects().size(); ++i) {
+	std::vector<GameObject>::iterator current = world.getGameObjects().begin();
+	std::vector<GameObject>::const_iterator end = world.getGameObjects().end();
 
-		float tempDistance = calculateDistance(object.getPhysics()->getRect(), world.getGameObjects()[i].getPhysics()->getRect());
+	for(; current != end; ++current) {
 
-		if( (world.areEnemies(object, world.getGameObjects()[i])) && 
+		float tempDistance = calculateDistance(object.getPhysics()->getRect(), current->getPhysics()->getRect());
+
+		if( (world.areEnemies(object, *current)) && 
 			(tempDistance <= distance) && 
-			(&(world.getGameObjects()[i]) != &object) ) {
+			(&(*current) != &object) ) {
 
 			distance = tempDistance;
-			mTarget = new GameObject(world.getGameObjects()[i]);
+			mTarget = new GameObject(*current);
 
 		}
 
@@ -61,7 +64,23 @@ void InputComponent::moveToTarget(GameObject& object, GameObject& target, World&
 	destination.x = getTarget()->getPhysics()->getRect().left / tileSize;
 	destination.y = getTarget()->getPhysics()->getRect().top / tileSize;
 	
-	if(world.wavePathFind(source, destination, getPath())) {
+	//If path doesn't exist, update the path.
+	if(!mPathExists) {
+
+		mPathExists = world.wavePathFind(source, destination, getPath());
+		mPathUpdateClock.restart();
+
+	}
+
+	//If path still doesn't exist, stop.
+	//Update path every mUpdateFrequency seconds.
+	if(mPathExists && mPathUpdateClock.getElapsedTime().asSeconds() < mUpdateFrequency) {
+
+		sf::Vector2i targetVector;
+		targetVector.x = getTarget()->getPhysics()->getRect().left;
+		targetVector.y = getTarget()->getPhysics()->getRect().top;
+
+		//getPath()[getPath().size() - 1] = sf::Vector2i(targetVector);
 
 		//If target is located in another tile, move to the first tile in the path.
 		if(getPath().size() != 0/* || getPath().size() > 2*/) {
@@ -74,8 +93,8 @@ void InputComponent::moveToTarget(GameObject& object, GameObject& target, World&
 		} else {
 			
 			sf::Vector2i targetVector;
-			targetVector.x = getTarget()->getPhysics()->getRect().left;
-			targetVector.y = getTarget()->getPhysics()->getRect().top;
+			targetVector.x = getTarget()->getPhysics()->getRect().left / tileSize;
+			targetVector.y = getTarget()->getPhysics()->getRect().top / tileSize;
 
 			moveToTile(object, targetVector, tileSize);
 
@@ -83,7 +102,14 @@ void InputComponent::moveToTarget(GameObject& object, GameObject& target, World&
 
 	} else {
 
-		stop(object);
+		if(!mPathExists)
+			stop(object);
+		else {
+
+			mPathExists = world.wavePathFind(source, destination, getPath());
+			mPathUpdateClock.restart();
+
+		}
 
 	}
 
@@ -111,6 +137,8 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 
 	object.getPhysics()->setRect(objectRect);
 
+	bool reachedX = false;
+	bool reachedY = false;
 
 	if(objectRect.left != tile.x * tileSize) {
 
@@ -119,6 +147,8 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 		else
 			moveRight(object, tile.x * tileSize - objectRect.left);
 
+	} else {
+		reachedX = true;
 	}
 	
 	if (objectRect.top != tile.y * tileSize) {
@@ -128,9 +158,14 @@ void InputComponent::moveToTile(GameObject& object, sf::Vector2i tile, int tileS
 		else
 			moveDown(object, tile.y * tileSize - objectRect.top);
 
+	} else {
+		reachedY = true;
 	}
 
-	object.getPhysics()->setRect(objectRect);
+	//object.getPhysics()->setRect(objectRect);
+
+	if(reachedX && reachedY)
+		getPath().erase(getPath().begin());
 
 }
 
@@ -249,6 +284,18 @@ std::vector<sf::Vector2i>& InputComponent::getPath() {
 	return mPath;
 }
 
+bool InputComponent::pathExists() {
+	return mPathExists;
+}
+
+float InputComponent::getUpdateFrequency() {
+	return mUpdateFrequency;
+}
+
+sf::Clock& InputComponent::getPathUpdateClock() {
+	return mPathUpdateClock;
+}
+
 bool InputComponent::isTargeting() {
 	return mIsTargeting;
 }
@@ -263,6 +310,14 @@ void InputComponent::setTargeting(bool isTargeting) {
 
 void InputComponent::setTarget(GameObject* target) {
 	mTarget = target;
+}
+
+void InputComponent::setPathExists(bool pathExists) {
+	mPathExists = pathExists;
+}
+
+void InputComponent::setUpdateFrequency(float updateTime) {
+	mUpdateFrequency = updateTime;
 }
 //
 //==========================================

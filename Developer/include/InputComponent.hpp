@@ -39,14 +39,22 @@ public:
 	bool							isTargeting();
 	GameObject*						getTarget();
 	std::vector<sf::Vector2i>&		getPath();
+	bool							pathExists();
+	float							getUpdateFrequency();
+	sf::Clock&						getPathUpdateClock();
 
 	void							setBadDirection(int);
 	void							setTargeting(bool);
 	void							setTarget(GameObject*);
+	void							setPathExists(bool pathExists);
+	void							setUpdateFrequency(float updateTime);
 
 private:
 
 	std::vector<sf::Vector2i>		mPath;
+	bool							mPathExists;
+	sf::Clock						mPathUpdateClock;
+	float							mUpdateFrequency;
 
 	int								mBadDirection;
 	bool							mIsTargeting;

@@ -174,30 +174,31 @@ void StateMachine::initializeStatesMap() {
 
 void StateMachine::run() {
 
-	//sf::Time timePerFrame = sf::seconds(1 / mFPS_CAP);
-	sf::Clock gameLoopClock;
-
-	//sf::Time timeSinceLastUpdate = sf::Time::Zero;
 	if(mTerminateGame)
 		return;
 
-	while(mWindow->isOpen()/* && (mCurrentState->getGameObjects().size() != 0)*/) {
+	sf::Time timePerFrame = sf::seconds(1 / mFPS_CAP);
+	sf::Time timeSinceLastUpdate = sf::Time::Zero;
+	sf::Clock gameLoopClock;
 
-		float deltaTime = gameLoopClock.getElapsedTime().asMicroseconds();
-		deltaTime /= mConfig.gameSpeed;
+	while(mWindow->isOpen()) {
 
-		//timeSinceLastUpdate += gameLoopClock.getElapsedTime();
-		gameLoopClock.restart();
+		//float deltaTime = gameLoopClock.getElapsedTime().asMicroseconds();
+		//deltaTime /= mConfig.gameSpeed;
 
-		//while(timeSinceLastUpdate > timePerFrame) {
+		timeSinceLastUpdate = gameLoopClock.getElapsedTime();
+		//gameLoopClock.restart();
+
+		while(timeSinceLastUpdate > timePerFrame) {
 			
-			//timeSinceLastUpdate -= timePerFrame;
+			timeSinceLastUpdate -= timePerFrame;
 
 			processEvents();
-			update(deltaTime);
+			//update(deltaTime);
+			update(timePerFrame.asMilliseconds());
 			render();
 
-		//}
+		}
 
 	}
 	

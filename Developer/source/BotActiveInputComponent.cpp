@@ -15,6 +15,12 @@ BotActiveInputComponent::BotActiveInputComponent() {
 	setTargeting(false);
 	setTarget(NULL);
 
+	setPathExists(false);
+
+	getPathUpdateClock().restart();
+
+	setUpdateFrequency(1);	///EXTERMINATE!!!!
+
 }
 
 void BotActiveInputComponent::update(GameObject& object, World& world, config& config) {
@@ -58,6 +64,11 @@ void BotActiveInputComponent::update(GameObject& object, World& world, config& c
 				object.getCombat()->attack(object, *(getTarget()));
 
 		}
+
+	} else {
+
+		getPath().clear();
+		setPathExists(false);
 
 	}
 

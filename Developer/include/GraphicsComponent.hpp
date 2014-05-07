@@ -4,6 +4,8 @@
 
 #include <_includes_system.hpp>
 
+#include <DataTypes.hpp>
+
 //Prototypes.
 class GameObject;
 
@@ -22,6 +24,7 @@ public:
 
 private:
 
+	objectGraphics					mSettings;
 	sf::Texture						mTexture;
 
 };

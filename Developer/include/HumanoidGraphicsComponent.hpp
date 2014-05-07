@@ -11,6 +11,7 @@ class HumanoidGraphicsComponent : public GraphicsComponent {
 public:
 
 									HumanoidGraphicsComponent(Textures::ID textureID);
+									HumanoidGraphicsComponent(objectGraphics settings);
 
 	virtual void					update(GameObject&, float);
 	virtual void					draw(sf::RenderWindow&);

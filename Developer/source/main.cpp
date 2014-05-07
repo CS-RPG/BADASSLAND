@@ -24,6 +24,8 @@ TextureHolder				gTextureHolder;
 sf::Font					gFont;
 int							gFontSize;
 
+float						gAnimationSpeedMultiplier = 0.05;
+
 float						gMapCollisionAccuracy = 0.08;		//Should be less than 1.
 float						gMaxWindowSizeMultiplier = 3;
 float						gMaxZoomRate = 10;
@@ -70,7 +72,7 @@ void outputPath(std::vector<sf::Vector2i>& path) {
 
 	std::cout << "\nPath:\n";
 	for (int i = 0; i < path.size(); ++i)
-		std::cout << path[i].x + 1 << ' ' << path[i].y + 1 << '\n';
+		std::cout << path[i].x << ' ' << path[i].y << '\n';
 
 }
 

@@ -219,13 +219,14 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	if(mTerminateGame)
 		window.close();
 
-	//sf::Vector2i windowPosition = window.getPosition();
-	//std::cout << windowPosition.x << " " << windowPosition.y << '\n';
-
 	//===============UPDATING GAME LOGIC===========
-	for(int i = 0; i < getGameObjects().size(); ++i)
-		getGameObjects()[i].update(deltaTime, &config, *this);
-	
+	std::vector<GameObject>::iterator current = getGameObjects().begin();
+	std::vector<GameObject>::const_iterator end = getGameObjects().end();
+
+	for(; current != end; ++current)
+		(*current).update(deltaTime, &config, *this);
+
+
 	bool playerIsAlive = false;
 
 	//Deleting objects marked for removal.
@@ -686,10 +687,13 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 	sf::FloatRect rect = object->getPhysics()->getRect();
 	sf::Vector2f movement = object->getPhysics()->getMovement();
 
-	for(int i = 0; i < getGameObjects().size(); ++i) {
+	std::vector<GameObject>::iterator current = getGameObjects().begin();
+	std::vector<GameObject>::const_iterator end = getGameObjects().end();
+
+	for(; current != end; ++current) {
 		
-		sf::FloatRect currentRect = getGameObjects()[i].getPhysics()->getRect();
-		if(rect.intersects(currentRect) && object != &getGameObjects()[i] && !getGameObjects()[i].isNoClip()) {
+		sf::FloatRect currentRect = current->getPhysics()->getRect();
+		if(rect.intersects(currentRect) && object != &(*current) && !(current->isNoClip())) {
 
 			if((movement.x > 0) && (direction == 0)) {rect.left -= (rect.left + rect.width) - currentRect.left;			object->getInput()->setBadDirection(2);}
 			if((movement.x < 0) && (direction == 0)) {rect.left += (currentRect.left + currentRect.width) - rect.left;	object->getInput()->setBadDirection(4);}
@@ -700,9 +704,9 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 		
 	}
 
-	if(rect.left < -120 || rect.left > 120 * 40 || rect.top > 12 * 120 || rect.top < -120) {
-		std::cout << "ObjectCollision Error\n";
-	}
+	//if(rect.left < -120 || rect.left > 120 * 40 || rect.top > 12 * 120 || rect.top < -120) {
+	//	std::cout << "ObjectCollision Error\n";
+	//}
 
 	object->getPhysics()->setRect(rect);
 
@@ -808,8 +812,10 @@ bool World::wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vec
 				currentTile = tiles[i];
 
 	}
-	path[0] = sf::Vector2i(source.x, source.y);
+
+	//path[0] = sf::Vector2i(source.x, source.y);
 	
+	//Deleting first node.
 	path.erase(path.begin());
 
 	//outputPath(path);

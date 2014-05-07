@@ -39,14 +39,20 @@ public:
 	virtual void					handleInput(config& config);
 	void							updateMouseCoordinates(sf::RenderWindow& window, config& config, sf::Vector2f viewPosition);
 
-	void							resolveMapCollision(GameObject*, int, int);
-	void							resolveObjectCollision(GameObject*, int);
+	//Direction:
+	//0 == horizontal
+	//1 == vertical
+	void							resolveMapCollision(GameObject*, int direction, int tileSize);
+	void							resolveObjectCollision(GameObject*, int direction);
+
 	std::vector<sf::Vector2i>		getAdjacentTiles(sf::Vector2i tile);
 	bool							wavePathFind(sf::Vector2i source, sf::Vector2i destination, std::vector<sf::Vector2i>& path);
 
 	bool							loadLevelMap(std::string);
 	void							buildCollisionMap();
 	void							deleteLevelMap();
+
+	void							loadObjects();
 
 	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
 	bool							areEnemies(GameObject& object1, GameObject& object2);
@@ -69,6 +75,9 @@ private:
 
 	std::map<std::string,
 		Objects::ID>				mObjectMap;
+
+	std::map<Objects::ID, 
+		objectGraphics>				mObjectGraphics;
 
 	//Returns true/false depending on karma associated with the faction.
 	//true == good

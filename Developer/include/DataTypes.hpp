@@ -3,7 +3,9 @@
 #define _DataTypes_hpp_included_
 
 #include <_includes_system.hpp>
+#include <TextureHolder.hpp>
 
+extern TextureHolder		gTextureHolder;
 
 //============ATTRIBUTES====================
 struct attributes {
@@ -46,6 +48,21 @@ struct config {
 
 	sf::Keyboard::Key				controls1[4];
 	sf::Keyboard::Key				controls2[4];
+
+};
+
+
+//============OBJECT GRAPHICS===============
+struct objectGraphics {
+
+	Textures::ID					texture;
+
+	int								width;
+	int								height;
+
+	int								frameCount;
+
+	sf::Vector2i					frames[5];
 
 };
 

@@ -5,6 +5,8 @@ extern TextureHolder		gTextureHolder;
 extern sf::Font				gFont;
 extern int					gFontSize;
 
+extern float				gAnimationSpeedMultiplier;
+
 
 //============HumanoidGraphicsComponent=====
 //
@@ -44,6 +46,42 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
 
 }
 
+HumanoidGraphicsComponent::HumanoidGraphicsComponent(objectGraphics settings) {
+
+	//===============Sprites=======================
+	mCurrentSprite.setTexture(	gTextureHolder.get(settings.texture));
+	mSpriteStill.setTexture(	gTextureHolder.get(settings.texture));
+	mSpriteUp.setTexture(		gTextureHolder.get(settings.texture));
+	mSpriteDown.setTexture(		gTextureHolder.get(settings.texture));
+	mSpriteLeft.setTexture(		gTextureHolder.get(settings.texture));
+	mSpriteRight.setTexture(	gTextureHolder.get(settings.texture));
+
+	mSpriteStill.setTextureRect(sf::IntRect(settings.frames[0].x, settings.frames[0].y, settings.width, settings.height));
+	mSpriteUp.setTextureRect(	sf::IntRect(settings.frames[1].x, settings.frames[1].y, settings.width, settings.height));
+	mSpriteDown.setTextureRect(	sf::IntRect(settings.frames[2].x, settings.frames[2].y, settings.width, settings.height));
+	mSpriteLeft.setTextureRect(	sf::IntRect(settings.frames[3].x, settings.frames[3].y, settings.width, settings.height));
+	mSpriteRight.setTextureRect(sf::IntRect(settings.frames[4].x, settings.frames[4].y, settings.width, settings.height));
+
+
+	//===============HP-Bar========================
+	mHPBarSprite.setTexture(gTextureHolder.get(Textures::HP_Bar));
+	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
+
+
+	//===============Text==========================
+	mText.setFont(gFont);
+	mText.setCharacterSize(gFontSize);
+	mText.setStyle(sf::Text::Bold);
+	mText.setColor(sf::Color::Red);
+
+
+	mCurrentSprite = mSpriteStill;
+
+	mFrameCount = settings.frameCount;		//!!!Replace with global variable.
+	mCurrentFrame= 0;
+
+}
+
 void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 
 	//===============Animation=====================
@@ -53,7 +91,7 @@ void HumanoidGraphicsComponent::update(GameObject& player, float deltaTime) {
 	if(player.getPhysics()->getDirection() == 5) mCurrentSprite = mSpriteDown;
 	if(player.getPhysics()->getDirection() == 1) mCurrentSprite = mSpriteUp;
 
-	mAnimationSpeed = player.getPhysics()->getSpeed() * 0.05;
+	mAnimationSpeed = player.getPhysics()->getSpeed() * gAnimationSpeedMultiplier;
 	mCurrentFrame += mAnimationSpeed * deltaTime;
 	if(mCurrentFrame > mFrameCount) mCurrentFrame -= mFrameCount;
 	
