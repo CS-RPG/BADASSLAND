@@ -52,6 +52,7 @@ private:
 	bool							mIsAlive;
 	bool							mIsMarkedForRemoval;
 
+	//float							mSightRange;
 	float							mAttackRange;
 	float							mAttackSpeed;
 	float							mDamage;

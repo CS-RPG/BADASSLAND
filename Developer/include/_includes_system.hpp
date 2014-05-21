@@ -20,6 +20,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <typeinfo>
 
 
 #endif

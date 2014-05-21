@@ -15,8 +15,6 @@
 #include <_includes_badass.hpp>
 #include <_includes_system.hpp>
 
-//#define myGameObjectIter std::vector<GameObject>::iterator
-//#define myGameObjectConstIter std::vector<GameObject>::const_iterator
 
 //============GLOBAL VARIABLES==============
 float						gRangeMultiplier = 60;	//Range multiplier for target capturing.
@@ -34,6 +32,13 @@ float						gMaxZoomRate = 10;
 float						gGridThickness = 1.5;
 
 std::vector<sf::Vector2u>	gScreenResolutions;
+
+
+//============DIRECTORIES===================
+std::string					gLevelsDirectiory = "./levels/";
+std::string					gTexturesDirectory = "./textures/";
+std::string					gObjectsDirectoty = "./Objects/";
+
 
 //  ______             _               __                  _   _                 
 // |  ____|           (_)             / _|                | | (_)                

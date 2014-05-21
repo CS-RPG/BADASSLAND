@@ -11,8 +11,8 @@
 class DynamicPhysicsComponent : public PhysicsComponent {
 public:
 
-									DynamicPhysicsComponent(sf::FloatRect, float);
-	virtual void					update(GameObject&, World&, int, float);
+									DynamicPhysicsComponent(sf::FloatRect rect, float speed);
+	virtual void					update(GameObject& object, World& world, int tileSize, float deltaTime);
 
 };
 //

@@ -1,9 +1,19 @@
 //State.cpp
 #include <State.hpp>
 
+typedef void(State::*script)(std::string);
+
+
 //============State=========================
-//
+void State::initializeScripts() {
+
+}
+
 void State::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
+
+}
+
+void State::updateButtons(sf::RenderWindow& window, sf::View& view, config& config, State& state) {
 
 }
 
@@ -15,8 +25,15 @@ void State::handleInput(config& config) {
 
 }
 
-std::vector<std::vector<int>>& State::getLevelMap() {
-	return mLevelMap;
+void State::runScript(std::string scriptID, std::string args) {
+	//mScripts[script](args);
+	script f = mScripts[scriptID];
+	(this->*f)(args);
+}
+
+void State::changeState(std::string args) {
+	//getStateMachine()->changeState(args);
+	std::cout << "State::changeState\n";
 }
 
 std::vector<GameObject>& State::getGameObjects() {
@@ -27,29 +44,22 @@ std::vector<GameObject>& State::getSharedObjects() {
 	return mSharedObjects;
 }
 
-int State::getMapHeight() {
-	return mMapHeight;
-}
-
-int State::getMapWidth() {
-	return mMapWidth;
-}
-
 StateMachine*& State::getStateMachine() {
 	return mStateMachine;
 }
 
-void State::setMapHeight(int height) {
-	mMapHeight = height;
+sf::Clock& State::getButtonClock() {
+	return mButtonClock;
 }
 
-void State::setMapWidth(int width) {
-	mMapWidth = width;
+std::map<std::string, script>& State::getScripts() {
+	return mScripts;
+}
+
+std::vector<Button>& State::getButtons() {
+	return mButtons;
 }
 
 void State::setStateMachine(StateMachine* stateMachine) {
 	mStateMachine = stateMachine;
 }
-
-//
-//==========================================

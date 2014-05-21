@@ -10,7 +10,6 @@ extern float						gMaxWindowSizeMultiplier;
 
 
 //============StateMachine==================
-//
 StateMachine::StateMachine() {
 
 	//Creating mControlsMap.
@@ -24,7 +23,7 @@ StateMachine::StateMachine() {
 
 		std::cout << "Config file error!\n" << "Press space to exit.\n";
 		mTerminateGame = true;
-		while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
+		//terminate();
 		return;
 
 	} else {
@@ -53,7 +52,7 @@ StateMachine::StateMachine() {
 
 	//std::string levelMapName = "./levels/level1.txt";
 	std::string levelMapName = "./levels/" + mConfig.levelMapName;
-	mCurrentState = new World(levelMapName, mConfig);
+	mCurrentState = new World(levelMapName, mConfig, this);
 
 }
 
@@ -174,14 +173,23 @@ void StateMachine::initializeStatesMap() {
 
 void StateMachine::run() {
 
-	if(mTerminateGame)
-		return;
+	if(mTerminateGame) {
+			while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
+			return;
+			//terminate();
+	}
 
 	sf::Time timePerFrame = sf::seconds(1 / mFPS_CAP);
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
 	sf::Clock gameLoopClock;
 
 	while(mWindow->isOpen()) {
+
+		//if(mTerminateGame) {
+		//	while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
+		//	return;
+		//}
+
 
 		//float deltaTime = gameLoopClock.getElapsedTime().asMicroseconds();
 		//deltaTime /= mConfig.gameSpeed;
@@ -230,8 +238,18 @@ void StateMachine::processEvents() {
 				break;
 
 			case(sf::Event::KeyPressed):
-				if(event.key.code == sf::Keyboard::Escape)
-					mWindow->close();
+				/*
+				if(event.key.code == sf::Keyboard::Escape && mButtonClock.getElapsedTime().asSeconds() > mConfig.spawnDelay) {
+
+					if(typeid(*mCurrentState) == typeid(World))
+						changeState("MainMenu", "");
+					else
+						changeState("World", "level3");
+					
+					mButtonClock.restart();
+					//mWindow->close();
+				}
+				*/
 				break;
 
 			case(sf::Event::Resized):
@@ -262,25 +280,47 @@ void StateMachine::processEvents() {
 
 }
 
-void StateMachine::changeState(std::string stateName) {
-	/*
-	mCurrentState->onExit();
-	delete mCurrentState;
+void StateMachine::terminate() {
+	std::cout << "Press Space to exit.\n";
+	while(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {}
+	mWindow->close();
+}
+
+void StateMachine::changeState(std::string args) {
+	
+	//HANDLE MEMORY + onExit / onCreate.
+
+	//mCurrentState->onExit();
+	//State* temp = mCurrentState;
+	//delete mCurrentState;
+	std::string stateName = args;
+	stateName.erase(stateName.find_first_of(' '), std::string::npos);
+	//std::cout << stateName.c_str() << '\n';
+
+	std::string levelName = args;
+	levelName.erase(0, levelName.find_first_of(' ') + 1);
+	//std::cout << levelName.c_str() << '\n';
+
 
 	switch(mStatesMap[stateName]) {
 
 		case(States::MainMenu):
-			mCurrentState = new MainMenu();
+			mCurrentState = new MainMenu(this, *mWindow, mView, mConfig);
 			break;
 
 		case(States::World):
-			mCurrentState = new World("level2", mConfig);
+			mCurrentState = new World("./levels/" + levelName, mConfig, this);
+			break;
+
+		default:
+			std::cout << "Unknown stateName.\n";
 			break;
 
 	}
 
-	mCurrentState->onCreate();
-	*/
+	//delete temp;
+	//mCurrentState->onCreate();
+	
 }
 
 void StateMachine::addState() {
@@ -400,5 +440,7 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 	return true;
 
 }
-//
-//==========================================
+
+void StateMachine::setTerminateGame(bool terminate) {
+	mTerminateGame = terminate;
+}

@@ -18,7 +18,6 @@ struct attributes {
 
 };
 
-
 //============RESISTANCES===================
 struct resistances {
 
@@ -30,7 +29,6 @@ struct resistances {
      int							earth;
 
 };
-
 
 //============CONFIG========================
 struct config {
@@ -51,6 +49,16 @@ struct config {
 
 };
 
+//============OBJECT DATA===================
+struct objectData {
+	/*
+	InputComponent*					input;
+	PhysicsComponent*				physics;
+	GraphicsComponent*				graphics;
+	CombatComponent*				combat;
+	SocialComponent*				social;
+	*/
+};
 
 //============OBJECT GRAPHICS===============
 struct objectGraphics {
@@ -66,6 +74,14 @@ struct objectGraphics {
 
 };
 
+//============BUTTON DATA===================
+struct buttonData {
+
+	sf::FloatRect					rect;
+	std::string						onClick;
+	std::string						onClickArgs;
+
+};
 
 //============MESSAGE=======================
 struct Message {

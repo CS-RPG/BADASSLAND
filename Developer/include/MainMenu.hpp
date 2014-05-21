@@ -5,24 +5,27 @@
 #include <_includes_system.hpp>
 #include <_includes_badass.hpp>
 
-//class Button;
 
 class MainMenu : public State {
 public:
 
-									MainMenu();
+	typedef void(State::*script)(std::string);
+
+									MainMenu(StateMachine* game, sf::RenderWindow& window, sf::View& view, config& config);
+
+	virtual void					initializeScripts();
 
 	virtual void					update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config);
+	virtual void					updateButtons(sf::RenderWindow& window, sf::View& view, config& config, State& state);
+
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
+	virtual void					handleInput(config& config);
 
-	//std::vector<Button>&			getButtons();
-
+	virtual void					changeState(std::string args);
 
 private:
 
-
-	//std::vector<Button>				mButtons;
-
+	typedef void(State::*script)(std::string);
 
 };
 

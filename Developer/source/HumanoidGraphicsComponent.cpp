@@ -130,5 +130,3 @@ void HumanoidGraphicsComponent::draw(sf::RenderWindow& window) {
 	window.draw(mText);
 
 }
-//
-//==========================================

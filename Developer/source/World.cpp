@@ -24,15 +24,14 @@ SpawnEntry*					objects;
 int							objectCount = 0;
 
 
-//============WORLD======================
-//
-World::World(std::string fileName, config& config) {
+World::World(std::string fileName, config& config, StateMachine* game) {
 
-	//Creating mObjectMap.
+	setStateMachine(game);
+
+	//===============INITIALIZATION================
 	initializeObjectMap();
-
-	//Initializing mFactionKarma;
 	initializeFactionKarmaMap();
+	initializeScripts();
 
 	mSpawnClock.restart();
 
@@ -153,11 +152,12 @@ World::World(std::string fileName, config& config) {
 	mGridActive = false;
 	
 
-	//Spawning objects.
+	//===============SPAWNING OBJECTS==============
 	//If player exists, last player, written in level-file, will be the view center.
 	//If not (and there are any objects), first GameObject will be the view center.
 	mCenterObjectN = 0;
 	mIsPlayerAlive = false;
+	getGameObjects().reserve(objectCount);	//Reserving memory for objects. (???)
 	for(int i = 0; i < objectCount; ++i)
 		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
 
@@ -186,12 +186,20 @@ void World::initializeObjectMap() {
 
 void World::initializeFactionKarmaMap() {
 
+	//===============GOOD==========================
 	mFactionKarmaMap.insert(std::make_pair("players", true));
 	mFactionKarmaMap.insert(std::make_pair("gods", true));
 	mFactionKarmaMap.insert(std::make_pair("yellow_elves", true));
 
+	//===============EVIL==========================
 	mFactionKarmaMap.insert(std::make_pair("devils", false));
 	mFactionKarmaMap.insert(std::make_pair("red_elves", false));
+
+}
+
+void World::initializeScripts() {
+
+	getScripts().insert(std::make_pair("changeState", &State::changeState));
 
 }
 
@@ -214,6 +222,7 @@ void World::onExit() {
 
 }
 
+//============UPDATE========================
 void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, config& config) {
 	
 	if(mTerminateGame)
@@ -223,10 +232,9 @@ void World::update(float deltaTime, sf::RenderWindow& window, sf::View& view, co
 	updateView(window, view, config);
 	updateMouseCoordinates(window, config, mViewPosition);
 	updateGrid(config);
+	updateHUD(window);
 
 	handleInput(config);
-
-	updateHUD(window);
 
 }
 
@@ -275,8 +283,8 @@ void World::updateView(sf::RenderWindow& window, sf::View& view, config& config)
 	
 	//If focus object is within level borders, do the View optimization stuff.
 	//If not, just focus on the object.
-	if(mScreenCenter.left > 0 && mScreenCenter.left < getMapWidth() * config.tileSize &&
-			mScreenCenter.top > 0 && mScreenCenter.top < getMapHeight() * config.tileSize ||
+	if(mScreenCenter.left >= 0 && mScreenCenter.left <= (getMapWidth() - 1) * config.tileSize &&
+			mScreenCenter.top >= 0 && mScreenCenter.top <= (getMapHeight() - 1) * config.tileSize ||
 			getGameObjects().size() == 0) {
 	
 		if(mViewPosition.x < 0)													mViewPosition.x = 0;
@@ -354,79 +362,7 @@ void World::updateHUD(sf::RenderWindow& window) {
 
 }
 
-void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
-
-	//Rendering level map tiles.
-	for(int i = 0; i < getMapHeight(); ++i) {
-		for(int j = 0; j < getMapWidth(); ++j) {
-				
-			switch(getLevelMap()[i][j]) {
-				case 'B': mTile.setFillColor(sf::Color::Black); break;
-				case '0': mTile.setFillColor(sf::Color::Green); break;
-				default: continue;
-			}
-
-			mTile.setPosition(config.tileSize * j, config.tileSize * i);
-			window.draw(mTile);
-
-		}
-	}
-
-	//Path highlight.
-	if(mPathHighlight) {
-
-		for(int i = 0; i < getGameObjects()[mCenterObjectN].getInput()->getPath().size(); ++i) {
-
-			sf::Vector2i tilePosition = getGameObjects()[mCenterObjectN].getInput()->getPath()[i];
-			mPathTile.setPosition(tilePosition.x * config.tileSize, tilePosition.y * config.tileSize);
-			window.draw(mPathTile);
-
-		}
-
-	}
-
-	//Rendering grid.
-	if(mGridActive) {
-
-		for(int i = 0; i < getMapHeight(); ++i)
-			for(int j = 0; j < getMapWidth(); ++j) {
-			
-				mHorizontalLine.setPosition(config.tileSize * j, 0);
-				mVerticalLine.setPosition(0, config.tileSize * i);
-
-				window.draw(mHorizontalLine);
-				window.draw(mVerticalLine);
-
-			}
-
-	}
-
-	//Rendering objects.
-	for(int i = 0; i < getGameObjects().size(); ++i) 
-		getGameObjects()[i].getGraphics()->draw(window);
-
-	
-	//Reconfiguring view for HUD rendering.
-	sf::FloatRect viewRect;
-	viewRect.left = view.getCenter().x - mViewWidth / 2;
-	viewRect.top = view.getCenter().y - mViewHeight / 2;
-	viewRect.width = config.screenWidth;
-	viewRect.height = config.screenHeight;
-
-	view.reset(viewRect);
-	window.setView(view);
-	
-
-	//Rendering HUD.
-	window.draw(mTextHealth);
-	//window.draw(mTextMana);
-	window.draw(mTextEnemyCount);
-	window.draw(mTextObjectCoordinates);
-	window.draw(mTextMouseCoordinates);
-	window.draw(mOutConsole);
-	
-}
-
+//============INPUT=========================
 void World::handleInput(config& config) {
 
 	//===============ZOOM==========================
@@ -449,7 +385,6 @@ void World::handleInput(config& config) {
 		mSpawnClock.restart();
 
 	}
-
 
 	//===============SPAWNING OBJECTS==============
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::G) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
@@ -502,7 +437,7 @@ void World::handleInput(config& config) {
 		getGameObjects()[mCenterObjectN].getSocial()->setFaction("gods");
 
 		getGameObjects()[mCenterObjectN].setInput(new KeyboardInputComponent(config.controls1));
-		getGameObjects()[mCenterObjectN].setPhysics(new NoClipPhysicsComponent(rect, 1));
+		getGameObjects()[mCenterObjectN].setPhysics(new NoClipPhysicsComponent(rect, 0.1));
 		getGameObjects()[mCenterObjectN].setCombat(new InvincibleCombatComponent(9999, 9999, 9999, 9999, 9999));
 
 		mSpawnClock.restart();						
@@ -554,7 +489,6 @@ void World::handleInput(config& config) {
 
 	}
 
-
 	//Pathfinding.
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::M) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay && getGameObjects().size() != 0) {
 
@@ -574,7 +508,6 @@ void World::handleInput(config& config) {
 
 	}
 
-
 	//Grid ON / OFF.
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::L) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
@@ -592,13 +525,154 @@ void World::handleInput(config& config) {
 
 	}
 
+	//Main menu.
+	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) && getButtonClock().getElapsedTime().asSeconds() > config.spawnDelay) {
+		
+		getStateMachine()->changeState("MainMenu ");
+		getButtonClock().restart();
+
+	}
+
 }
 
+//============RENDER========================
+void World::render(sf::RenderWindow& window, sf::View& view, config& config) {
+
+	renderMap(window, view, config);
+	renderObjects(window, view, config);
+	renderHUD(window, view, config);
+	
+}
+
+void World::renderMap(sf::RenderWindow& window, sf::View& view, config& config) {
+
+	//Rendering level map tiles.
+	for(int i = 0; i < getMapHeight(); ++i) {
+		for(int j = 0; j < getMapWidth(); ++j) {
+				
+			switch(getLevelMap()[i][j]) {
+				case 'B': mTile.setFillColor(sf::Color::Black); break;
+				case '0': mTile.setFillColor(sf::Color::Green); break;
+				default: continue;
+			}
+
+			mTile.setPosition(config.tileSize * j, config.tileSize * i);
+			window.draw(mTile);
+
+		}
+	}
+
+	//Path highlight.
+	if(mPathHighlight) {
+
+		for(int i = 0; i < getGameObjects()[mCenterObjectN].getInput()->getPath().size(); ++i) {
+
+			sf::Vector2i tilePosition = getGameObjects()[mCenterObjectN].getInput()->getPath()[i];
+			mPathTile.setPosition(tilePosition.x * config.tileSize, tilePosition.y * config.tileSize);
+			window.draw(mPathTile);
+
+		}
+
+	}
+
+	//Rendering grid.
+	if(mGridActive) {
+
+		for(int i = 0; i <= getMapWidth(); ++i) {
+			mHorizontalLine.setPosition(config.tileSize * i, 0);
+			window.draw(mHorizontalLine);
+		}
+				
+		for(int i = 0; i <= getMapHeight(); ++i) {
+			mVerticalLine.setPosition(0, config.tileSize * i);
+			window.draw(mVerticalLine);
+		}
+
+	}
+
+}
+
+void World::renderObjects(sf::RenderWindow& window, sf::View& view, config& config) {
+
+	myGameObjectIter current = getGameObjects().begin();
+	myGameObjectConstIter end = getGameObjects().end();
+
+	for(; current != end; ++current)
+		current->getGraphics()->draw(window);
+
+}
+
+void World::renderHUD(sf::RenderWindow& window, sf::View& view, config& config) {
+
+	/*
+	//Reconfiguring view for HUD rendering.
+	sf::FloatRect viewRect;
+	viewRect.left = view.getCenter().x - mViewWidth / 2;
+	viewRect.top = view.getCenter().y - mViewHeight / 2;
+	viewRect.width = config.screenWidth;
+	viewRect.height = config.screenHeight;
+
+	view.reset(viewRect);
+	window.setView(view);
+	*/
+
+	window.draw(mTextHealth);
+	//window.draw(mTextMana);
+	window.draw(mTextEnemyCount);
+	window.draw(mTextObjectCoordinates);
+	window.draw(mTextMouseCoordinates);
+	window.draw(mOutConsole);
+
+}
+
+//============OTHER=========================
 void World::resolveMapCollision(GameObject* object, int direction, int tileSize) {
 
 	sf::FloatRect rect = object->getPhysics()->getRect();
 	sf::Vector2f movement = object->getPhysics()->getMovement();					
 
+	//If out of range map.
+	if(rect.left < 0) {
+
+		object->getInput()->setBadDirection(4);
+		for(int i = 0; i < getMapWidth(); ++i)
+			if(!getCollisionMap().at(rect.top / tileSize).at(i)) {
+				rect.left = i * tileSize;
+				break;
+			}
+
+	} else if(rect.left + rect.width > getMapWidth() * tileSize) {
+		
+		object->getInput()->setBadDirection(2);
+		for(int i = getMapWidth() - 1; i > 0; --i)
+			if(!getCollisionMap().at(rect.top / tileSize).at(i)) {
+				rect.left = i * tileSize;
+				break;
+			}
+
+	}
+
+	if(rect.top < 0) {
+
+		object->getInput()->setBadDirection(1);
+		for(int i = 0; i < getMapHeight(); ++i)
+			if(!getCollisionMap().at(i).at(rect.left / tileSize)) {
+				rect.top = i * tileSize;
+				break;
+			}
+
+	} else if(rect.top + rect.height > getMapHeight() * tileSize) {
+		
+		object->getInput()->setBadDirection(3);
+		for(int i = getMapHeight() - 1; i > 0; --i)
+			if(!getCollisionMap().at(i).at(rect.left / tileSize)) {
+				rect.top = i * tileSize;
+				break;
+			}
+
+	}
+
+	//Collision map.
 	for(int i = rect.top / tileSize; i < (rect.top + rect.height) / tileSize; ++i)
 		for(int j = rect.left / tileSize; j < (rect.left + rect.width) / tileSize; ++j) {
 
@@ -706,18 +780,14 @@ void World::resolveObjectCollision(GameObject* object, int direction) {
 		sf::FloatRect currentRect = current->getPhysics()->getRect();
 		if(rect.intersects(currentRect) && object != &(*current) && !(current->isNoClip())) {
 
-			if((movement.x > 0) && (direction == 0)) {rect.left -= (rect.left + rect.width) - currentRect.left;			object->getInput()->setBadDirection(2);}
-			if((movement.x < 0) && (direction == 0)) {rect.left += (currentRect.left + currentRect.width) - rect.left;	object->getInput()->setBadDirection(4);}
-			if((movement.y > 0) && (direction == 1)) {rect.top -= (rect.top + rect.height) - currentRect.top;			object->getInput()->setBadDirection(3);}
-			if((movement.y < 0) && (direction == 1)) {rect.top += (currentRect.top + currentRect.height) - rect.top;	object->getInput()->setBadDirection(1);}
+			if((movement.x > 0) && (direction == 0)) {rect.left = currentRect.left - rect.width;			object->getInput()->setBadDirection(2); /*current->getInput()->setBadDirection(4);*/}
+			if((movement.x < 0) && (direction == 0)) {rect.left = currentRect.left + currentRect.width;		object->getInput()->setBadDirection(4); /*current->getInput()->setBadDirection(2);*/}
+			if((movement.y > 0) && (direction == 1)) {rect.top = currentRect.top - rect.height;				object->getInput()->setBadDirection(3); /*current->getInput()->setBadDirection(1);*/}
+			if((movement.y < 0) && (direction == 1)) {rect.top = currentRect.top + currentRect.height;		object->getInput()->setBadDirection(1); /*current->getInput()->setBadDirection(3);*/}
 
 		}
 		
 	}
-
-	//if(rect.left < -120 || rect.left > 120 * 40 || rect.top > 12 * 120 || rect.top < -120) {
-	//	std::cout << "ObjectCollision Error\n";
-	//}
 
 	object->getPhysics()->setRect(rect);
 
@@ -846,6 +916,7 @@ bool World::loadLevelMap(std::string filename) {
 
 	if(height <= 0 || width <= 0) {
 		std::cout << "Incorrect map size!\n";
+		inputFile.close();
 		return false;
 	}
 
@@ -865,6 +936,7 @@ bool World::loadLevelMap(std::string filename) {
 			if(inputFile.eof()) {
 				
 				std::cout << "Unexpected end of level file!\n";
+				inputFile.close();
 				return false;
 
 			}
@@ -880,10 +952,13 @@ bool World::loadLevelMap(std::string filename) {
 	
 	if(objectCount < 0) {
 		std::cout << "Incorrect object count!\n";
+		inputFile.close();
 		return false;
 	}
 
 	std::cout << "Objects to spawn: " << objectCount << '\n';
+
+	getGameObjects().reserve(objectCount);
 
 	delete[] objects;
 	objects = new SpawnEntry[objectCount];
@@ -925,6 +1000,30 @@ void World::deleteLevelMap() {
 
 	getLevelMap().clear();
 	getGameObjects().clear();
+
+}
+
+bool World::loadObject(std::string fileName) {
+
+	std::ifstream inputFile(fileName);
+
+	if(!inputFile.good()) {
+		std::cout << "Object file doesn't exist!\n";
+		inputFile.close();
+		return false;
+	}
+
+	//Temp buffer.
+	std::string temp;
+
+	//InputComponent.
+
+	getline(inputFile, temp);
+	getline(inputFile, temp);
+
+
+
+	inputFile.close();
 
 }
 
@@ -1001,15 +1100,16 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 		}
 	
 	//Level map collision.
-	try {
+	if(objectRect.left >= 0 && objectRect.left <= (getMapWidth() - 1) * config.tileSize && objectRect.top >= 0 && objectRect.top <= (getMapHeight() - 1) * config.tileSize) {
+		
 		for(int i = objectRect.top / config.tileSize; i < (objectRect.top + objectRect.height) / config.tileSize; ++i)
 			for(int j = objectRect.left / config.tileSize; j < (objectRect.left + objectRect.width) / config.tileSize; ++j)
 				if(getCollisionMap().at(i).at(j)) {
 					canSpawn = false;
 					break;
 				}
-	}
-	catch(const std::out_of_range& e) {
+
+	} else {
 
 		std::cout << "Can't spawn here! Out of map range!\n";
 		return;
@@ -1028,7 +1128,6 @@ void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& 
 
 	}
 
-
 }
 
 bool World::areEnemies(GameObject& object1, GameObject& object2) {
@@ -1042,6 +1141,19 @@ bool World::areEnemies(GameObject& object1, GameObject& object2) {
 		return false;
 	return true;
 
+}
+
+//============GET===========================
+std::vector<std::vector<int>>& World::getLevelMap() {
+	return mLevelMap;
+}
+
+int World::getMapHeight() {
+	return mMapHeight;
+}
+
+int World::getMapWidth() {
+	return mMapWidth;
 }
 
 std::vector<std::vector<bool>>& World::getCollisionMap() {
@@ -1068,8 +1180,15 @@ bool World::isPlayerAlive() {
 	return mIsPlayerAlive;
 }
 
+//============SET===========================
+void World::setMapHeight(int height) {
+	mMapHeight = height;
+}
+
+void World::setMapWidth(int width) {
+	mMapWidth = width;
+}
+
 void World::setPlayerAlive(bool isAlive) {
 	mIsPlayerAlive = isAlive;
 }
-//
-//==========================================

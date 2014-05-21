@@ -48,6 +48,7 @@
 
 //============PHYSICS=======================
 #include <DynamicPhysicsComponent.hpp>
+#include <StaticPhysicsComponent.hpp>
 #include <NoClipPhysicsComponent.hpp>
 
 //============GRAPHICS======================

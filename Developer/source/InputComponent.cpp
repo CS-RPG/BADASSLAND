@@ -30,7 +30,8 @@ void InputComponent::captureTarget(GameObject& object, World& world) {
 
 		if( (world.areEnemies(object, *current)) && 
 			(tempDistance <= distance) && 
-			(&(*current) != &object) ) {
+			(&(*current) != &object) &&
+			current->getCombat()->isAlive()) {
 
 			distance = tempDistance;
 			mTarget = new GameObject(*current);

@@ -34,10 +34,14 @@ public:
 	void							render();
 	void							processEvents();
 
-	void							changeState(std::string stateName);
+	void							terminate();
+
+	void							changeState(std::string args);
 	void							addState();
 
 	bool							loadConfigFile(std::string fileName);
+
+	void							setTerminateGame(bool terminate);
 
 
 private:
@@ -48,6 +52,8 @@ private:
 	sf::RenderWindow*				mWindow;
 	sf::View						mView;
 	float							mFPS_CAP;
+
+	sf::Clock						mButtonClock;
 
 	config							mConfig;
 	bool							mTerminateGame;

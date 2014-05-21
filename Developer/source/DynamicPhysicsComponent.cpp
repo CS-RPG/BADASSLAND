@@ -13,9 +13,9 @@ DynamicPhysicsComponent::DynamicPhysicsComponent(sf::FloatRect rect, float speed
 
 }
 
-void DynamicPhysicsComponent::update(GameObject& player, World& world, int tileSize, float deltaTime) {
+void DynamicPhysicsComponent::update(GameObject& object, World& world, int tileSize, float deltaTime) {
 	
-	sf::Vector2f movement = player.getPhysics()->getMovement();
+	sf::Vector2f movement = object.getPhysics()->getMovement();
 
 	if((movement.x == 0) && (movement.y == 0))	setDirection(0);
 	if((movement.x == 0) && (movement.y < 0))	setDirection(1);
@@ -28,24 +28,24 @@ void DynamicPhysicsComponent::update(GameObject& player, World& world, int tileS
 	if((movement.x < 0) && (movement.y < 0))	setDirection(8);
 
 	//Horizontal movement & resolving collisions.
-	sf::FloatRect rect = player.getPhysics()->getRect();
+	sf::FloatRect rect = object.getPhysics()->getRect();
 	rect.left += movement.x * deltaTime;
-	player.getPhysics()->setRect(rect);
-	world.resolveObjectCollision(&player, 0);
-	world.resolveMapCollision(&player, 0, tileSize);
+	object.getPhysics()->setRect(rect);
+	world.resolveObjectCollision(&object, 0);
+	world.resolveMapCollision(&object, 0, tileSize);
 	
 	movement.x = 0;
 
 	//Vertical movement & resolving collisions.
-	rect = player.getPhysics()->getRect();
+	rect = object.getPhysics()->getRect();
 	rect.top += movement.y * deltaTime;
-	player.getPhysics()->setRect(rect);
-	world.resolveObjectCollision(&player, 1);
-	world.resolveMapCollision(&player, 1, tileSize);
+	object.getPhysics()->setRect(rect);
+	world.resolveObjectCollision(&object, 1);
+	world.resolveMapCollision(&object, 1, tileSize);
 
 	movement.y = 0;
 
-	player.getPhysics()->setMovement(movement);
+	object.getPhysics()->setMovement(movement);
 	
 }
 //
