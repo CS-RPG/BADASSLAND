@@ -7,7 +7,6 @@
 
 
 //============NoClipPhysicsComponent========
-//
 class NoClipPhysicsComponent : public PhysicsComponent {
 public:
 
@@ -15,8 +14,6 @@ public:
 	virtual void					update(GameObject&, World&, int, float);
 
 };
-//
-//==========================================
 
 
 #endif

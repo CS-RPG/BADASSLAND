@@ -11,7 +11,6 @@ class GameObject;
 
 
 //============GraphicsComponent=============
-//
 class GraphicsComponent {
 public:
 
@@ -28,8 +27,6 @@ private:
 	sf::Texture						mTexture;
 
 };
-//
-//==========================================
 
 
 #endif

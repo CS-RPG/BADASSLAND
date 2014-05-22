@@ -12,7 +12,6 @@
 
 
 //============KeyboardInputComponent========
-//
 class KeyboardInputComponent : public InputComponent {
 public:
 
@@ -24,8 +23,6 @@ private:
 	sf::Keyboard::Key*				mKeyBindings;
 
 };
-//
-//==========================================
 
 
 #endif

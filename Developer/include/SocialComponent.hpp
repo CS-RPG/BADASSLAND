@@ -6,7 +6,6 @@
 
 
 //============SocialComponent===============
-//
 class SocialComponent {
 public:
 
@@ -25,8 +24,6 @@ private:
 	sf::String						mFaction;
 
 };
-//
-//==========================================
 
 
 #endif

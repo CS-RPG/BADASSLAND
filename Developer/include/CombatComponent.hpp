@@ -9,7 +9,6 @@ class GameObject;
 
 
 //============CombatComponent===============
-//
 class CombatComponent {
 public:
 
@@ -61,8 +60,6 @@ private:
 	sf::Clock						mAttackClock;
 
 };
-//
-//==========================================
 
 
 #endif

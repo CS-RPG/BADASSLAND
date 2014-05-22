@@ -14,7 +14,6 @@ class GameObject;
 
 
 //============InputComponent================
-//
 class InputComponent {
 public:
 
@@ -71,9 +70,6 @@ private:
 	int								mDirection;
 	
 };
-//
-//==========================================
-
 
 
 #endif

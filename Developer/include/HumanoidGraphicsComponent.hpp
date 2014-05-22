@@ -6,7 +6,6 @@
 #include <_includes_system.hpp>
 
 //============HumanoidGraphicsComponent=====
-//
 class HumanoidGraphicsComponent : public GraphicsComponent {
 public:
 
@@ -34,8 +33,6 @@ private:
 	int								mFrameCount;
 
 };
-//
-//==========================================
 
 
 #endif

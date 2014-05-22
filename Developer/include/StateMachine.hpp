@@ -20,7 +20,6 @@ namespace States {
 }
 
 //============StateMachine==================
-//
 class StateMachine {
 public:
 
@@ -69,8 +68,6 @@ private:
 	std::map<std::string, State>	mStates;			
 
 };
-//
-//==========================================
 
 
 #endif

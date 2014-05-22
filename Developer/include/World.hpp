@@ -10,29 +10,16 @@
 
 extern TextureHolder		gTextureHolder;
 
-namespace Objects {
-
-	enum ID {
-
-		Player,
-		Elf_Enemy,
-		Elf_Friendly,
-		Elf_Minion
-
-	};
-
-
-}
-
 //============WORLD=========================
 class World : public State {
 public:
 
 									World(std::string fileName, config& config, StateMachine* game);
 
-	void							initializeObjectMap();
-	void							initializeFactionKarmaMap();
 	virtual void					initializeScripts();
+
+	void							loadObjects();
+	void							loadFactionKarmaMap(std::string filename);
 
 	void							onCreate();
 	void							onExit();
@@ -107,8 +94,11 @@ private:
 	int								mMapHeight;
 	int								mMapWidth;
 
-	std::map<std::string,
-		Objects::ID>				mObjectMap;
+	//===============OBJECTS=======================
+	std::map<std::string, bool>		mAvailableObjects;
+
+	std::map<std::string, bool>		mFactionKarmaMap;	//true/false depending on karma associated with the faction.
+														//true == good, false == bad.
 
 	//===============OBJECT DATA===================
 	std::map<std::string, 
@@ -125,9 +115,6 @@ private:
 
 	std::map<std::string, 
 		objectSocial>				mObjectSocial;
-
-	std::map<std::string, bool>		mFactionKarmaMap;	//true/false depending on karma associated with the faction.
-														//true == good, false == bad.
 
 	//===============SCREEN========================
 	sf::RectangleShape				mTile;

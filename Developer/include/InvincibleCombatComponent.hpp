@@ -7,7 +7,6 @@
 
 
 //============InvincibleCombatComponent=====
-//
 class InvincibleCombatComponent : public CombatComponent {
 public:
 
@@ -18,8 +17,6 @@ public:
 	//virtual void					heal(float);
 
 };
-//
-//==========================================
 
 
 #endif

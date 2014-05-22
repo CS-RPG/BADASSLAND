@@ -1,0 +1,7 @@
+//Good.
+players
+yellow_elves
+gods
+//Bad.
+devils
+red_elves

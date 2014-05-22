@@ -102,6 +102,8 @@ std::istream& operator>>(std::istream& is, objectInput& inputSettings) {
 //Physics.
 std::istream& operator>>(std::istream& is, objectPhysics& physicsSettings) {
 
+	bool badData = false;
+
 	char buffer[50];
 	is.getline(buffer, 50);
 	physicsSettings.componentType = std::string(buffer);
@@ -109,6 +111,14 @@ std::istream& operator>>(std::istream& is, objectPhysics& physicsSettings) {
 	is >> physicsSettings.size.x;
 	is >> physicsSettings.size.y;
 	is >> physicsSettings.speed;
+
+	if(	physicsSettings.size.x <= 0 ||
+		physicsSettings.size.y <= 0 ||
+		physicsSettings.speed < 0)
+		badData = true;
+
+	if(badData)
+		is.setstate(std::ios::failbit);
 
 	return is;
 
@@ -175,7 +185,6 @@ std::istream& operator>>(std::istream& is, objectSocial& socialSettings) {
 
 	is.getline(buffer, 50);
 	socialSettings.name = std::string(buffer);
-	std::cout << socialSettings.name;
 
 	is.getline(buffer, 50);
 	socialSettings.faction = std::string(buffer);

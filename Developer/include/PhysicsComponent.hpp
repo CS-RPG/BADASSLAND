@@ -11,7 +11,6 @@ class GameObject;
 
 
 //============PhysicsComponent==============
-//
 class PhysicsComponent {
 public:
 
@@ -36,8 +35,6 @@ private:
 	float							mSpeed;
 
 };
-//
-//==========================================
 
 
 #endif

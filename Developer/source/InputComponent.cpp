@@ -13,7 +13,6 @@ extern float				gMapCollisionAccuracy;
 
 
 //============InputComponent================
-//
 InputComponent::~InputComponent() {}
 
 void InputComponent::captureTarget(GameObject& object, World& world) {
@@ -199,7 +198,7 @@ void InputComponent::stop(GameObject& object) {
 	object.getPhysics()->setMovement(movement);
 
 }
-
+//!!!SET DIRECTIONS
 void InputComponent::moveLeft(GameObject& object) {
 
 	sf::Vector2f movement = object.getPhysics()->getMovement();
@@ -347,5 +346,3 @@ void InputComponent::setDirection(int direction) {
 void InputComponent::setChangeDirectionFrequency(float changeDirectionFrequency) {
 	mChangeDirectionFrequency = changeDirectionFrequency;
 }
-//
-//==========================================

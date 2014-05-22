@@ -7,21 +7,10 @@
 
 extern std::string				gTexturesDirectory;
 
-namespace Textures {
-
-	enum ID {
-
-		Elf_Green,
-		Elf_Red,
-		Elf_Yellow,
-		HP_Bar
-
-	};
-
-}
-
 #define myTextureMapType std::map<std::string, std::unique_ptr<sf::Texture>>
 
+
+//============TextureHolder=================
 class TextureHolder {
 public:
 

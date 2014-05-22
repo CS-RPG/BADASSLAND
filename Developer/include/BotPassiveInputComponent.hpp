@@ -6,7 +6,6 @@
 #include <_includes_badass.hpp>
 
 //============BotPassiveInputComponent======
-//
 class BotPassiveInputComponent : public InputComponent {
 public:
 
@@ -16,8 +15,6 @@ public:
 private:
 
 };
-//
-//==========================================
 
 
 #endif

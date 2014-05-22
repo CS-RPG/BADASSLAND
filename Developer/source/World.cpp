@@ -27,17 +27,22 @@ int							objectCount = 0;
 World::World(std::string fileName, config& config, StateMachine* game) {
 
 	setStateMachine(game);
-
-	//===============INITIALIZATION================
-	initializeObjectMap();
-	initializeFactionKarmaMap();
-	initializeScripts();
-
 	mConfig = getStateMachine()->getConfig();
-
 	mSpawnClock.restart();
 
-	//===============LEVEL, COLLISION MAP==========
+	//===============INITIALIZATION================
+	initializeScripts();
+
+	//===============LOADING DATA==================
+	loadFactionKarmaMap("FactionKarmaMap.txt");
+
+	//===============LOADING OBJECTS===============
+	loadObject("Elf_Yellow");
+	loadObject("Elf_Red");
+	loadObject("Elf_Minion");
+	loadObject("Player");
+
+	//===============LOADING MAP===================
 	if(!loadLevelMap(fileName)) {
 
 		std::cout << "Level file error!\n" << "Press space to exit.\n";
@@ -50,16 +55,13 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 
 	buildCollisionMap();
 
-
 	//===============VIEW==========================
 	mViewWidth = config.screenWidth;
 	mViewHeight = config.screenHeight;
 
-
 	//===============FONT==========================
 	gFont.loadFromFile("sansation.ttf");
 	gFontSize = 30;
-
 
 	//===============TEXTURES======================
 	gTextureHolder.load("HP_Bar");
@@ -67,20 +69,12 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 
 	//sf::Sprite tile(tileSet);
 
-
-	//===============LOADING OBJECTS===============
-	loadObject("Elf_Yellow");
-	loadObject("Elf_Red");
-	loadObject("Elf_Minion");
-	loadObject("Player");
-
 	//===============SOUND=========================
 	//sf::SoundBuffer emenyHitSoundBuffer;
 
 	//emenyHitSoundBuffer.loadFromFile("sound1.ogg");
 
 	//sf::Sound emenyHitSound(emenyHitSoundBuffer);
-
 
 	//===============HUD HEALTH====================
 	mTextHealth.setFont(gFont);
@@ -90,7 +84,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mTextHealth.setColor(sf::Color::Red);
 	mTextHealth.setPosition(0, 0);
 
-
 	//===============HUD MANA======================
 	mTextMana.setFont(gFont);
 	mTextMana.setString("");
@@ -98,7 +91,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mTextMana.setStyle(sf::Text::Bold);
 	mTextMana.setColor(sf::Color::Blue);
 	mTextMana.setPosition(0, gFontSize);
-
 
 	//===============HUD ENEMY COUNT===============
 	mTextEnemyCount.setFont(gFont);
@@ -108,7 +100,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mTextEnemyCount.setColor(sf::Color::Color(184, 138, 0));
 	mTextEnemyCount.setPosition(0, gFontSize * 2);
 
-
 	//===============HUD PLAYER COORDINATES========
 	mTextObjectCoordinates.setFont(gFont);
 	mTextObjectCoordinates.setString("");
@@ -116,7 +107,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mTextObjectCoordinates.setStyle(sf::Text::Bold);
 	mTextObjectCoordinates.setColor(sf::Color::Color(125, 145, 176));
 	mTextObjectCoordinates.setPosition(0, gFontSize * 3);
-
 
 	//===============HUD MOUSE COORDINATES=========
 	mTextMouseCoordinates.setFont(gFont);
@@ -126,7 +116,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mTextMouseCoordinates.setColor(sf::Color::Color(125, 145, 176));
 	mTextMouseCoordinates.setPosition(0, gFontSize * 7);
 
-
 	//===============HUD OUT CONSOLE===============
 	mOutConsole.setFont(gFont);
 	mOutConsole.setString("");
@@ -135,16 +124,13 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mOutConsole.setColor(sf::Color::Color(sf::Color::Red));
 	mOutConsole.setPosition(0, gFontSize * 10);
 
-
 	//===============TILE OBJECT===================
 	mTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
-
 
 	//===============PATH HIGHLIGHT================
 	mPathTile = sf::RectangleShape(sf::Vector2f(config.tileSize, config.tileSize));
 	mPathTile.setFillColor(sf::Color::Green);
 	mPathHighlight = false;
-
 
 	//===============GRID==========================
 	mVerticalLine = sf::RectangleShape(sf::Vector2f(mViewWidth, gGridThickness));
@@ -154,7 +140,6 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mHorizontalLine.setFillColor(sf::Color::Black);
 
 	mGridActive = false;
-	
 
 	//===============SPAWNING OBJECTS==============
 	//If player exists, last player, written in level-file, will be the view center.
@@ -179,31 +164,31 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	
 }
 
-void World::initializeObjectMap() {
-
-	mObjectMap.insert(std::make_pair("Player", Objects::Player));
-	mObjectMap.insert(std::make_pair("Elf_Enemy", Objects::Elf_Enemy));
-	mObjectMap.insert(std::make_pair("Elf_Minion", Objects::Elf_Minion));
-	mObjectMap.insert(std::make_pair("Elf_Friendly", Objects::Elf_Friendly));
-
-}
-
-void World::initializeFactionKarmaMap() {
-
-	//===============GOOD==========================
-	mFactionKarmaMap.insert(std::make_pair("players", true));
-	mFactionKarmaMap.insert(std::make_pair("gods", true));
-	mFactionKarmaMap.insert(std::make_pair("yellow_elves", true));
-
-	//===============EVIL==========================
-	mFactionKarmaMap.insert(std::make_pair("devils", false));
-	mFactionKarmaMap.insert(std::make_pair("red_elves", false));
-
-}
-
 void World::initializeScripts() {
 
 	getScripts().insert(std::make_pair("changeState", &State::changeState));
+
+}
+
+void World::loadObjects() {
+
+}
+
+void World::loadFactionKarmaMap(std::string filename) {
+
+	std::ifstream inputFile(filename);
+
+	std::string temp;
+
+	getline(inputFile, temp);
+
+	for(std::string line; line != "//Bad."; getline(inputFile, line))
+		mFactionKarmaMap.insert(std::make_pair(line, true));
+
+	for(std::string line; !inputFile.eof(); getline(inputFile, line))
+		mFactionKarmaMap.insert(std::make_pair(line, false));
+
+	inputFile.close();
 
 }
 
@@ -371,17 +356,13 @@ void World::handleInput(config& config) {
 
 	//===============ZOOM==========================
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
-		
 		zoomOut();
 		mSpawnClock.restart();
-
 	}
 	
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
-
 		zoomIn();
 		mSpawnClock.restart();
-
 	}
 
 	//===============SPAWNING OBJECTS==============
@@ -474,12 +455,10 @@ void World::handleInput(config& config) {
 		myGameObjectConstIter end = getGameObjects().end();
 
 		for(; current != end; ++current) {
-
 			if(rect.intersects(current->getPhysics()->getRect())) {
 				current->getCombat()->setMarkedForRemoval(true);
 				break;
 			}
-
 		}
 
 		mSpawnClock.restart();
@@ -507,27 +486,21 @@ void World::handleInput(config& config) {
 
 	//Grid ON / OFF.
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::L) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
-
 		mGridActive ^= 1;
 		mSpawnClock.restart();
-
 	}
 
 
 	//Path highlight ON / OFF.
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::B) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
-
 		mPathHighlight ^= 1;
 		mSpawnClock.restart();
-
 	}
 
 	//Main menu.
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) && getButtonClock().getElapsedTime().asSeconds() > config.spawnDelay) {
-		
 		getStateMachine()->changeState("MainMenu ");
 		getButtonClock().restart();
-
 	}
 
 }
@@ -1043,6 +1016,10 @@ bool World::loadObject(std::string objectID) {
 	//Physics.
 	objectPhysics physicsSettings;
 	inputFile >> physicsSettings;
+	if(inputFile.fail()) {
+		std::cout << "Physics data error!\n";
+		return false;
+	}
 	mObjectPhysics.insert(std::make_pair(objectID, physicsSettings));
 	inputFile.get();			//SKIP LINE.
 	getline(inputFile, temp);	//SKIP LINE.
@@ -1050,6 +1027,10 @@ bool World::loadObject(std::string objectID) {
 	//Graphics.
 	objectGraphics graphicsSettings;
 	inputFile >> graphicsSettings;
+	if(inputFile.fail()) {
+		std::cout << "Graphics data error!\n";
+		return false;
+	}
 	gTextureHolder.load(graphicsSettings.textureID);
 	mObjectGraphics.insert(std::make_pair(objectID, graphicsSettings));
 	inputFile.get();			//SKIP LINE.
@@ -1068,16 +1049,22 @@ bool World::loadObject(std::string objectID) {
 	mObjectSocial.insert(std::make_pair(objectID, socialSettings));
 
 
-	std::cout << socialSettings.componentType.c_str() << '\n';
-	std::cout << temp.c_str() << '\n';
+	//std::cout << socialSettings.componentType.c_str() << '\n';
+	//std::cout << temp.c_str() << '\n';
 
 	inputFile.close();
 
+	mAvailableObjects.insert(std::make_pair(objectID, true));
 	return true;
 
 }
 
 void World::spawnObject(std::string objectID, sf::Vector2i coordinates, config& config) {
+
+	if(!mAvailableObjects[objectID]) {
+		std::cout << "Can't spawn.\n";
+		return;
+	}
 
 	GameObject* temp;
 	bool canSpawn = true;
@@ -1102,24 +1089,34 @@ void World::spawnObject(std::string objectID, sf::Vector2i coordinates, config& 
 		else if(mObjectInput[objectID].controlType == 2)
 			input = new KeyboardInputComponent(config.controls2);
 
+	} else {
+		canSpawn = false;
 	}
 
 	//Physics.
 	if(mObjectPhysics[objectID].componentType == "Dynamic")
 		physics = new DynamicPhysicsComponent(mObjectPhysics[objectID], sf::Vector2f(coordinates.x, coordinates.y));
 	//else if(mObjectPhysics[objectID] == "Static")
+	else
+		canSpawn = false;
 
 	//Graphics.
 	if(mObjectGraphics[objectID].componentType == "Humanoid")
 		graphics = new HumanoidGraphicsComponent(mObjectGraphics[objectID]);
+	else
+		canSpawn = false;
 
 	//Combat.
 	if(mObjectCombat[objectID].componentType == "Humanoid")
 		combat = new HumanoidCombatComponent(mObjectCombat[objectID]);
+	else
+		canSpawn = false;
 
 	//Social.
 	if(mObjectSocial[objectID].componentType == "Humanoid")
 		social = new HumanoidSocialComponent(mObjectSocial[objectID]);
+	else
+		canSpawn = false;
 
 	temp = new GameObject(	input,
 							physics,

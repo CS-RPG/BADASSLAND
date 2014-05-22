@@ -7,7 +7,6 @@
 
 
 //============StaticPhysicsComponent=======
-//
 class StaticPhysicsComponent : public PhysicsComponent {
 public:
 
@@ -15,8 +14,6 @@ public:
 	virtual void					update(GameObject& object, World& world, int tileSize, float deltaTime);
 
 };
-//
-//==========================================
 
 
 #endif
