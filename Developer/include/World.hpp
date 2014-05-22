@@ -5,8 +5,6 @@
 #include <_includes_system.hpp>
 #include <_includes_badass.hpp>
 
-//#define myGameObjectIter std::vector<GameObject>::iterator
-//#define myGameObjectConstIter std::vector<GameObject>::const_iterator
 
 extern TextureHolder		gTextureHolder;
 

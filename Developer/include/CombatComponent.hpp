@@ -35,6 +35,7 @@ public:
 	void							setDT(float);
 	void							kill();
 	void							revive();
+	void							setAlive(bool alive);
 	void							setMarkedForRemoval(bool);
 
 	void							setAttackRange(float);

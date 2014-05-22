@@ -23,6 +23,7 @@ HumanoidCombatComponent::HumanoidCombatComponent(objectCombat settings) {
 	setDamage(settings.damage);
 	setAttackRange(settings.attackRange);
 	setAttackSpeed(settings.attackSpeed);
+	setAlive(true);
 	setMarkedForRemoval(false);
 
 }
@@ -31,7 +32,7 @@ void HumanoidCombatComponent::update(GameObject& object, World& world) {
 
 	if(!isAlive()) {
 
-		deleteFromAttackers(object, world);
+		//deleteFromAttackers(object, world);
 		setMarkedForRemoval(true);
 
 	}

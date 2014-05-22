@@ -1,4 +1,4 @@
-BADASS TALES of BADASSLAND v. 0.8 alpha
+BADASS TALES of BADASSLAND v. 0.8.1 alpha
 
 Paul Pushmin,
 Leo Vetlugin
@@ -8,6 +8,15 @@ https://github.com/CS-RPG/BADASSLAND
 
 
 //============CHANGELOG=========================\\
+New in 0.8.1:
+(+) - New features.
+(*) - Bug fixes.
+
+ + Added MainMenu and buttons.
+ + Loading FactionKarmaMap from file.
+ + Loading objects from file.
+ * Fixes object out of map range bug.
+-----------------------------------------------------------------
 New in 0.8:
 (+) - New features.
 (*) - Bug fixes.

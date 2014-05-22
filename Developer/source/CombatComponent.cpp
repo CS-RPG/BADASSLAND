@@ -23,7 +23,7 @@ void CombatComponent::deleteFromAttackers(GameObject& object, World& world) {
 		}
 		*/
 	}
-	std::cout << attackers << '\n';
+	//std::cout << attackers << '\n';
 
 }
 
@@ -88,6 +88,10 @@ void CombatComponent::revive() {
 	mIsAlive = true;
 }
 
+void CombatComponent::setAlive(bool alive) {
+	mIsAlive = alive;
+}
+
 void CombatComponent::setMarkedForRemoval(bool isMarkedForRemoval) {
 	mIsMarkedForRemoval = isMarkedForRemoval;
 }
@@ -107,5 +111,3 @@ void CombatComponent::setDamage(float damage) {
 void CombatComponent::restartAttackClock() {
 	mAttackClock.restart();
 }
-//
-//==========================================
