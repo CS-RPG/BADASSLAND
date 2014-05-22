@@ -10,7 +10,7 @@
 class HumanoidGraphicsComponent : public GraphicsComponent {
 public:
 
-									HumanoidGraphicsComponent(Textures::ID textureID);
+									HumanoidGraphicsComponent(std::string textureID);
 									HumanoidGraphicsComponent(objectGraphics settings);
 
 	virtual void					update(GameObject&, float);

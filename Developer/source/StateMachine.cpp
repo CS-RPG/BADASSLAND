@@ -441,6 +441,10 @@ bool StateMachine::loadConfigFile(std::string filename = "config.txt") {
 
 }
 
+config& StateMachine::getConfig() {
+	return mConfig;
+}
+
 void StateMachine::setTerminateGame(bool terminate) {
 	mTerminateGame = terminate;
 }

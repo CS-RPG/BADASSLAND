@@ -33,6 +33,8 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	initializeFactionKarmaMap();
 	initializeScripts();
 
+	mConfig = getStateMachine()->getConfig();
+
 	mSpawnClock.restart();
 
 	//===============LEVEL, COLLISION MAP==========
@@ -60,15 +62,17 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 
 
 	//===============TEXTURES======================
-	gTextureHolder.load(Textures::HP_Bar, "./textures/HPBar.png");
-	gTextureHolder.load(Textures::Elf_Red, "./textures/red_elf_sprite_list.png");
-	gTextureHolder.load(Textures::Elf_Green, "./textures/green_elf_sprite_list.png");
-	gTextureHolder.load(Textures::Elf_Yellow, "./textures/yellow_elf_sprite_list.png");
+	gTextureHolder.load("HP_Bar");
 	//gTextureHolder.load(Textures::TileSet, "./textures/testTileSet.png");
-	//gTextureHolder.load(Textures::HP_Potion, "./textures/healthPotion.png");
 
 	//sf::Sprite tile(tileSet);
 
+
+	//===============LOADING OBJECTS===============
+	loadObject("Elf_Yellow");
+	loadObject("Elf_Red");
+	loadObject("Elf_Minion");
+	loadObject("Player");
 
 	//===============SOUND=========================
 	//sf::SoundBuffer emenyHitSoundBuffer;
@@ -159,7 +163,7 @@ World::World(std::string fileName, config& config, StateMachine* game) {
 	mIsPlayerAlive = false;
 	getGameObjects().reserve(objectCount);	//Reserving memory for objects. (???)
 	for(int i = 0; i < objectCount; ++i)
-		spawnObject(mObjectMap[objects[i].objectID], sf::Vector2i(objects[i].x, objects[i].y), config);
+		spawnObject(objects[i].objectID, sf::Vector2i(objects[i].x, objects[i].y), config);
 
 	for(int i = 0; i < getGameObjects().size(); ++i) {
 		if(getGameObjects()[i].isPlayer()) {
@@ -368,20 +372,14 @@ void World::handleInput(config& config) {
 	//===============ZOOM==========================
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 		
-		if(mViewWidth / config.screenWidth <= gMaxZoomRate) {
-			mViewWidth *= config.zoomRate;
-			mViewHeight *= config.zoomRate;
-		}
+		zoomOut();
 		mSpawnClock.restart();
 
 	}
 	
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp) && mSpawnClock.getElapsedTime().asSeconds() > config.spawnDelay) {
 
-		if(mViewWidth / config.screenWidth >= 1 / gMaxZoomRate) {
-			mViewWidth /= config.zoomRate;
-			mViewHeight /= config.zoomRate;
-		}
+		zoomIn();
 		mSpawnClock.restart();
 
 	}
@@ -392,7 +390,7 @@ void World::handleInput(config& config) {
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
-		spawnObject(Objects::Elf_Enemy, coordinates, config);
+		spawnObject("Elf_Red", coordinates, config);
 		mSpawnClock.restart();
 
 	}
@@ -402,8 +400,7 @@ void World::handleInput(config& config) {
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
-		spawnObject(Objects::Elf_Friendly, coordinates, config);
-		//getGameObjects()[getGameObjects().size() - 1].update(deltaTime, &config, *this);	//
+		spawnObject("Elf_Yellow", coordinates, config);
 		mSpawnClock.restart();
 
 	}
@@ -413,7 +410,7 @@ void World::handleInput(config& config) {
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
-		spawnObject(Objects::Elf_Minion, coordinates, config);
+		spawnObject("Elf_Minion", coordinates, config);
 		mSpawnClock.restart();
 
 	}
@@ -423,7 +420,7 @@ void World::handleInput(config& config) {
 		sf::Vector2i coordinates;
 		coordinates.x = getMouseCoordinates().x;
 		coordinates.y = getMouseCoordinates().y;
-		spawnObject(Objects::Player, coordinates, config);
+		spawnObject("Player", coordinates, config);
 		mSpawnClock.restart();
 
 	}
@@ -531,6 +528,25 @@ void World::handleInput(config& config) {
 		getStateMachine()->changeState("MainMenu ");
 		getButtonClock().restart();
 
+	}
+
+}
+
+//============SCRIPTS=======================
+void World::zoomIn() {
+
+	if(mViewWidth / mConfig.screenWidth >= 1 / gMaxZoomRate) {
+			mViewWidth /= mConfig.zoomRate;
+			mViewHeight /= mConfig.zoomRate;
+	}
+
+}
+
+void World::zoomOut() {
+
+	if(mViewWidth / mConfig.screenWidth <= gMaxZoomRate) {
+		mViewWidth *= mConfig.zoomRate;
+		mViewHeight *= mConfig.zoomRate;
 	}
 
 }
@@ -1003,9 +1019,9 @@ void World::deleteLevelMap() {
 
 }
 
-bool World::loadObject(std::string fileName) {
+bool World::loadObject(std::string objectID) {
 
-	std::ifstream inputFile(fileName);
+	std::ifstream inputFile("./Objects/" + objectID + ".txt");
 
 	if(!inputFile.good()) {
 		std::cout << "Object file doesn't exist!\n";
@@ -1017,78 +1033,104 @@ bool World::loadObject(std::string fileName) {
 	std::string temp;
 
 	//InputComponent.
+	getline(inputFile, temp);	//SKIP LINE.
+	objectInput inputSettings;
+	inputFile >> inputSettings;
+	mObjectInput.insert(std::make_pair(objectID, inputSettings));
+	inputFile.get();			//SKIP LINE.
+	getline(inputFile, temp);	//SKIP LINE.
 
-	getline(inputFile, temp);
-	getline(inputFile, temp);
+	//Physics.
+	objectPhysics physicsSettings;
+	inputFile >> physicsSettings;
+	mObjectPhysics.insert(std::make_pair(objectID, physicsSettings));
+	inputFile.get();			//SKIP LINE.
+	getline(inputFile, temp);	//SKIP LINE.
+
+	//Graphics.
+	objectGraphics graphicsSettings;
+	inputFile >> graphicsSettings;
+	gTextureHolder.load(graphicsSettings.textureID);
+	mObjectGraphics.insert(std::make_pair(objectID, graphicsSettings));
+	inputFile.get();			//SKIP LINE.
+	getline(inputFile, temp);	//SKIP LINE.
+
+	//Combat.
+	objectCombat combatSettings;
+	inputFile >> combatSettings;
+	mObjectCombat.insert(std::make_pair(objectID, combatSettings));
+	inputFile.get();			//SKIP LINE.
+	getline(inputFile, temp);	//SKIP LINE.
+
+	//Social.
+	objectSocial socialSettings;
+	inputFile >> socialSettings;
+	mObjectSocial.insert(std::make_pair(objectID, socialSettings));
 
 
+	std::cout << socialSettings.componentType.c_str() << '\n';
+	std::cout << temp.c_str() << '\n';
 
 	inputFile.close();
 
+	return true;
+
 }
 
-void World::spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config) {
+void World::spawnObject(std::string objectID, sf::Vector2i coordinates, config& config) {
 
 	GameObject* temp;
 	bool canSpawn = true;
 	int width;
 	int height;
 
-	switch(objectID) {
+	InputComponent* input = NULL;
+	PhysicsComponent* physics = NULL;
+	GraphicsComponent* graphics = NULL;
+	CombatComponent* combat = NULL;
+	SocialComponent* social = NULL;
 
-		case(Objects::Player):
-
-			width = config.tileSize;
-			height = config.tileSize;
-			temp = new GameObject(	new KeyboardInputComponent(config.controls1),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.1),
-									new HumanoidGraphicsComponent(Textures::Elf_Green),
-									new HumanoidCombatComponent(150, 150, 40, 100, 2),
-									new HumanoidSocialComponent("Player", "players")  );
-			temp->setPlayer(true);
-			break;
-
-		case(Objects::Elf_Enemy):
-
-			width = config.tileSize;
-			height = config.tileSize;
-			temp = new GameObject(	new BotActiveInputComponent(),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.05),
-									new HumanoidGraphicsComponent(Textures::Elf_Red),
-									new HumanoidCombatComponent(150, 150, 40, 180, 2),
-									new HumanoidSocialComponent("Red Elf", "red_elves")  );
-			temp->setPlayer(false);
-			break;
-
-		case(Objects::Elf_Friendly):
-
-			width = config.tileSize;
-			height = config.tileSize;
-			temp = new GameObject(	new BotPassiveInputComponent(4),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.03),
-									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
-									new HumanoidCombatComponent(150, 150, 40, 130, 2),
-									new HumanoidSocialComponent("Yellow Elf", "yellow_elves")  );
-			temp->setPlayer(false);
-			break;
-
-		case(Objects::Elf_Minion):
-
-			width = config.tileSize;
-			height = config.tileSize;	
-			temp = new GameObject(	new KeyboardInputComponent(config.controls2),
-									new DynamicPhysicsComponent(sf::FloatRect(coordinates.x, coordinates.y, width, height), 0.04),
-									new HumanoidGraphicsComponent(Textures::Elf_Yellow),
-									new HumanoidCombatComponent(150, 150, 40, 130, 2),
-									new HumanoidSocialComponent("Minion", "players")  );
-			temp->setPlayer(false);
-			break;
-
-		default:
-
-			break;
+	//Input.
+	if(mObjectInput[objectID].componentType == "passiveAI")
+		input = new BotPassiveInputComponent(4);
+	else if(mObjectInput[objectID].componentType == "activeAI")
+		input = new BotActiveInputComponent();
+	else if(mObjectInput[objectID].componentType == "keyboard") {
+		
+		if(mObjectInput[objectID].controlType == 1)
+			input = new KeyboardInputComponent(config.controls1);
+		else if(mObjectInput[objectID].controlType == 2)
+			input = new KeyboardInputComponent(config.controls2);
 
 	}
+
+	//Physics.
+	if(mObjectPhysics[objectID].componentType == "Dynamic")
+		physics = new DynamicPhysicsComponent(mObjectPhysics[objectID], sf::Vector2f(coordinates.x, coordinates.y));
+	//else if(mObjectPhysics[objectID] == "Static")
+
+	//Graphics.
+	if(mObjectGraphics[objectID].componentType == "Humanoid")
+		graphics = new HumanoidGraphicsComponent(mObjectGraphics[objectID]);
+
+	//Combat.
+	if(mObjectCombat[objectID].componentType == "Humanoid")
+		combat = new HumanoidCombatComponent(mObjectCombat[objectID]);
+
+	//Social.
+	if(mObjectSocial[objectID].componentType == "Humanoid")
+		social = new HumanoidSocialComponent(mObjectSocial[objectID]);
+
+	temp = new GameObject(	input,
+							physics,
+							graphics,
+							combat,
+							social	);
+
+	if(mObjectInput[objectID].componentType == "keyboard")
+		temp->setPlayer(true);
+	else
+		temp->setPlayer(false);
 
 	sf::FloatRect objectRect = (*temp).getPhysics()->getRect();
 

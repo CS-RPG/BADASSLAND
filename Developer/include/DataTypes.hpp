@@ -7,6 +7,13 @@
 
 extern TextureHolder		gTextureHolder;
 
+class InputComponent;
+class PhysicsComponent;
+class GraphicsComponent;
+class CombatComponent;
+class SocialComponent;
+
+
 //============ATTRIBUTES====================
 struct attributes {
 
@@ -49,45 +56,65 @@ struct config {
 
 };
 
-//============OBJECT DATA===================
-struct objectData {
-	/*
-	InputComponent*					input;
-	PhysicsComponent*				physics;
-	GraphicsComponent*				graphics;
-	CombatComponent*				combat;
-	SocialComponent*				social;
-	*/
+//============OBJECT DATA===============
+struct objectInput {
+
+	friend							std::istream& operator>>(std::istream& is, objectInput& inputSettings);
+
+	std::string						componentType;
+
+	int								controlType;
+
 };
 
-//============OBJECT GRAPHICS===============
+struct objectPhysics {
+
+	friend							std::istream& operator>>(std::istream& is, objectPhysics& physicsSettings);
+
+	std::string						componentType;
+
+	sf::Vector2f					size;
+	float							speed;
+
+};
+
 struct objectGraphics {
 
-	Textures::ID					texture;
+	friend							std::istream& operator>>(std::istream& is, objectGraphics& graphicsSettings);
+
+	std::string						componentType;
+
+	std::string						textureID;
 
 	int								width;
 	int								height;
 
 	int								frameCount;
-
 	sf::Vector2i					frames[5];
 
 };
 
-//============BUTTON DATA===================
-struct buttonData {
+struct objectCombat {
 
-	sf::FloatRect					rect;
-	std::string						onClick;
-	std::string						onClickArgs;
+	friend							std::istream& operator>>(std::istream& is, objectCombat& combatSettings);
+
+	std::string						componentType;
+
+	float							maxHP;
+	float							damage;
+	float							attackRange;
+	float							attackSpeed;
 
 };
 
-//============MESSAGE=======================
-struct Message {
+struct objectSocial {
 
-	std::string						messageID;
-	char**							args;
+	friend							std::istream& operator>>(std::istream& is, objectSocial& socialSettings);
+
+	std::string						componentType;
+
+	std::string						name;
+	std::string						faction;
 
 };
 

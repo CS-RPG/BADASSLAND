@@ -1,0 +1,55 @@
+//Input.
+	//Component type.
+	PassiveAI
+	
+//Physics.
+	//Component type.
+	DynamicPhysicsComponent
+	
+	//Width, height.
+	120 120
+
+//Graphics.
+	//Component type.
+	HumanoidGraphicsComponent
+
+	//Texture.
+	Elf_Yellow
+
+	//Animation frame count.
+	10
+
+	//Frame coordinates (Still, Up, Down, Left, Right).
+	0 15
+	0 787
+	0 535
+	0 667
+	0 925
+
+//Combat.
+	//Component type.
+	HumanoidCombatComponent
+	
+	//HP.
+	200
+	
+	//Damage.
+	40
+	
+	//Attack range.
+	130
+	
+	//Attack speed.
+	2
+
+//Social.
+	//Component type.
+	HumanoidSocialComponent
+
+	//Name.
+	Green Elf
+	
+	//Faction.
+	green_elves
+	
+	

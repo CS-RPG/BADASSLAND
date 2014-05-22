@@ -5,10 +5,24 @@ extern float				gMapCollisionAccuracy;
 
 //============DynamicPhysicsComponent=======
 //
-DynamicPhysicsComponent::DynamicPhysicsComponent(sf::FloatRect rect, float speed = 0.1) {
+DynamicPhysicsComponent::DynamicPhysicsComponent(sf::FloatRect rect, float speed) {
 
 	setRect(rect);
 	setSpeed(speed);
+	setDirection(0);
+
+}
+
+DynamicPhysicsComponent::DynamicPhysicsComponent(objectPhysics settings, sf::Vector2f position) {
+
+	sf::FloatRect rect;
+	rect.width = settings.size.x;
+	rect.height = settings.size.y;
+	rect.left = position.x;
+	rect.top = position.y;
+
+	setRect(rect);
+	setSpeed(settings.speed);
 	setDirection(0);
 
 }

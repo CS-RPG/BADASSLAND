@@ -48,6 +48,10 @@ public:
 	//============INPUT=========================
 	virtual void					handleInput(config& config);
 
+	//============SCRIPTS=======================
+	void							zoomIn();
+	void							zoomOut();
+
 	//============RENDER========================
 	virtual void					render(sf::RenderWindow& window, sf::View& view, config& config);
 	virtual void					renderMap(sf::RenderWindow& window, sf::View& view, config& config);
@@ -66,9 +70,9 @@ public:
 	void							buildCollisionMap();
 	void							deleteLevelMap();
 
-	bool							loadObject(std::string fileName);
+	bool							loadObject(std::string objectID);
 
-	void							spawnObject(Objects::ID objectID, sf::Vector2i coordinates, config& config);
+	void							spawnObject(std::string objectID, sf::Vector2i coordinates, config& config);
 	bool							areEnemies(GameObject& object1, GameObject& object2);
 
 	//============GET===========================
@@ -90,6 +94,8 @@ public:
 
 private:
 
+	config							mConfig;
+
 	bool							mTerminateGame;
 
 	sf::Clock						mSpawnClock;
@@ -104,32 +110,26 @@ private:
 	std::map<std::string,
 		Objects::ID>				mObjectMap;
 
-	std::map<std::string,
-		objectData>					mObjectDataMap;
-	/*
-	//Object component maps.
-	std::map<std::string,
-		InputComponent>				mObjectInputMap;
+	//===============OBJECT DATA===================
+	std::map<std::string, 
+		objectInput>				mObjectInput;
 
-	std::map<std::string,
-		PhysicsComponent>			mObjectPhysicsMap;
+	std::map<std::string, 
+		objectPhysics>				mObjectPhysics;
 
-	std::map<std::string,
-		GraphicsComponent>			mObjectGraphicsMap;
-
-	std::map<std::string,
-		CombatComponent>			mObjectCombatMap;
-
-	std::map<std::string,
-		SocialComponent>			mObjectSocialMap;
-	*/
-
-	std::map<Objects::ID, 
+	std::map<std::string, 
 		objectGraphics>				mObjectGraphics;
+
+	std::map<std::string, 
+		objectCombat>				mObjectCombat;
+
+	std::map<std::string, 
+		objectSocial>				mObjectSocial;
 
 	std::map<std::string, bool>		mFactionKarmaMap;	//true/false depending on karma associated with the faction.
 														//true == good, false == bad.
 
+	//===============SCREEN========================
 	sf::RectangleShape				mTile;
 
 	bool							mPathHighlight;
@@ -144,6 +144,7 @@ private:
 	float							mViewWidth;
 	float							mViewHeight;
 
+	//===============HUD===========================
 	sf::Text						mTextHealth;
 	sf::Text						mTextMana;
 	sf::Text						mTextEnemyCount;

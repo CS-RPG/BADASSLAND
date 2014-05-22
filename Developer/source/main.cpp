@@ -83,6 +83,108 @@ void outputPath(std::vector<sf::Vector2i>& path) {
 
 }
 
+//============OBJECT DATA FUNCTIONS=========
+
+//Input.
+std::istream& operator>>(std::istream& is, objectInput& inputSettings) {
+
+	char buffer[50];
+	is.getline(buffer, 50);
+	inputSettings.componentType = std::string(buffer);
+
+	if(inputSettings.componentType == std::string("keyboard"))
+		is >> inputSettings.controlType;
+
+	return is;
+
+}
+
+//Physics.
+std::istream& operator>>(std::istream& is, objectPhysics& physicsSettings) {
+
+	char buffer[50];
+	is.getline(buffer, 50);
+	physicsSettings.componentType = std::string(buffer);
+
+	is >> physicsSettings.size.x;
+	is >> physicsSettings.size.y;
+	is >> physicsSettings.speed;
+
+	return is;
+
+}
+
+//Graphics.
+std::istream& operator>>(std::istream& is, objectGraphics& graphicsSettings) {
+
+	bool badData = false;
+
+	char buffer[50];
+	is.getline(buffer, 50);
+	graphicsSettings.componentType = std::string(buffer);
+
+	is.getline(buffer, 50);
+	graphicsSettings.textureID = std::string(buffer);
+	
+	is >> graphicsSettings.frameCount;
+	for(int i = 0; i < 5; ++i) {
+
+		is >> graphicsSettings.frames[i].x;
+		is >> graphicsSettings.frames[i].y;
+		if(graphicsSettings.frames[i].x < 0 || graphicsSettings.frames[i].y < 0)
+			badData = true;
+
+	}
+	is >> graphicsSettings.width;
+	is >> graphicsSettings.height;
+
+	if(	graphicsSettings.frameCount <= 0 ||
+		graphicsSettings.width <= 0 ||
+		graphicsSettings.height <= 0)
+		badData = true;
+
+	if(badData)
+		is.setstate(std::ios::failbit);
+
+	return is;
+
+}
+
+//Combat.
+std::istream& operator>>(std::istream& is, objectCombat& combatSettings) {
+
+	char buffer[50];
+	is.getline(buffer, 50);
+	combatSettings.componentType = std::string(buffer);
+
+	is >> combatSettings.maxHP;
+	is >> combatSettings.damage;
+	is >> combatSettings.attackRange;
+	is >> combatSettings.attackSpeed;
+
+	return is;
+
+}
+
+//Social.
+std::istream& operator>>(std::istream& is, objectSocial& socialSettings) {
+
+	char buffer[50];
+	is.getline(buffer, 50);
+	socialSettings.componentType = std::string(buffer);
+
+	is.getline(buffer, 50);
+	socialSettings.name = std::string(buffer);
+	std::cout << socialSettings.name;
+
+	is.getline(buffer, 50);
+	socialSettings.faction = std::string(buffer);
+
+	return is;
+
+}
+
+
 //  __  __       _       
 // |  \/  |     (_)      
 // | \  / | __ _ _ _ __  

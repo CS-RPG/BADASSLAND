@@ -5,6 +5,8 @@
 //#include <_includes_badass.hpp>
 #include <_includes_system.hpp>
 
+extern std::string				gTexturesDirectory;
+
 namespace Textures {
 
 	enum ID {
@@ -18,14 +20,14 @@ namespace Textures {
 
 }
 
-#define myTextureMapType std::map<Textures::ID, std::unique_ptr<sf::Texture>>
+#define myTextureMapType std::map<std::string, std::unique_ptr<sf::Texture>>
 
 class TextureHolder {
 public:
 
-	void							load(Textures::ID id, std::string fileName);
+	void							load(std::string id);
 
-	sf::Texture&					get(Textures::ID id);
+	sf::Texture&					get(std::string id);
 
 private:
 

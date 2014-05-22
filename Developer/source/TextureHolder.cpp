@@ -1,16 +1,16 @@
 //TextureHolder.cpp
 #include <TextureHolder.hpp>
 
-void TextureHolder::load(Textures::ID id, std::string fileName) {
+void TextureHolder::load(std::string id) {
 
 	std::unique_ptr<sf::Texture> texture(new sf::Texture());
-	texture->loadFromFile(fileName);
+	texture->loadFromFile(gTexturesDirectory + id + ".png");
 
 	mTextureMap.insert(std::make_pair(id, std::move(texture)));
 
 }
 
-sf::Texture& TextureHolder::get(Textures::ID id) {
+sf::Texture& TextureHolder::get(std::string id) {
 
 	auto found = mTextureMap.find(id);
 	return *found->second;

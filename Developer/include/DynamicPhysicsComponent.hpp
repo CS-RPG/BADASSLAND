@@ -7,16 +7,15 @@
 
 
 //============DynamicPhysicsComponent=======
-//
 class DynamicPhysicsComponent : public PhysicsComponent {
 public:
 
 									DynamicPhysicsComponent(sf::FloatRect rect, float speed);
+									DynamicPhysicsComponent(objectPhysics settings, sf::Vector2f position);
+
 	virtual void					update(GameObject& object, World& world, int tileSize, float deltaTime);
 
 };
-//
-//==========================================
 
 
 #endif

@@ -10,7 +10,7 @@ extern float				gAnimationSpeedMultiplier;
 
 //============HumanoidGraphicsComponent=====
 //
-HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
+HumanoidGraphicsComponent::HumanoidGraphicsComponent(std::string textureID) {
 
 	//===============Sprites=======================
 	mCurrentSprite.setTexture(gTextureHolder.get(textureID));
@@ -28,7 +28,7 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
 
 
 	//===============HP-Bar========================
-	mHPBarSprite.setTexture(gTextureHolder.get(Textures::HP_Bar));
+	mHPBarSprite.setTexture(gTextureHolder.get("HP_Bar"));
 	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
 
 
@@ -49,12 +49,12 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(Textures::ID textureID) {
 HumanoidGraphicsComponent::HumanoidGraphicsComponent(objectGraphics settings) {
 
 	//===============Sprites=======================
-	mCurrentSprite.setTexture(	gTextureHolder.get(settings.texture));
-	mSpriteStill.setTexture(	gTextureHolder.get(settings.texture));
-	mSpriteUp.setTexture(		gTextureHolder.get(settings.texture));
-	mSpriteDown.setTexture(		gTextureHolder.get(settings.texture));
-	mSpriteLeft.setTexture(		gTextureHolder.get(settings.texture));
-	mSpriteRight.setTexture(	gTextureHolder.get(settings.texture));
+	mCurrentSprite.setTexture(	gTextureHolder.get(settings.textureID));
+	mSpriteStill.setTexture(	gTextureHolder.get(settings.textureID));
+	mSpriteUp.setTexture(		gTextureHolder.get(settings.textureID));
+	mSpriteDown.setTexture(		gTextureHolder.get(settings.textureID));
+	mSpriteLeft.setTexture(		gTextureHolder.get(settings.textureID));
+	mSpriteRight.setTexture(	gTextureHolder.get(settings.textureID));
 
 	mSpriteStill.setTextureRect(sf::IntRect(settings.frames[0].x, settings.frames[0].y, settings.width, settings.height));
 	mSpriteUp.setTextureRect(	sf::IntRect(settings.frames[1].x, settings.frames[1].y, settings.width, settings.height));
@@ -64,7 +64,7 @@ HumanoidGraphicsComponent::HumanoidGraphicsComponent(objectGraphics settings) {
 
 
 	//===============HP-Bar========================
-	mHPBarSprite.setTexture(gTextureHolder.get(Textures::HP_Bar));
+	mHPBarSprite.setTexture(gTextureHolder.get("HP_Bar"));
 	mHPBarSprite.setTextureRect(sf::IntRect(0, 0, 100, 10));
 
 

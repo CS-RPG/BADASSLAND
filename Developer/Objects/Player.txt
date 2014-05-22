@@ -1,0 +1,24 @@
+//Input
+keyboard
+1
+//PHYSICS
+Dynamic
+120 120
+0.1
+//GRAPHICS
+Humanoid
+Elf_Green
+10
+0 15
+0 787
+0 535
+0 667
+0 925
+120 120
+//COMBAT
+Humanoid
+200 40 500 2
+//SOCIAL
+Humanoid
+Player_Elf
+players

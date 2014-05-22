@@ -14,7 +14,6 @@
 
 
 //============GameObject====================
-//
 class GameObject {
 public:
 									
@@ -23,6 +22,7 @@ public:
 												GraphicsComponent*,
 												CombatComponent*,
 												SocialComponent* );
+								//	GameObject(gameObjectData data);
 
 	void							update(float, struct config*, World&);
 
@@ -58,8 +58,6 @@ private:
 	SocialComponent*				mSocial;
 
 };
-//
-//==========================================
 
 
 #endif

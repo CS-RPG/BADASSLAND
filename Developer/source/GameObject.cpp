@@ -3,7 +3,6 @@
 
 
 //=================GameObject===============
-//
 GameObject::GameObject( InputComponent* input, 
 						PhysicsComponent* physics,
 						GraphicsComponent* graphics,
@@ -95,5 +94,3 @@ bool GameObject::operator==(GameObject& other) {
 	return false;
 
 }
-//
-//==========================================

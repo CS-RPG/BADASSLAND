@@ -41,6 +41,8 @@ public:
 
 	bool							loadConfigFile(std::string fileName);
 
+	config&							getConfig();
+
 	void							setTerminateGame(bool terminate);
 
 

@@ -3,7 +3,6 @@
 
 
 //============HumanoidCombatComponent=======
-//
 HumanoidCombatComponent::HumanoidCombatComponent(int HP, int maxHP, float damage, float attackRange, float attackSpeed) {
 	
 	setMaxHP(maxHP);
@@ -12,6 +11,18 @@ HumanoidCombatComponent::HumanoidCombatComponent(int HP, int maxHP, float damage
 	setDamage(damage);
 	setAttackRange(attackRange);
 	setAttackSpeed(attackSpeed);
+	setMarkedForRemoval(false);
+
+}
+
+HumanoidCombatComponent::HumanoidCombatComponent(objectCombat settings) {
+
+	setMaxHP(settings.maxHP);
+	setHP(settings.maxHP);
+
+	setDamage(settings.damage);
+	setAttackRange(settings.attackRange);
+	setAttackSpeed(settings.attackSpeed);
 	setMarkedForRemoval(false);
 
 }
@@ -53,5 +64,3 @@ void HumanoidCombatComponent::takeDamage(GameObject& attacker, GameObject& targe
 	}
 
 }
-//
-//==========================================

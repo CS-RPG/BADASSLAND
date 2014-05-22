@@ -1,0 +1,23 @@
+//Input
+passiveAI
+//PHYSICS
+Dynamic
+120 120
+0.05
+//GRAPHICS
+Humanoid
+Elf_Yellow
+10
+0 15
+0 787
+0 535
+0 667
+0 925
+120 120
+//COMBAT
+Humanoid
+200 40 130 2
+//SOCIAL
+Humanoid
+Yellow_Elf
+yellow_elves
